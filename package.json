@@ -1,0 +1,30 @@
+{
+  "name": "contentiq",
+  "private": true,
+  "version": "1.0.0",
+  "description": "CONTENT.IQ — AI-powered SaaS content generation platform with voice interaction",
+  "scripts": {
+    "dev": "concurrently --names \"SERVER,CLIENT\" --prefix-colors \"blue,green\" \"pnpm --filter server dev\" \"pnpm --filter client dev\"",
+    "build": "pnpm --filter shared build && pnpm --filter client build && pnpm --filter server build",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "typecheck": "pnpm --filter client typecheck && pnpm --filter server typecheck",
+    "test": "pnpm --filter server test && pnpm --filter client test",
+    "prepare": "husky",
+    "seed": "pnpm --filter server run seed"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "concurrently": "^9.1.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.11"
+  },
+  "lint-staged": {
+    "**/*.{ts,tsx,js,jsx,json}": ["biome check --write --no-errors-on-unmatched"]
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

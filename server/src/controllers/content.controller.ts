@@ -5,6 +5,7 @@ import { CREDITS_PER_GENERATION } from "../middleware/checkCredits.js";
 import { AppError, ForbiddenError, NotFoundError } from "../middleware/errorHandler.js";
 import { Content } from "../models/Content.model.js";
 import { Template } from "../models/Template.model.js";
+import { User } from "../models/User.model.js";
 import {
   generateTitle,
   improveContent,
@@ -38,7 +39,11 @@ export async function generate(req: Request, res: Response): Promise<void> {
 
       await deductCredits(userId, CREDITS_PER_GENERATION, `Génération ${params.type}`, saved._id);
       logger.debug(`Contenu généré : ${saved._id} — ${tokensUsed} tokens`);
-      return { contentId: String(saved._id) };
+      const updatedUser = await User.findById(userId).select("credits").lean();
+      return {
+        contentId: String(saved._id),
+        creditsRemaining: updatedUser?.credits?.remaining,
+      };
     } catch (err) {
       logger.error("Erreur sauvegarde contenu :", err);
       return {};

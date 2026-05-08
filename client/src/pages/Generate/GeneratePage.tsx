@@ -10,6 +10,7 @@ import { resetEditor, setEditorContent, setParams } from "@/store/contentSlice";
 import { useAppDispatch, useAppSelector } from "@/store/index";
 import { type GenerateContentInput, GenerateContentSchema } from "@contentiq/shared";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -24,6 +25,7 @@ const LANGUAGES: Array<{ value: GenerateContentInput["language"]; label: string 
 export default function GeneratePage() {
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const { isGenerating, streamedContent, tokensGenerated, currentParams, savedContentId } =
     useAppSelector((s) => s.content);
   const userLang = useAppSelector((s) => s.auth.user?.language ?? "fr");
@@ -104,7 +106,11 @@ export default function GeneratePage() {
         contentService.getGenerateUrl(),
         { ...data, keywords },
         {
-          onDone: () => toast({ title: "Contenu généré !", variant: "default" }),
+          onDone: () => {
+            toast({ title: "Contenu généré !", variant: "default" });
+            queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+            queryClient.invalidateQueries({ queryKey: ["contents"] });
+          },
         },
       );
     },

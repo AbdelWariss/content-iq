@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import mongoose from "mongoose";
 import { Content } from "../models/Content.model.js";
 import { CreditTransaction } from "../models/CreditTransaction.model.js";
 import { User } from "../models/User.model.js";
@@ -8,7 +9,11 @@ export async function getDashboardStats(req: Request, res: Response): Promise<vo
   const { userId, role } = getAuthUser(req);
   const isAdmin = role === "admin";
 
+  // Regular queries (find/countDocuments) auto-cast strings to ObjectId.
+  // Aggregation pipelines do NOT — explicit cast required.
   const userFilter = isAdmin ? {} : { userId };
+  const oidUserId = isAdmin ? null : new mongoose.Types.ObjectId(userId);
+  const aggFilter = isAdmin ? {} : { userId: oidUserId };
 
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -38,17 +43,17 @@ export async function getDashboardStats(req: Request, res: Response): Promise<vo
 
     // Répartition par type
     Content.aggregate([
-      { $match: { ...userFilter, status: { $ne: "archived" } } },
+      { $match: { ...aggFilter, status: { $ne: "archived" } } },
       { $group: { _id: "$type", count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 6 },
     ]),
 
-    // Activité journalière (30 derniers jours)
+    // Activité journalière (365 derniers jours)
     Content.aggregate([
       {
         $match: {
-          ...userFilter,
+          ...aggFilter,
           status: { $ne: "archived" },
           createdAt: { $gte: last365Days },
         },
@@ -67,7 +72,7 @@ export async function getDashboardStats(req: Request, res: Response): Promise<vo
 
     // Total tokens consommés
     Content.aggregate([
-      { $match: { ...userFilter, status: { $ne: "archived" } } },
+      { $match: { ...aggFilter, status: { $ne: "archived" } } },
       { $group: { _id: null, total: { $sum: "$tokensUsed" } } },
     ]),
 
@@ -78,7 +83,7 @@ export async function getDashboardStats(req: Request, res: Response): Promise<vo
     CreditTransaction.aggregate([
       {
         $match: {
-          ...(isAdmin ? {} : { userId: userId as unknown as import("mongoose").Types.ObjectId }),
+          ...aggFilter,
           type: "consume",
           createdAt: { $gte: startOfMonth },
         },

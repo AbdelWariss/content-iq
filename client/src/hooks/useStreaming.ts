@@ -1,4 +1,5 @@
 import { toast } from "@/hooks/use-toast";
+import { updateCredits } from "@/store/authSlice";
 import { appendToken, startGeneration, stopGeneration } from "@/store/contentSlice";
 import { useAppDispatch, useAppSelector } from "@/store/index";
 import { useCallback, useRef } from "react";
@@ -65,6 +66,7 @@ export function useStreaming() {
                 done?: boolean;
                 tokensUsed?: number;
                 contentId?: string;
+                creditsRemaining?: number;
                 error?: string;
               };
 
@@ -79,6 +81,9 @@ export function useStreaming() {
 
               if (parsed.done) {
                 dispatch(stopGeneration(parsed.contentId));
+                if (parsed.creditsRemaining !== undefined) {
+                  dispatch(updateCredits({ remaining: parsed.creditsRemaining }));
+                }
                 options.onDone?.(parsed.tokensUsed ?? 0, parsed.contentId);
               }
             } catch (parseError) {

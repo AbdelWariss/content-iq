@@ -1,20 +1,10 @@
 import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import { useAppSelector } from "@/store/index";
+import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
 
-const mainItems = [
-  { to: "/dashboard", icon: CiqIcon.dash, label: "Tableau de bord", key: "dash" },
-  { to: "/generate", icon: CiqIcon.sparkle, label: "Générer", key: "generate", badge: "voix" },
-  { to: "/history", icon: CiqIcon.history, label: "Historique", key: "history" },
-  { to: "/templates", icon: CiqIcon.templ, label: "Templates", key: "templ" },
-];
-
-const accountItems = [
-  { to: "/profile", icon: CiqIcon.user, label: "Profil & voix" },
-  { to: "/pricing", icon: CiqIcon.card, label: "Facturation" },
-];
-
 export function Sidebar() {
+  const { t } = useTranslation();
   const user = useAppSelector((s) => s.auth.user);
 
   const used = user?.credits ? user.credits.total - user.credits.remaining : 0;
@@ -23,6 +13,24 @@ export function Sidebar() {
   const pct = total > 0 ? Math.round((used / total) * 100) : 0;
 
   const isAdmin = user?.role === "admin";
+
+  const mainItems = [
+    { to: "/dashboard", icon: CiqIcon.dash, label: t("sidebar.dashboard"), key: "dash" },
+    {
+      to: "/generate",
+      icon: CiqIcon.sparkle,
+      label: t("sidebar.generate"),
+      key: "generate",
+      badge: t("sidebar.voice"),
+    },
+    { to: "/history", icon: CiqIcon.history, label: t("sidebar.history"), key: "history" },
+    { to: "/templates", icon: CiqIcon.templ, label: t("sidebar.templates"), key: "templ" },
+  ];
+
+  const accountItems = [
+    { to: "/profile", icon: CiqIcon.user, label: t("sidebar.profile") },
+    { to: "/pricing", icon: CiqIcon.card, label: t("sidebar.billing") },
+  ];
 
   return (
     <aside className="sidenav hidden lg:flex">
@@ -56,7 +64,7 @@ export function Sidebar() {
       ))}
 
       {/* ─── Account section ─── */}
-      <div className="nav-section">Compte</div>
+      <div className="nav-section">{t("sidebar.account")}</div>
 
       {accountItems.map((it) => (
         <NavLink
@@ -82,7 +90,7 @@ export function Sidebar() {
       {/* ─── Credits card ─── */}
       <div className="card" style={{ padding: 12, marginTop: 12 }}>
         <div className="row between" style={{ marginBottom: 8 }}>
-          <span className="t-eyebrow">Crédits</span>
+          <span className="t-eyebrow">{t("sidebar.credits")}</span>
           <span className="t-mono" style={{ fontSize: 12, color: "var(--ink-mute)" }}>
             {remaining}/{total}
           </span>
@@ -91,7 +99,7 @@ export function Sidebar() {
           <i style={{ width: `${100 - pct}%` }} />
         </div>
         <div style={{ fontSize: 11, color: "var(--ink-mute)", marginTop: 6 }}>
-          Renouvelle 14 juin
+          {t("sidebar.renewsOn", { date: "14 juin" })}
         </div>
       </div>
     </aside>

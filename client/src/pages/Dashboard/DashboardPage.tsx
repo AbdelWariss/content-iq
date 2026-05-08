@@ -3,7 +3,8 @@ import { statsService } from "@/services/stats.service";
 import { useAppSelector } from "@/store/index";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { fr } from "date-fns/locale";
+import { enUS, fr } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 const TYPE_ICON: Record<string, React.ReactNode> = {
@@ -46,7 +47,9 @@ const BAR_COLORS = [
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const user = useAppSelector((s) => s.auth.user);
+  const dateLocale = i18n.language === "en" ? enUS : fr;
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ["dashboard-stats"],
@@ -66,7 +69,7 @@ export default function DashboardPage() {
     return (
       <div style={{ padding: "32px 40px" }}>
         <div className="t-eyebrow" style={{ marginBottom: 8 }}>
-          Tableau de bord
+          {t("dashboard.eyebrow")}
         </div>
         <div
           style={{
@@ -104,19 +107,20 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="row between" style={{ marginBottom: 28 }}>
         <div>
-          <span className="t-eyebrow">Tableau de bord</span>
+          <span className="t-eyebrow">{t("dashboard.eyebrow")}</span>
           <h1 className="t-display" style={{ fontSize: 40, margin: "6px 0 0" }}>
-            Bonjour {firstName}. <em style={{ color: "var(--ink-mute)" }}>On crée quoi ?</em>
+            {t("dashboard.greeting", { name: firstName })}{" "}
+            <em style={{ color: "var(--ink-mute)" }}>{t("dashboard.tagline")}</em>
           </h1>
         </div>
         <div className="row" style={{ gap: 8 }}>
           <button className="btn btn-outline btn-sm" onClick={() => navigate("/history")}>
             <Ico icon={CiqIcon.history} />
-            Historique
+            {t("dashboard.historyBtn")}
           </button>
           <button className="btn btn-primary" onClick={() => navigate("/generate")}>
             <Ico icon={CiqIcon.sparkle} />
-            Nouveau contenu
+            {t("dashboard.newContent")}
           </button>
         </div>
       </div>
@@ -147,14 +151,14 @@ export default function DashboardPage() {
             <Ico icon={CiqIcon.sparkle} size={28} />
           </div>
           <div>
-            <p style={{ fontSize: 18, fontWeight: 600 }}>Bienvenue sur CONTENT.IQ !</p>
+            <p style={{ fontSize: 18, fontWeight: 600 }}>{t("dashboard.emptyTitle")}</p>
             <p style={{ fontSize: 14, color: "var(--ink-mute)", marginTop: 6 }}>
-              Générez votre premier contenu pour voir vos statistiques.
+              {t("dashboard.emptyDesc")}
             </p>
           </div>
           <button className="btn btn-accent btn-lg" onClick={() => navigate("/generate")}>
             <Ico icon={CiqIcon.sparkle} />
-            Générer mon premier contenu
+            {t("dashboard.emptyBtn")}
           </button>
         </div>
       ) : (
@@ -186,7 +190,7 @@ export default function DashboardPage() {
                 />
               </svg>
               <div className="col" style={{ flex: 1 }}>
-                <span className="t-eyebrow">Crédits restants</span>
+                <span className="t-eyebrow">{t("dashboard.creditsRemaining")}</span>
                 <div className="row" style={{ alignItems: "baseline", gap: 6, marginTop: 4 }}>
                   <span className="t-mono" style={{ fontSize: 36, fontWeight: 600 }}>
                     {remaining}
@@ -194,14 +198,14 @@ export default function DashboardPage() {
                   <span style={{ color: "var(--ink-mute)", fontSize: 13 }}>/ {total}</span>
                 </div>
                 <div style={{ fontSize: 12, color: "var(--ink-mute)", marginTop: 2 }}>
-                  Renouvelle dans 39 jours
+                  {t("dashboard.renewsIn", { days: 39 })}
                 </div>
                 <button
                   className="btn btn-outline btn-sm"
                   style={{ alignSelf: "flex-start", marginTop: 10 }}
                   onClick={() => navigate("/pricing")}
                 >
-                  Recharger
+                  {t("dashboard.topUp")}
                 </button>
               </div>
             </div>
@@ -209,19 +213,23 @@ export default function DashboardPage() {
             {/* KPI cards */}
             {[
               {
-                label: "Contenus ce mois",
+                label: t("dashboard.contentsThisMonth"),
                 value: stats.totals.contentsThisMonth,
-                delta: `+${stats.totals.contentsThisMonth} ce mois`,
+                delta: t("dashboard.thisMonth", { n: stats.totals.contentsThisMonth }),
               },
               {
-                label: "Tokens consommés",
+                label: t("dashboard.tokensUsed"),
                 value:
                   stats.totals.tokensUsed > 1000
                     ? `${(stats.totals.tokensUsed / 1000).toFixed(1)}K`
                     : String(stats.totals.tokensUsed),
-                delta: "total cumulé",
+                delta: t("dashboard.totalCumul"),
               },
-              { label: "Favoris", value: stats.totals.favorites, delta: "contenus sauvegardés" },
+              {
+                label: t("dashboard.favorites"),
+                value: stats.totals.favorites,
+                delta: t("dashboard.savedContents"),
+              },
             ].map((k) => (
               <div key={k.label} className="card" style={{ padding: 20 }}>
                 <span className="t-eyebrow">{k.label}</span>
@@ -243,11 +251,11 @@ export default function DashboardPage() {
             {/* Activity bar chart */}
             <div className="card" style={{ padding: 22 }}>
               <div className="row between">
-                <span className="t-eyebrow">Activité — 30 jours</span>
+                <span className="t-eyebrow">{t("dashboard.activityChart")}</span>
                 <div className="seg">
-                  <button className="on">30j</button>
-                  <button>7j</button>
-                  <button>an</button>
+                  <button className="on">{t("dashboard.period30d")}</button>
+                  <button>{t("dashboard.period7d")}</button>
+                  <button>{t("dashboard.periodYear")}</button>
                 </div>
               </div>
               {stats.dailyActivity.length > 0 ? (
@@ -292,7 +300,7 @@ export default function DashboardPage() {
                     <span>J-30</span>
                     <span>J-20</span>
                     <span>J-10</span>
-                    <span>Auj.</span>
+                    <span>{t("dashboard.today")}</span>
                   </div>
                 </>
               ) : (
@@ -306,14 +314,14 @@ export default function DashboardPage() {
                     fontSize: 13,
                   }}
                 >
-                  Pas encore de données
+                  {t("dashboard.noData")}
                 </div>
               )}
             </div>
 
             {/* Type breakdown */}
             <div className="card" style={{ padding: 22 }}>
-              <span className="t-eyebrow">Types les plus utilisés</span>
+              <span className="t-eyebrow">{t("dashboard.topTypes")}</span>
               <div className="col" style={{ gap: 12, marginTop: 18 }}>
                 {stats.typeBreakdown.slice(0, 5).map(({ type, count }, i) => {
                   const maxCount = Math.max(...stats.typeBreakdown.map((x) => x.count), 1);
@@ -344,9 +352,9 @@ export default function DashboardPage() {
             {/* Recent content */}
             <div className="card" style={{ padding: 22 }}>
               <div className="row between" style={{ marginBottom: 14 }}>
-                <span className="t-eyebrow">Derniers contenus</span>
+                <span className="t-eyebrow">{t("dashboard.recentContents")}</span>
                 <button className="btn btn-ghost btn-sm" onClick={() => navigate("/history")}>
-                  Tout voir →
+                  {t("dashboard.seeAll")}
                 </button>
               </div>
               <div className="col" style={{ gap: 4 }}>
@@ -382,7 +390,7 @@ export default function DashboardPage() {
                           {TYPE_LABELS[item.type] ?? item.type} ·{" "}
                           {formatDistanceToNow(new Date(item.createdAt), {
                             addSuffix: true,
-                            locale: fr,
+                            locale: dateLocale,
                           })}
                         </span>
                       </div>
@@ -401,7 +409,7 @@ export default function DashboardPage() {
                       fontSize: 13,
                     }}
                   >
-                    Générez du contenu pour voir l'historique
+                    {t("dashboard.noHistory")}
                   </div>
                 )}
               </div>
@@ -410,7 +418,7 @@ export default function DashboardPage() {
             {/* Type breakdown summary */}
             <div className="card" style={{ padding: 22 }}>
               <div className="row between" style={{ marginBottom: 14 }}>
-                <span className="t-eyebrow">Vue d'ensemble</span>
+                <span className="t-eyebrow">{t("dashboard.overview")}</span>
               </div>
               <div className="col" style={{ gap: 16 }}>
                 <div className="card" style={{ padding: 14, background: "var(--bg-sunk)" }}>
@@ -421,7 +429,7 @@ export default function DashboardPage() {
                     {stats.totals.contents}
                   </div>
                   <div style={{ fontSize: 12, color: "var(--ink-mute)", marginTop: 2 }}>
-                    contenus créés au total
+                    {t("dashboard.totalCreated")}
                   </div>
                 </div>
                 <div className="card" style={{ padding: 14, background: "var(--bg-sunk)" }}>
@@ -429,7 +437,7 @@ export default function DashboardPage() {
                     {stats.totals.creditsConsumedThisMonth}
                   </div>
                   <div style={{ fontSize: 12, color: "var(--ink-mute)", marginTop: 2 }}>
-                    crédits consommés ce mois
+                    {t("dashboard.creditsUsedMonth")}
                   </div>
                 </div>
                 <button
@@ -438,7 +446,7 @@ export default function DashboardPage() {
                   onClick={() => navigate("/generate")}
                 >
                   <Ico icon={CiqIcon.sparkle} />
-                  Générer
+                  {t("dashboard.generateBtn")}
                 </button>
               </div>
             </div>

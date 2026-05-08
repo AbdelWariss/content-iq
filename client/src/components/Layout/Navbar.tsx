@@ -1,10 +1,28 @@
 import { CiqIcon, Ico } from "@/lib/ciq-icons";
-import { useAppSelector } from "@/store/index";
+import api from "@/services/axios";
+import { updateUser } from "@/store/authSlice";
+import { useAppDispatch, useAppSelector } from "@/store/index";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 export function Navbar() {
+  const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+  const lang = user?.language ?? "fr";
+
+  async function setLanguage(newLang: "fr" | "en") {
+    if (newLang === lang) return;
+    dispatch(updateUser({ language: newLang }));
+    i18n.changeLanguage(newLang);
+    try {
+      await api.put("/users/me", { language: newLang });
+    } catch {
+      dispatch(updateUser({ language: lang }));
+      i18n.changeLanguage(lang);
+    }
+  }
 
   const plan =
     user?.role === "admin"
@@ -62,8 +80,20 @@ export function Navbar() {
       {/* Right: lang toggle + theme + avatar */}
       <div className="row" style={{ gap: 8 }}>
         <div className="seg">
-          <button className="on">FR</button>
-          <button>EN</button>
+          <button
+            type="button"
+            className={lang === "fr" ? "on" : ""}
+            onClick={() => setLanguage("fr")}
+          >
+            FR
+          </button>
+          <button
+            type="button"
+            className={lang === "en" ? "on" : ""}
+            onClick={() => setLanguage("en")}
+          >
+            EN
+          </button>
         </div>
 
         <button
@@ -72,7 +102,7 @@ export function Navbar() {
           onClick={() => navigate("/generate")}
         >
           <Ico icon={CiqIcon.sparkle} />
-          Générer
+          {t("nav.generate")}
         </button>
 
         <div

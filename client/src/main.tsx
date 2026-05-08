@@ -9,6 +9,7 @@ import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
 import "./index.css";
+import "./lib/i18n";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Élément #root introuvable");

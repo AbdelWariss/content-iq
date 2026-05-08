@@ -12,30 +12,7 @@ import { type GenerateContentInput, GenerateContentSchema } from "@contentiq/sha
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-
-const CONTENT_TYPES: Array<{
-  value: GenerateContentInput["type"];
-  label: string;
-  icon: React.ReactNode;
-}> = [
-  { value: "linkedin", label: "LinkedIn", icon: CiqIcon.linkedin },
-  { value: "blog", label: "Article", icon: CiqIcon.blog },
-  { value: "email", label: "Email", icon: CiqIcon.email },
-  { value: "twitter", label: "X / Thread", icon: CiqIcon.twitter },
-  { value: "instagram", label: "Instagram", icon: CiqIcon.insta },
-  { value: "product", label: "Produit", icon: CiqIcon.product },
-  { value: "youtube", label: "YouTube", icon: CiqIcon.yt },
-  { value: "bio", label: "Bio", icon: CiqIcon.bio },
-];
-
-const TONES: Array<{ value: GenerateContentInput["tone"]; label: string }> = [
-  { value: "professional", label: "Professionnel" },
-  { value: "casual", label: "Décontracté" },
-  { value: "inspiring", label: "Inspirant" },
-  { value: "technical", label: "Technique" },
-  { value: "humorous", label: "Humoristique" },
-  { value: "persuasive", label: "Persuasif" },
-];
+import { useTranslation } from "react-i18next";
 
 const LANGUAGES: Array<{ value: GenerateContentInput["language"]; label: string }> = [
   { value: "fr", label: "Français" },
@@ -44,16 +21,42 @@ const LANGUAGES: Array<{ value: GenerateContentInput["language"]; label: string 
   { value: "ar", label: "العربية" },
 ];
 
-const LENGTHS: Array<{ value: GenerateContentInput["length"]; label: string }> = [
-  { value: "short", label: "Court · < 300 mots" },
-  { value: "medium", label: "Moyen · 300–800 mots" },
-  { value: "long", label: "Long · 800–2000 mots" },
-];
-
 export default function GeneratePage() {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const { isGenerating, streamedContent, tokensGenerated, currentParams, savedContentId } =
     useAppSelector((s) => s.content);
+  const userLang = useAppSelector((s) => s.auth.user?.language ?? "fr");
+
+  const CONTENT_TYPES: Array<{
+    value: GenerateContentInput["type"];
+    label: string;
+    icon: React.ReactNode;
+  }> = [
+    { value: "linkedin", label: t("generate.typeLinkedin"), icon: CiqIcon.linkedin },
+    { value: "blog", label: t("generate.typeBlog"), icon: CiqIcon.blog },
+    { value: "email", label: t("generate.typeEmail"), icon: CiqIcon.email },
+    { value: "twitter", label: t("generate.typeTwitter"), icon: CiqIcon.twitter },
+    { value: "instagram", label: t("generate.typeInstagram"), icon: CiqIcon.insta },
+    { value: "product", label: t("generate.typeProduct"), icon: CiqIcon.product },
+    { value: "youtube", label: t("generate.typeYoutube"), icon: CiqIcon.yt },
+    { value: "bio", label: t("generate.typeBio"), icon: CiqIcon.bio },
+  ];
+
+  const TONES: Array<{ value: GenerateContentInput["tone"]; label: string }> = [
+    { value: "professional", label: t("generate.toneProfessional") },
+    { value: "casual", label: t("generate.toneCasual") },
+    { value: "inspiring", label: t("generate.toneInspiring") },
+    { value: "technical", label: t("generate.toneTechnical") },
+    { value: "humorous", label: t("generate.toneHumorous") },
+    { value: "persuasive", label: t("generate.tonePersuasive") },
+  ];
+
+  const LENGTHS: Array<{ value: GenerateContentInput["length"]; label: string }> = [
+    { value: "short", label: t("generate.lengthShort") },
+    { value: "medium", label: t("generate.lengthMedium") },
+    { value: "long", label: t("generate.lengthLong") },
+  ];
   const [isExporting, setIsExporting] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const { stream, stop } = useStreaming();
@@ -78,7 +81,7 @@ export default function GeneratePage() {
     defaultValues: {
       type: (currentParams.type as GenerateContentInput["type"]) ?? "linkedin",
       tone: (currentParams.tone as GenerateContentInput["tone"]) ?? "inspiring",
-      language: (currentParams.language as GenerateContentInput["language"]) ?? "fr",
+      language: (currentParams.language as GenerateContentInput["language"]) ?? userLang,
       length: (currentParams.length as GenerateContentInput["length"]) ?? "medium",
       subject: currentParams.subject ?? "",
       keywords: [],
@@ -113,7 +116,7 @@ export default function GeneratePage() {
     await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-    toast({ title: "Copié !" });
+    toast({ title: t("generate.copied") });
   }, [displayContent]);
 
   const addKeyword = useCallback(() => {
@@ -145,7 +148,7 @@ export default function GeneratePage() {
     clearInterval(voiceTimer.current);
     if (voiceTranscript) {
       setValue("subject", voiceTranscript);
-      toast({ title: "Brief dicté !", description: "Le sujet a été rempli automatiquement." });
+      toast({ title: t("generate.briefDictated"), description: t("generate.briefDictatedDesc") });
     }
   }, [voiceTranscript, setValue, stopListening]);
 
@@ -156,11 +159,11 @@ export default function GeneratePage() {
       setShowExportMenu(false);
       try {
         await exportService.download(savedContentId, format, currentParams.subject);
-        toast({ title: `Export ${format.toUpperCase()} prêt !` });
+        toast({ title: t("generate.exportSuccess", { fmt: format.toUpperCase() }) });
       } catch {
         toast({
-          title: "Export échoué",
-          description: "Vérifiez votre plan ou réessayez.",
+          title: t("generate.exportError"),
+          description: t("generate.exportErrorDesc"),
           variant: "destructive",
         });
       } finally {
@@ -218,27 +221,27 @@ export default function GeneratePage() {
         className="scrollbar-thin"
       >
         <h2 className="t-display" style={{ fontSize: 28, margin: "0 0 18px" }}>
-          Nouveau contenu
+          {t("generate.title")}
         </h2>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="col" style={{ gap: 14 }}>
             {/* Brief header */}
             <div className="row between">
-              <span className="t-eyebrow">Brief de génération</span>
+              <span className="t-eyebrow">{t("generate.briefHeader")}</span>
               <button
                 type="button"
                 className="btn btn-ghost btn-sm"
                 style={{ color: "var(--accent)" }}
               >
                 <Ico icon={CiqIcon.mic} />
-                Dicter le brief
+                {t("generate.dictate")}
               </button>
             </div>
 
             {/* Content type */}
             <div>
-              <label className="label">Type de contenu</label>
+              <label className="label">{t("generate.contentType")}</label>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
                 {CONTENT_TYPES.map(({ value, label, icon }) => {
                   const on = watchedType === value;
@@ -273,11 +276,11 @@ export default function GeneratePage() {
 
             {/* Subject */}
             <div>
-              <label className="label">Sujet *</label>
+              <label className="label">{t("generate.subject")}</label>
               <textarea
                 className="textarea"
                 rows={3}
-                placeholder="Ex: Annonce de notre plan Business pour les agences africaines"
+                placeholder={t("generate.subjectPlaceholder")}
                 {...register("subject")}
               />
               {errors.subject && (
@@ -290,7 +293,7 @@ export default function GeneratePage() {
             {/* Tone + Length + Language */}
             <div className="row" style={{ gap: 10 }}>
               <div style={{ flex: 1 }}>
-                <label className="label">Ton</label>
+                <label className="label">{t("generate.tone")}</label>
                 <select className="select" {...register("tone")}>
                   {TONES.map(({ value, label }) => (
                     <option key={value} value={value}>
@@ -300,7 +303,7 @@ export default function GeneratePage() {
                 </select>
               </div>
               <div style={{ flex: 1 }}>
-                <label className="label">Longueur</label>
+                <label className="label">{t("generate.length")}</label>
                 <select className="select" {...register("length")}>
                   {LENGTHS.map(({ value, label }) => (
                     <option key={value} value={value}>
@@ -310,7 +313,7 @@ export default function GeneratePage() {
                 </select>
               </div>
               <div style={{ flex: 0.7 }}>
-                <label className="label">Langue</label>
+                <label className="label">{t("generate.language")}</label>
                 <select className="select" {...register("language")}>
                   {LANGUAGES.map(({ value, label }) => (
                     <option key={value} value={value}>
@@ -323,7 +326,7 @@ export default function GeneratePage() {
 
             {/* Keywords */}
             <div>
-              <label className="label">Mots-clés à inclure</label>
+              <label className="label">{t("generate.keywords")}</label>
               <div
                 className="row"
                 style={{
@@ -359,7 +362,7 @@ export default function GeneratePage() {
                     fontSize: 13,
                     padding: "2px 4px",
                   }}
-                  placeholder="+ ajouter…"
+                  placeholder={t("generate.keywordPlaceholder")}
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   onKeyDown={(e) => {
@@ -374,10 +377,10 @@ export default function GeneratePage() {
 
             {/* Audience */}
             <div>
-              <label className="label">Audience cible</label>
+              <label className="label">{t("generate.audience")}</label>
               <input
                 className="input"
-                placeholder="Ex: PME africaines, 30-50 ans"
+                placeholder={t("generate.audiencePlaceholder")}
                 {...register("audience")}
               />
             </div>
@@ -391,7 +394,7 @@ export default function GeneratePage() {
             style={{ width: "100%", justifyContent: "center", marginTop: 18 }}
           >
             <Ico icon={CiqIcon.sparkle} />
-            {isGenerating ? "Génération en cours…" : "Générer le contenu"}
+            {isGenerating ? t("generate.generatingBtn") : t("generate.generateBtn")}
           </button>
 
           {isGenerating && (
@@ -402,14 +405,14 @@ export default function GeneratePage() {
               onClick={stop}
             >
               <Ico icon={CiqIcon.stop} />
-              Arrêter
+              {t("generate.stopBtn")}
             </button>
           )}
 
           <div
             style={{ fontSize: 11.5, color: "var(--ink-mute)", textAlign: "center", marginTop: 8 }}
           >
-            ⌘ + ↵ ou dites « génère »
+            {t("generate.hint")}
           </div>
         </form>
       </div>
@@ -461,10 +464,10 @@ export default function GeneratePage() {
             <div
               style={{ fontSize: 11.5, color: "var(--ink-mute)", fontFamily: "var(--font-mono)" }}
             >
-              {voiceStatus === "listening" ? "En écoute" : "Dicter le brief"}
+              {voiceStatus === "listening" ? t("generate.listening") : t("generate.dictateHint")}
             </div>
             <div style={{ fontSize: 13, fontWeight: 500 }}>
-              {voiceStatus === "listening" ? "Cliquez pour arrêter" : "« Génère un post LinkedIn »"}
+              {voiceStatus === "listening" ? t("generate.clickToStop") : t("generate.voiceExample")}
             </div>
           </div>
           {voiceStatus === "listening" && <MicWave size="md" color="var(--voice)" />}
@@ -494,15 +497,15 @@ export default function GeneratePage() {
           <div className="row" style={{ gap: 10 }}>
             {isGenerating ? (
               <span className="pill accent" style={{ padding: "2px 10px" }}>
-                ● Génération en cours
+                {t("generate.statusGenerating")}
               </span>
             ) : displayContent ? (
               <span className="pill" style={{ padding: "2px 10px", color: "var(--ink-soft)" }}>
-                ✓ Contenu prêt
+                {t("generate.statusReady")}
               </span>
             ) : (
               <span className="pill" style={{ padding: "2px 10px" }}>
-                Configurez et générez
+                {t("generate.statusConfigure")}
               </span>
             )}
             {isGenerating && (
@@ -515,7 +518,7 @@ export default function GeneratePage() {
             <div className="row" style={{ gap: 6 }}>
               <button type="button" className="btn btn-outline btn-sm" onClick={handleCopy}>
                 <Ico icon={copied ? CiqIcon.check : CiqIcon.copy} />
-                {copied ? "Copié !" : "Copier"}
+                {copied ? t("generate.copied") : t("generate.copy")}
               </button>
               <button
                 type="button"
@@ -523,7 +526,7 @@ export default function GeneratePage() {
                 onClick={() => handleSubmit(onSubmit)()}
               >
                 <Ico icon={CiqIcon.refresh} />
-                Régénérer
+                {t("generate.regenerate")}
               </button>
               {savedContentId && (
                 <div style={{ position: "relative" }}>
@@ -534,7 +537,7 @@ export default function GeneratePage() {
                     disabled={isExporting}
                   >
                     <Ico icon={CiqIcon.arrow} style={{ transform: "rotate(90deg)" }} />
-                    {isExporting ? "Export…" : "Exporter"}
+                    {isExporting ? t("generate.exporting") : t("generate.export")}
                   </button>
                   {showExportMenu && (
                     <div
@@ -562,12 +565,12 @@ export default function GeneratePage() {
                           onClick={() => handleExport(fmt)}
                         >
                           {fmt === "pdf"
-                            ? "PDF"
+                            ? t("generate.exportPdf")
                             : fmt === "docx"
-                              ? "Word (.docx)"
+                              ? t("generate.exportDocx")
                               : fmt === "markdown"
-                                ? "Markdown"
-                                : "Texte (.txt)"}
+                                ? t("generate.exportMarkdown")
+                                : t("generate.exportTxt")}
                         </button>
                       ))}
                     </div>

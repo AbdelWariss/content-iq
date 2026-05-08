@@ -1,4 +1,5 @@
 import { toast } from "@/hooks/use-toast";
+import i18n from "@/lib/i18n";
 import { authService } from "@/services/auth.service";
 import { logout as logoutAction, setCredentials, setLoading } from "@/store/authSlice";
 import { useAppDispatch, useAppSelector } from "@/store/index";
@@ -20,6 +21,7 @@ export function useAuth() {
     }
     try {
       const res = await authService.getMe();
+      const userLang = res.data.user.language ?? "fr";
       dispatch(
         setCredentials({
           accessToken: token,
@@ -30,10 +32,11 @@ export function useAuth() {
             role: res.data.user.role,
             avatarUrl: res.data.user.avatarUrl,
             credits: res.data.user.credits,
-            language: res.data.user.language,
+            language: userLang,
           },
         }),
       );
+      i18n.changeLanguage(userLang);
     } catch {
       dispatch(setLoading(false));
     }
@@ -48,6 +51,7 @@ export function useAuth() {
   const login = useCallback(
     async (email: string, password: string) => {
       const res = await authService.login({ email, password });
+      const userLang = res.data.user.language ?? "fr";
       dispatch(
         setCredentials({
           accessToken: res.data.accessToken,
@@ -58,10 +62,11 @@ export function useAuth() {
             role: res.data.user.role,
             avatarUrl: res.data.user.avatarUrl,
             credits: res.data.user.credits,
-            language: res.data.user.language,
+            language: userLang,
           },
         }),
       );
+      i18n.changeLanguage(userLang);
       navigate("/dashboard");
     },
     [dispatch, navigate],
@@ -70,6 +75,7 @@ export function useAuth() {
   const register = useCallback(
     async (name: string, email: string, password: string) => {
       const res = await authService.register({ name, email, password });
+      const regLang = res.data.user.language ?? "fr";
       dispatch(
         setCredentials({
           accessToken: res.data.accessToken,
@@ -80,10 +86,11 @@ export function useAuth() {
             role: res.data.user.role,
             avatarUrl: res.data.user.avatarUrl,
             credits: res.data.user.credits,
-            language: res.data.user.language,
+            language: regLang,
           },
         }),
       );
+      i18n.changeLanguage(regLang);
       toast({
         title: "Compte créé !",
         description: res.data.message ?? "Vérifiez votre email pour activer votre compte.",

@@ -24,6 +24,7 @@ export async function getDashboardStats(req: Request, res: Response): Promise<vo
     favoriteCount,
     creditTransactions,
     userCount,
+    recentItems,
   ] = await Promise.all([
     // Total contenus
     Content.countDocuments({ ...userFilter, status: { $ne: "archived" } }),
@@ -87,6 +88,13 @@ export async function getDashboardStats(req: Request, res: Response): Promise<vo
 
     // Utilisateurs actifs (admin only)
     isAdmin ? User.countDocuments({ updatedAt: { $gte: last7Days } }) : Promise.resolve(0),
+
+    // 5 derniers contenus
+    Content.find({ ...userFilter, status: { $ne: "archived" } })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select("type title prompt isFavorite tokensUsed createdAt")
+      .lean(),
   ]);
 
   const user = isAdmin ? null : await User.findById(userId).select("credits");
@@ -114,6 +122,7 @@ export async function getDashboardStats(req: Request, res: Response): Promise<vo
           tokens: d.tokens,
         }),
       ),
+      recentItems,
     },
   });
 }

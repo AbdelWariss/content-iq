@@ -1,9 +1,10 @@
 import { CiqIcon, Ico } from "@/lib/ciq-icons";
-import { statsService } from "@/services/stats.service";
+import { type RecentItem, statsService } from "@/services/stats.service";
 import { useAppSelector } from "@/store/index";
 import { useQuery } from "@tanstack/react-query";
-import { formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { enUS, fr } from "date-fns/locale";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
@@ -57,6 +58,8 @@ export default function DashboardPage() {
     staleTime: 2 * 60 * 1000,
   });
 
+  const [activePeriod, setActivePeriod] = useState<"30" | "7" | "365">("30");
+
   const firstName = user?.name?.split(" ")[0] ?? "vous";
 
   const remaining = user?.credits?.remaining ?? 0;
@@ -64,6 +67,11 @@ export default function DashboardPage() {
   const ringR = 38;
   const ringCirc = 2 * Math.PI * ringR;
   const ringPct = total > 0 ? remaining / total : 0;
+
+  const resetDate = user?.credits?.resetDate ? new Date(user.credits.resetDate) : null;
+  const daysUntilReset = resetDate
+    ? Math.max(0, Math.ceil((resetDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : 0;
 
   if (isLoading) {
     return (
@@ -198,7 +206,7 @@ export default function DashboardPage() {
                   <span style={{ color: "var(--ink-mute)", fontSize: 13 }}>/ {total}</span>
                 </div>
                 <div style={{ fontSize: 12, color: "var(--ink-mute)", marginTop: 2 }}>
-                  {t("dashboard.renewsIn", { days: 39 })}
+                  {t("dashboard.renewsIn", { days: daysUntilReset })}
                 </div>
                 <button
                   className="btn btn-outline btn-sm"
@@ -253,70 +261,97 @@ export default function DashboardPage() {
               <div className="row between">
                 <span className="t-eyebrow">{t("dashboard.activityChart")}</span>
                 <div className="seg">
-                  <button className="on">{t("dashboard.period30d")}</button>
-                  <button>{t("dashboard.period7d")}</button>
-                  <button>{t("dashboard.periodYear")}</button>
+                  <button
+                    type="button"
+                    className={activePeriod === "30" ? "on" : ""}
+                    onClick={() => setActivePeriod("30")}
+                  >
+                    {t("dashboard.period30d")}
+                  </button>
+                  <button
+                    type="button"
+                    className={activePeriod === "7" ? "on" : ""}
+                    onClick={() => setActivePeriod("7")}
+                  >
+                    {t("dashboard.period7d")}
+                  </button>
+                  <button
+                    type="button"
+                    className={activePeriod === "365" ? "on" : ""}
+                    onClick={() => setActivePeriod("365")}
+                  >
+                    {t("dashboard.periodYear")}
+                  </button>
                 </div>
               </div>
-              {stats.dailyActivity.length > 0 ? (
-                <>
+              {(() => {
+                const days = activePeriod === "7" ? 7 : activePeriod === "365" ? 365 : 30;
+                const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+                  .toISOString()
+                  .slice(0, 10);
+                const filtered = stats.dailyActivity.filter((d) => d.date >= cutoff);
+                return filtered.length > 0 ? (
+                  <>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-end",
+                        gap: 3,
+                        height: 160,
+                        marginTop: 22,
+                      }}
+                    >
+                      {filtered.map((d, i, arr) => {
+                        const maxVal = Math.max(...arr.map((x) => x.count), 1);
+                        const h = Math.max((d.count / maxVal) * 96, d.count > 0 ? 6 : 2);
+                        const isLast = i === arr.length - 1;
+                        return (
+                          <div
+                            key={d.date}
+                            title={`${d.date}: ${d.count}`}
+                            style={{
+                              flex: 1,
+                              height: `${h}%`,
+                              background: isLast ? "var(--accent)" : "var(--ink)",
+                              opacity: isLast ? 1 : 0.18,
+                              borderRadius: 2,
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                    <div
+                      className="row between"
+                      style={{
+                        marginTop: 10,
+                        fontSize: 11,
+                        color: "var(--ink-mute)",
+                        fontFamily: "var(--font-mono)",
+                      }}
+                    >
+                      {filtered[0] && (
+                        <span>
+                          {format(new Date(filtered[0].date), "d MMM", { locale: dateLocale })}
+                        </span>
+                      )}
+                      <span>{t("dashboard.today")}</span>
+                    </div>
+                  </>
+                ) : (
                   <div
                     style={{
-                      display: "flex",
-                      alignItems: "flex-end",
-                      gap: 3,
                       height: 160,
-                      marginTop: 22,
-                    }}
-                  >
-                    {stats.dailyActivity.slice(-30).map((d, i, arr) => {
-                      const maxVal = Math.max(...arr.map((x) => x.count), 1);
-                      const h = Math.max((d.count / maxVal) * 96, d.count > 0 ? 6 : 2);
-                      const isLast = i === arr.length - 1;
-                      return (
-                        <div
-                          key={d.date}
-                          title={`${d.date}: ${d.count}`}
-                          style={{
-                            flex: 1,
-                            height: `${h}%`,
-                            background: isLast ? "var(--accent)" : "var(--ink)",
-                            opacity: isLast ? 1 : 0.18,
-                            borderRadius: 2,
-                          }}
-                        />
-                      );
-                    })}
-                  </div>
-                  <div
-                    className="row between"
-                    style={{
-                      marginTop: 10,
-                      fontSize: 11,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                       color: "var(--ink-mute)",
-                      fontFamily: "var(--font-mono)",
+                      fontSize: 13,
                     }}
                   >
-                    <span>J-30</span>
-                    <span>J-20</span>
-                    <span>J-10</span>
-                    <span>{t("dashboard.today")}</span>
+                    {t("dashboard.noData")}
                   </div>
-                </>
-              ) : (
-                <div
-                  style={{
-                    height: 160,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "var(--ink-mute)",
-                    fontSize: 13,
-                  }}
-                >
-                  {t("dashboard.noData")}
-                </div>
-              )}
+                );
+              })()}
             </div>
 
             {/* Type breakdown */}
@@ -358,8 +393,8 @@ export default function DashboardPage() {
                 </button>
               </div>
               <div className="col" style={{ gap: 4 }}>
-                {(stats as any).recentItems ? (
-                  (stats as any).recentItems.slice(0, 5).map((item: any, i: number, arr: any[]) => (
+                {stats.recentItems?.length > 0 ? (
+                  stats.recentItems.map((item: RecentItem, i: number, arr: RecentItem[]) => (
                     <div
                       key={item._id}
                       className="row"

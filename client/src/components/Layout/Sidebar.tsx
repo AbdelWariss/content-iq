@@ -1,16 +1,23 @@
 import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import { useAppSelector } from "@/store/index";
+import { format } from "date-fns";
+import { enUS, fr } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
 
 export function Sidebar() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const user = useAppSelector((s) => s.auth.user);
+  const dateLocale = i18n.language === "en" ? enUS : fr;
 
   const used = user?.credits ? user.credits.total - user.credits.remaining : 0;
   const total = user?.credits?.total ?? 500;
   const remaining = user?.credits?.remaining ?? 0;
   const pct = total > 0 ? Math.round((used / total) * 100) : 0;
+
+  const resetDateFormatted = user?.credits?.resetDate
+    ? format(new Date(user.credits.resetDate), "d MMM", { locale: dateLocale })
+    : "—";
 
   const isAdmin = user?.role === "admin";
 
@@ -99,7 +106,7 @@ export function Sidebar() {
           <i style={{ width: `${100 - pct}%` }} />
         </div>
         <div style={{ fontSize: 11, color: "var(--ink-mute)", marginTop: 6 }}>
-          {t("sidebar.renewsOn", { date: "14 juin" })}
+          {t("sidebar.renewsOn", { date: resetDateFormatted })}
         </div>
       </div>
     </aside>

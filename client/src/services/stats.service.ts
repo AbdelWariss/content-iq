@@ -1,5 +1,15 @@
 import api from "./axios";
 
+export interface RecentItem {
+  _id: string;
+  type: string;
+  title?: string;
+  isFavorite?: boolean;
+  tokensUsed?: number;
+  createdAt: string;
+  prompt?: { subject?: string; tone?: string; language?: string };
+}
+
 export interface DashboardStats {
   totals: {
     contents: number;
@@ -12,6 +22,7 @@ export interface DashboardStats {
   credits: { remaining: number; total: number } | null;
   typeBreakdown: { type: string; count: number }[];
   dailyActivity: { date: string; count: number; tokens: number }[];
+  recentItems: RecentItem[];
 }
 
 export const statsService = {

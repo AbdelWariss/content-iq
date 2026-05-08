@@ -22,29 +22,25 @@ export function Sidebar() {
   const isAdmin = user?.role === "admin";
 
   const mainItems = [
-    { to: "/dashboard", icon: CiqIcon.dash, label: t("sidebar.dashboard"), key: "dash" },
-    {
-      to: "/generate",
-      icon: CiqIcon.sparkle,
-      label: t("sidebar.generate"),
-      key: "generate",
-      badge: t("sidebar.voice"),
-    },
-    { to: "/history", icon: CiqIcon.history, label: t("sidebar.history"), key: "history" },
-    { to: "/templates", icon: CiqIcon.templ, label: t("sidebar.templates"), key: "templ" },
+    { to: "/dashboard", icon: CiqIcon.dash, label: t("sidebar.dashboard") },
+    { to: "/generate", icon: CiqIcon.sparkle, label: t("sidebar.generate") },
+    { to: "/history", icon: CiqIcon.history, label: t("sidebar.history") },
+    { to: "/templates", icon: CiqIcon.templ, label: t("sidebar.templates") },
+    { to: "/history?favorite=true", icon: CiqIcon.star, label: t("sidebar.favorites") },
   ];
 
   const accountItems = [
     { to: "/profile", icon: CiqIcon.user, label: t("sidebar.profile") },
     { to: "/pricing", icon: CiqIcon.card, label: t("sidebar.billing") },
+    { to: "/profile#settings", icon: CiqIcon.gear, label: t("sidebar.settings") },
   ];
 
   return (
     <aside className="sidenav hidden lg:flex">
       {/* ─── Logo ─── */}
-      <div className="ciq-mark" style={{ padding: "0 8px 14px" }}>
+      <div className="ciq-mark" style={{ padding: "0 4px 20px" }}>
         <span className="dot">C</span>
-        <span className="name">
+        <span className="name" style={{ fontSize: 15 }}>
           <b>CONTENT</b>
           <span>.IQ</span>
         </span>
@@ -57,21 +53,15 @@ export function Sidebar() {
           to={it.to}
           className={({ isActive }) => `nav-item${isActive ? " on" : ""}`}
         >
-          <Ico icon={it.icon} />
+          <Ico icon={it.icon} size={18} />
           {it.label}
-          {it.badge && (
-            <span
-              className="pill accent"
-              style={{ marginLeft: "auto", padding: "1px 6px", fontSize: 10 }}
-            >
-              {it.badge}
-            </span>
-          )}
         </NavLink>
       ))}
 
       {/* ─── Account section ─── */}
-      <div className="nav-section">{t("sidebar.account")}</div>
+      <div className="nav-section" style={{ fontSize: 11, marginTop: 8 }}>
+        {t("sidebar.account")}
+      </div>
 
       {accountItems.map((it) => (
         <NavLink
@@ -79,14 +69,14 @@ export function Sidebar() {
           to={it.to}
           className={({ isActive }) => `nav-item${isActive ? " on" : ""}`}
         >
-          <Ico icon={it.icon} />
+          <Ico icon={it.icon} size={18} />
           {it.label}
         </NavLink>
       ))}
 
       {isAdmin && (
         <NavLink to="/admin" className={({ isActive }) => `nav-item${isActive ? " on" : ""}`}>
-          <Ico icon={CiqIcon.shield} />
+          <Ico icon={CiqIcon.shield} size={18} />
           Admin
         </NavLink>
       )}
@@ -95,17 +85,19 @@ export function Sidebar() {
       <div style={{ flex: 1 }} />
 
       {/* ─── Credits card ─── */}
-      <div className="card" style={{ padding: 12, marginTop: 12 }}>
+      <div className="card" style={{ padding: 14, marginTop: 12 }}>
         <div className="row between" style={{ marginBottom: 8 }}>
-          <span className="t-eyebrow">{t("sidebar.credits")}</span>
-          <span className="t-mono" style={{ fontSize: 12, color: "var(--ink-mute)" }}>
+          <span className="t-eyebrow" style={{ fontSize: 11 }}>
+            {t("sidebar.credits")}
+          </span>
+          <span className="t-mono" style={{ fontSize: 13, color: "var(--ink-mute)" }}>
             {remaining}/{total}
           </span>
         </div>
         <div className="gauge accent">
           <i style={{ width: `${100 - pct}%` }} />
         </div>
-        <div style={{ fontSize: 11, color: "var(--ink-mute)", marginTop: 6 }}>
+        <div style={{ fontSize: 12, color: "var(--ink-mute)", marginTop: 6 }}>
           {t("sidebar.renewsOn", { date: resetDateFormatted })}
         </div>
       </div>

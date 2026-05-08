@@ -188,65 +188,45 @@ export default function DashboardPage() {
               marginBottom: 18,
             }}
           >
-            {/* Credits ring — dark card */}
+            {/* Credits ring — glass card */}
             <div
               className="card"
-              style={{
-                padding: 22,
-                display: "flex",
-                gap: 20,
-                alignItems: "center",
-                background: "var(--ink)",
-                border: "none",
-                boxShadow: "0 4px 28px rgba(58,47,37,0.35)",
-              }}
+              style={{ padding: 24, display: "flex", gap: 22, alignItems: "center" }}
             >
-              <div style={{ width: 88, height: 88, flexShrink: 0 }}>
+              <div style={{ width: 96, height: 96, flexShrink: 0 }}>
                 <RadialBarChart
-                  width={88}
-                  height={88}
-                  cx={44}
-                  cy={44}
-                  innerRadius={28}
-                  outerRadius={42}
+                  width={96}
+                  height={96}
+                  cx={48}
+                  cy={48}
+                  innerRadius={32}
+                  outerRadius={46}
                   startAngle={90}
                   endAngle={-270}
                   data={[{ value: Math.round(ringPct * 100), fill: "var(--accent)" }]}
-                  barSize={8}
+                  barSize={9}
                 >
                   <RadialBar
-                    background={{ fill: "rgba(255,255,255,0.12)" }}
+                    background={{ fill: "var(--bg-sunk)" }}
                     dataKey="value"
-                    cornerRadius={4}
+                    cornerRadius={5}
                   />
                 </RadialBarChart>
               </div>
               <div className="col" style={{ flex: 1 }}>
-                <span className="t-eyebrow" style={{ color: "rgba(255,255,255,0.55)" }}>
-                  {t("dashboard.creditsRemaining")}
-                </span>
-                <div className="row" style={{ alignItems: "baseline", gap: 6, marginTop: 4 }}>
-                  <span
-                    className="t-mono"
-                    style={{ fontSize: 40, fontWeight: 600, color: "white", lineHeight: 1 }}
-                  >
+                <span className="t-eyebrow">{t("dashboard.creditsRemaining")}</span>
+                <div className="row" style={{ alignItems: "baseline", gap: 6, marginTop: 5 }}>
+                  <span className="t-mono" style={{ fontSize: 44, fontWeight: 600, lineHeight: 1 }}>
                     {remaining}
                   </span>
-                  <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 14 }}>/ {total}</span>
+                  <span style={{ color: "var(--ink-mute)", fontSize: 15 }}>/ {total}</span>
                 </div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", marginTop: 3 }}>
+                <div style={{ fontSize: 13, color: "var(--ink-mute)", marginTop: 4 }}>
                   {t("dashboard.renewsIn", { days: daysUntilReset })}
                 </div>
                 <button
-                  className="btn btn-sm"
-                  style={{
-                    alignSelf: "flex-start",
-                    marginTop: 12,
-                    background: "rgba(255,255,255,0.14)",
-                    color: "white",
-                    border: "1px solid rgba(255,255,255,0.2)",
-                    backdropFilter: "none",
-                  }}
+                  className="btn btn-outline btn-sm"
+                  style={{ alignSelf: "flex-start", marginTop: 12 }}
                   onClick={() => navigate("/pricing")}
                 >
                   {t("dashboard.topUp")}
@@ -255,53 +235,31 @@ export default function DashboardPage() {
             </div>
 
             {/* KPI: Contenus ce mois */}
-            <div className="card" style={{ padding: 20 }}>
-              <div className="row between" style={{ marginBottom: 14 }}>
+            <div className="card" style={{ padding: 22 }}>
+              <div className="row between" style={{ marginBottom: 12 }}>
                 <span className="t-eyebrow">{t("dashboard.contentsThisMonth")}</span>
-                <div
-                  style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: 9,
-                    background: "var(--accent-soft)",
-                    display: "grid",
-                    placeItems: "center",
-                  }}
-                >
-                  <Ico icon={CiqIcon.sparkle} style={{ color: "var(--accent)" }} size={16} />
-                </div>
+                <Ico icon={CiqIcon.sparkle} style={{ color: "var(--accent)" }} size={24} />
               </div>
-              <div className="t-mono" style={{ fontSize: 34, fontWeight: 600, lineHeight: 1 }}>
+              <div className="t-mono" style={{ fontSize: 40, fontWeight: 600, lineHeight: 1 }}>
                 {stats.totals.contentsThisMonth}
               </div>
-              <div style={{ fontSize: 13, color: "var(--ink-mute)", marginTop: 6 }}>
+              <div style={{ fontSize: 14, color: "var(--ink-mute)", marginTop: 8 }}>
                 {t("dashboard.thisMonth", { n: stats.totals.contentsThisMonth })}
               </div>
             </div>
 
             {/* KPI: Tokens */}
-            <div className="card" style={{ padding: 20 }}>
-              <div className="row between" style={{ marginBottom: 14 }}>
+            <div className="card" style={{ padding: 22 }}>
+              <div className="row between" style={{ marginBottom: 12 }}>
                 <span className="t-eyebrow">{t("dashboard.tokensUsed")}</span>
-                <div
-                  style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: 9,
-                    background: "var(--bg-sunk)",
-                    display: "grid",
-                    placeItems: "center",
-                  }}
-                >
-                  <Ico icon={CiqIcon.zap} style={{ color: "var(--ink)" }} size={16} />
-                </div>
+                <Ico icon={CiqIcon.zap} style={{ color: "var(--ink)" }} size={24} />
               </div>
-              <div className="t-mono" style={{ fontSize: 34, fontWeight: 600, lineHeight: 1 }}>
+              <div className="t-mono" style={{ fontSize: 40, fontWeight: 600, lineHeight: 1 }}>
                 {stats.totals.tokensUsed > 1000
                   ? `${(stats.totals.tokensUsed / 1000).toFixed(1)}K`
                   : stats.totals.tokensUsed}
               </div>
-              <div style={{ fontSize: 13, color: "var(--ink-mute)", marginTop: 6 }}>
+              <div style={{ fontSize: 14, color: "var(--ink-mute)", marginTop: 8 }}>
                 {stats.totals.contentsThisMonth > 0
                   ? `Moy. ${Math.round(stats.totals.tokensUsed / stats.totals.contentsThisMonth)} / gén.`
                   : t("dashboard.totalCumul")}
@@ -309,26 +267,15 @@ export default function DashboardPage() {
             </div>
 
             {/* KPI: CMD Vocales */}
-            <div className="card" style={{ padding: 20 }}>
-              <div className="row between" style={{ marginBottom: 14 }}>
+            <div className="card" style={{ padding: 22 }}>
+              <div className="row between" style={{ marginBottom: 12 }}>
                 <span className="t-eyebrow">CMD Vocales</span>
-                <div
-                  style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: 9,
-                    background: "var(--voice-soft)",
-                    display: "grid",
-                    placeItems: "center",
-                  }}
-                >
-                  <Ico icon={CiqIcon.mic} style={{ color: "var(--voice)" }} size={16} />
-                </div>
+                <Ico icon={CiqIcon.mic} style={{ color: "var(--voice)" }} size={24} />
               </div>
-              <div className="t-mono" style={{ fontSize: 34, fontWeight: 600, lineHeight: 1 }}>
+              <div className="t-mono" style={{ fontSize: 40, fontWeight: 600, lineHeight: 1 }}>
                 {stats.voice?.commandsThisMonth ?? 0}
               </div>
-              <div style={{ fontSize: 13, color: "var(--ink-mute)", marginTop: 6 }}>
+              <div style={{ fontSize: 14, color: "var(--ink-mute)", marginTop: 8 }}>
                 {stats.voice?.successRate
                   ? `${stats.voice.successRate}% reconnues`
                   : "pas encore de données"}
@@ -519,7 +466,7 @@ export default function DashboardPage() {
                         >
                           {item.title ?? item.prompt?.subject ?? `Contenu ${item.type}`}
                         </span>
-                        <span style={{ fontSize: 11.5, color: "var(--ink-mute)" }}>
+                        <span style={{ fontSize: 13, color: "var(--ink-mute)" }}>
                           {TYPE_LABELS[item.type] ?? item.type} ·{" "}
                           {formatDistanceToNow(new Date(item.createdAt), {
                             addSuffix: true,
@@ -591,7 +538,7 @@ export default function DashboardPage() {
                           "{cmd.transcript}"
                         </span>
                         {cmd.matchedCommand && (
-                          <span style={{ fontSize: 11.5, color: "var(--ink-mute)" }}>
+                          <span style={{ fontSize: 13, color: "var(--ink-mute)" }}>
                             → {cmd.matchedCommand}
                           </span>
                         )}

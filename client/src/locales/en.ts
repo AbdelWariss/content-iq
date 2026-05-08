@@ -15,6 +15,8 @@ const en = {
     credits: "Credits",
     renewsOn: "Renews {{date}}",
     voice: "voice",
+    favorites: "Favorites",
+    settings: "Settings",
   },
   // Dashboard
   dashboard: {

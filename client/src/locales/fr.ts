@@ -15,6 +15,8 @@ const fr = {
     credits: "Crédits",
     renewsOn: "Renouvelle {{date}}",
     voice: "voix",
+    favorites: "Favoris",
+    settings: "Paramètres",
   },
   // Dashboard
   dashboard: {

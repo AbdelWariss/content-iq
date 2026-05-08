@@ -10,6 +10,15 @@ export interface RecentItem {
   prompt?: { subject?: string; tone?: string; language?: string };
 }
 
+export interface VoiceLogItem {
+  _id: string;
+  transcript: string;
+  matchedCommand?: string;
+  confidence: number;
+  success: boolean;
+  createdAt: string;
+}
+
 export interface DashboardStats {
   totals: {
     contents: number;
@@ -23,6 +32,11 @@ export interface DashboardStats {
   typeBreakdown: { type: string; count: number }[];
   dailyActivity: { date: string; count: number; tokens: number }[];
   recentItems: RecentItem[];
+  voice: {
+    commandsThisMonth: number;
+    successRate: number;
+    recentCommands: VoiceLogItem[];
+  };
 }
 
 export const statsService = {

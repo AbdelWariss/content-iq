@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { Content } from "../models/Content.model.js";
 import { CreditTransaction } from "../models/CreditTransaction.model.js";
 import { User } from "../models/User.model.js";
+import { VoiceCommand } from "../models/VoiceCommand.model.js";
 import { getAuthUser } from "../utils/requestHelpers.js";
 
 export async function getDashboardStats(req: Request, res: Response): Promise<void> {
@@ -30,6 +31,9 @@ export async function getDashboardStats(req: Request, res: Response): Promise<vo
     creditTransactions,
     userCount,
     recentItems,
+    voiceCommandCount,
+    voiceSuccessRate,
+    recentVoiceCommands,
   ] = await Promise.all([
     // Total contenus
     Content.countDocuments({ ...userFilter, status: { $ne: "archived" } }),
@@ -100,6 +104,31 @@ export async function getDashboardStats(req: Request, res: Response): Promise<vo
       .limit(5)
       .select("type title prompt isFavorite tokensUsed createdAt")
       .lean(),
+
+    // Commandes vocales ce mois
+    VoiceCommand.countDocuments({
+      ...userFilter,
+      createdAt: { $gte: startOfMonth },
+    }),
+
+    // Taux de succès vocal
+    VoiceCommand.aggregate([
+      { $match: { ...aggFilter, createdAt: { $gte: startOfMonth } } },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          success: { $sum: { $cond: ["$success", 1, 0] } },
+        },
+      },
+    ]),
+
+    // Journal voix récent (5 dernières commandes)
+    VoiceCommand.find({ ...userFilter })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select("transcript matchedCommand confidence success createdAt")
+      .lean(),
   ]);
 
   const user = isAdmin ? null : await User.findById(userId).select("credits");
@@ -128,6 +157,18 @@ export async function getDashboardStats(req: Request, res: Response): Promise<vo
         }),
       ),
       recentItems,
+      voice: {
+        commandsThisMonth: voiceCommandCount,
+        successRate:
+          (voiceSuccessRate as Array<{ total: number; success: number }>)[0]?.total > 0
+            ? Math.round(
+                ((voiceSuccessRate as Array<{ total: number; success: number }>)[0].success /
+                  (voiceSuccessRate as Array<{ total: number; success: number }>)[0].total) *
+                  100,
+              )
+            : 0,
+        recentCommands: recentVoiceCommands,
+      },
     },
   });
 }

@@ -8,6 +8,7 @@ import { type UpdateProfileInput, UpdateProfileSchema } from "@contentiq/shared"
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 const VOICES = [
   { name: "Aïssata", meta: "FR · F", voiceId: "21m00Tcm4TlvDq8ikWAM", lang: "fr" as const },
@@ -22,6 +23,7 @@ const SPEEDS = ["0.75×", "1×", "1.25×", "1.5×"];
 export default function ProfilePage() {
   const { logout } = useAuth();
   const user = useAppSelector((s) => s.auth.user);
+  const { t } = useTranslation();
   const [isSaving, setIsSaving] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState("Aïssata");
   const [selectedSpeed, setSelectedSpeed] = useState("1×");
@@ -110,9 +112,9 @@ export default function ProfilePage() {
     setIsSaving(true);
     try {
       await api.put("/users/me", data);
-      toast({ title: "Profil mis à jour" });
+      toast({ title: t("profile.saveSuccess") });
     } catch {
-      toast({ title: "Erreur", description: "Impossible de sauvegarder.", variant: "destructive" });
+      toast({ title: "Erreur", description: t("profile.saveError"), variant: "destructive" });
     } finally {
       setIsSaving(false);
     }
@@ -136,16 +138,14 @@ export default function ProfilePage() {
   return (
     <div style={{ padding: "32px 40px", overflowY: "auto", maxWidth: 980 }}>
       <h1 className="t-display" style={{ fontSize: 40, margin: "0 0 6px" }}>
-        Profil &amp; préférences vocales
+        {t("profile.title")}
       </h1>
-      <p style={{ color: "var(--ink-soft)", marginBottom: 28 }}>
-        Configurez votre identité, votre voix et votre micro.
-      </p>
+      <p style={{ color: "var(--ink-soft)", marginBottom: 28 }}>{t("profile.subtitle")}</p>
 
       {/* Account */}
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="card" style={{ padding: 24, marginBottom: 18 }}>
-          <span className="t-eyebrow">Compte</span>
+          <span className="t-eyebrow">{t("profile.accountSection")}</span>
           <div className="row" style={{ gap: 18, marginTop: 16, alignItems: "flex-start" }}>
             <div
               className="imgph"
@@ -163,7 +163,7 @@ export default function ProfilePage() {
             </div>
             <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div>
-                <label className="label">Nom</label>
+                <label className="label">{t("profile.labelName")}</label>
                 <input className="input" {...register("name")} />
                 {errors.name && (
                   <p style={{ fontSize: 11, color: "var(--accent)", marginTop: 4 }}>
@@ -172,7 +172,7 @@ export default function ProfilePage() {
                 )}
               </div>
               <div>
-                <label className="label">Email</label>
+                <label className="label">{t("profile.labelEmail")}</label>
                 <input
                   className="input"
                   defaultValue={user.email}
@@ -181,15 +181,11 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="label">Bio courte</label>
-                <input
-                  className="input"
-                  placeholder="Copywriter & consultant"
-                  {...register("bio")}
-                />
+                <label className="label">{t("profile.labelBio")}</label>
+                <input className="input" placeholder={t("profile.bioPh")} {...register("bio")} />
               </div>
               <div>
-                <label className="label">Langue interface</label>
+                <label className="label">{t("profile.labelLang")}</label>
                 <select className="select">
                   <option>Français</option>
                   <option>English</option>
@@ -199,7 +195,7 @@ export default function ProfilePage() {
           </div>
           <div className="row" style={{ justifyContent: "flex-end", marginTop: 16, gap: 8 }}>
             <button type="submit" disabled={isSaving} className="btn btn-primary">
-              {isSaving ? "Sauvegarde…" : "Sauvegarder"}
+              {isSaving ? t("profile.savingBtn") : t("profile.saveBtn")}
             </button>
             <button
               type="button"
@@ -207,7 +203,7 @@ export default function ProfilePage() {
               style={{ color: "var(--accent)" }}
               onClick={logout}
             >
-              Se déconnecter
+              {t("profile.logoutBtn")}
             </button>
           </div>
         </div>
@@ -216,13 +212,13 @@ export default function ProfilePage() {
       {/* Voice preferences */}
       <div className="card" style={{ padding: 24, marginBottom: 18 }}>
         <div className="row between" style={{ marginBottom: 4 }}>
-          <span className="t-eyebrow">Voix de l'IQ Assistant</span>
+          <span className="t-eyebrow">{t("profile.voiceSection")}</span>
           <span className="pill voice">
             <MicWave size="sm" listening={false} /> ElevenLabs
           </span>
         </div>
         <p style={{ color: "var(--ink-soft)", fontSize: 13, marginBottom: 18 }}>
-          Choisissez la voix qui répondra à vos questions. Cliquez pour entendre un échantillon.
+          {t("profile.voiceDesc")}
         </p>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
@@ -253,7 +249,7 @@ export default function ProfilePage() {
                       e.stopPropagation();
                       previewVoice(name, voiceId, lang);
                     }}
-                    title={isPlaying ? "Arrêter" : "Écouter un aperçu"}
+                    title={isPlaying ? t("profile.stopPreview") : t("profile.listenPreview")}
                     style={{
                       background: "none",
                       border: "none",
@@ -288,7 +284,7 @@ export default function ProfilePage() {
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 22 }}>
           <div>
-            <label className="label">Vitesse de lecture</label>
+            <label className="label">{t("profile.speedLabel")}</label>
             <div className="seg" style={{ width: "100%" }}>
               {SPEEDS.map((s) => (
                 <button
@@ -304,7 +300,7 @@ export default function ProfilePage() {
             </div>
           </div>
           <div>
-            <label className="label">Lecture auto des réponses</label>
+            <label className="label">{t("profile.autoPlayLabel")}</label>
             <div
               className="row between"
               style={{
@@ -316,7 +312,7 @@ export default function ProfilePage() {
               }}
               onClick={() => setAutoPlay((v) => !v)}
             >
-              <span style={{ fontSize: 13 }}>L'assistant lit ses réponses à voix haute.</span>
+              <span style={{ fontSize: 13 }}>{t("profile.autoPlayDesc")}</span>
               <span
                 style={{
                   width: 36,
@@ -348,10 +344,10 @@ export default function ProfilePage() {
 
       {/* Mic & recognition */}
       <div className="card" style={{ padding: 24, marginBottom: 18 }}>
-        <span className="t-eyebrow">Microphone &amp; reconnaissance</span>
+        <span className="t-eyebrow">{t("profile.micSection")}</span>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 22, marginTop: 18 }}>
           <div>
-            <label className="label">Langue de reconnaissance</label>
+            <label className="label">{t("profile.micLangLabel")}</label>
             <select className="select">
               <option>Français (FR-FR)</option>
               <option>English (EN-US)</option>
@@ -360,7 +356,7 @@ export default function ProfilePage() {
             </select>
           </div>
           <div>
-            <label className="label">Moteur principal</label>
+            <label className="label">{t("profile.micEngineLabel")}</label>
             <div className="seg" style={{ width: "100%" }}>
               <button
                 type="button"
@@ -382,7 +378,7 @@ export default function ProfilePage() {
           </div>
           <div style={{ gridColumn: "1 / -1" }}>
             <div className="row between">
-              <label className="label">Sensibilité du micro</label>
+              <label className="label">{t("profile.micSensLabel")}</label>
               <span className="t-mono" style={{ fontSize: 12, color: "var(--ink-mute)" }}>
                 −42 dB
               </span>
@@ -421,18 +417,18 @@ export default function ProfilePage() {
                 className="row between"
                 style={{ fontSize: 11, color: "var(--ink-mute)", fontFamily: "var(--font-mono)" }}
               >
-                <span>Plus sensible</span>
-                <span>Test live</span>
-                <span>Plus tolérant au bruit</span>
+                <span>{t("profile.micMoreSensitive")}</span>
+                <span>{t("profile.micLiveTest")}</span>
+                <span>{t("profile.micMoreTolerant")}</span>
               </div>
               <div className="row" style={{ gap: 12, marginTop: 14, alignItems: "center" }}>
                 <button type="button" className="btn btn-outline btn-sm">
                   <Ico icon={CiqIcon.mic} />
-                  Tester mon micro
+                  {t("profile.testMicBtn")}
                 </button>
                 <MicWave size="md" color="var(--voice)" listening={false} />
                 <span className="t-mono" style={{ fontSize: 11.5, color: "var(--ink-mute)" }}>
-                  Bonjour, ceci est un test…
+                  {t("profile.testMicSample")}
                 </span>
               </div>
             </div>
@@ -444,15 +440,15 @@ export default function ProfilePage() {
       <div className="card" style={{ padding: 24 }}>
         <div className="row between">
           <div>
-            <span className="t-eyebrow">Abonnement</span>
+            <span className="t-eyebrow">{t("profile.subSection")}</span>
             <div className="row" style={{ gap: 10, marginTop: 8 }}>
-              <span className="pill accent">{planLabel[user.role] ?? "Free"}</span>
+              <span className="pill accent">{planLabel[user.role] ?? t("profile.subFree")}</span>
               <span style={{ fontSize: 14, color: "var(--ink-soft)" }}>
                 {user.role === "pro"
-                  ? "$9.99 / mois"
+                  ? t("profile.subPro")
                   : user.role === "business"
-                    ? "$29.99 / mois"
-                    : "Gratuit"}
+                    ? t("profile.subBusiness")
+                    : t("profile.subFree")}
               </span>
             </div>
           </div>
@@ -463,7 +459,7 @@ export default function ProfilePage() {
                 className="btn btn-outline"
                 onClick={() => stripeService.openPortal().catch(() => {})}
               >
-                Portail Stripe
+                {t("profile.stripePortal")}
               </button>
             )}
             {user.role !== "business" && (
@@ -476,7 +472,7 @@ export default function ProfilePage() {
                     .catch(() => {})
                 }
               >
-                {user.role === "free" ? "Passer Pro" : "Passer Business"}
+                {user.role === "free" ? t("profile.upgradePro") : t("profile.upgradeBusiness")}
               </button>
             )}
           </div>

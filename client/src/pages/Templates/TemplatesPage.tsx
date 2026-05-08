@@ -6,15 +6,8 @@ import { setParams } from "@/store/contentSlice";
 import { useAppDispatch, useAppSelector } from "@/store/index";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-
-const CATEGORIES = [
-  { value: "all", label: "Tous" },
-  { value: "marketing", label: "Marketing" },
-  { value: "social", label: "Social" },
-  { value: "business", label: "Business" },
-  { value: "creative", label: "Créatif" },
-];
 
 const TYPE_ICON: Record<string, React.ReactNode> = {
   blog: CiqIcon.blog,
@@ -57,6 +50,7 @@ function TemplateCard({
   onDelete: (id: string) => void;
   canDelete: boolean;
 }) {
+  const { t } = useTranslation();
   const isMine = !template.isPublic || canDelete;
 
   return (
@@ -88,7 +82,7 @@ function TemplateCard({
 
       <h3 style={{ fontSize: 16, margin: "0 0 4px", fontWeight: 600 }}>{template.name}</h3>
       <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: "0 0 14px", lineHeight: 1.5 }}>
-        {template.description ?? "Aucune description"}
+        {template.description ?? t("templates.noDescr")}
       </p>
 
       {template.variables.length > 0 && (
@@ -113,7 +107,9 @@ function TemplateCard({
       <div className="hr" style={{ margin: "12px 0" }} />
 
       <div className="row between" style={{ fontSize: 11.5, color: "var(--ink-mute)" }}>
-        <span className="t-mono">↗ {template.usageCount?.toLocaleString() ?? 0} util.</span>
+        <span className="t-mono">
+          {t("templates.usageCount", { n: template.usageCount?.toLocaleString() ?? 0 })}
+        </span>
         <div className="row" style={{ gap: 4 }}>
           {canDelete && (
             <button
@@ -121,13 +117,13 @@ function TemplateCard({
               className="btn btn-ghost btn-sm"
               style={{ padding: "4px 6px", color: "var(--ink-mute)" }}
               onClick={() => onDelete(template._id)}
-              title="Supprimer"
+              title={t("templates.deleteTitle")}
             >
               <Ico icon={CiqIcon.x} size={13} />
             </button>
           )}
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => onUse(template)}>
-            Utiliser →
+            {t("templates.useBtn")}
           </button>
         </div>
       </div>
@@ -139,6 +135,7 @@ function CreateTemplateModal({
   onClose,
   onSuccess,
 }: { onClose: () => void; onSuccess: () => void }) {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState("blog");
@@ -160,11 +157,11 @@ function CreateTemplateModal({
         isPublic,
       }),
     onSuccess: () => {
-      toast({ title: "Template créé !" });
+      toast({ title: t("templates.createdSuccess") });
       onSuccess();
       onClose();
     },
-    onError: () => toast({ title: "Erreur lors de la création", variant: "destructive" }),
+    onError: () => toast({ title: t("templates.createError"), variant: "destructive" }),
   });
 
   return (
@@ -182,7 +179,7 @@ function CreateTemplateModal({
     >
       <div className="card" style={{ width: "100%", maxWidth: 520, padding: 28, margin: "0 16px" }}>
         <div className="row between" style={{ marginBottom: 20 }}>
-          <h2 style={{ fontSize: 22, fontWeight: 600, margin: 0 }}>Nouveau template</h2>
+          <h2 style={{ fontSize: 22, fontWeight: 600, margin: 0 }}>{t("templates.modalTitle")}</h2>
           <button
             type="button"
             className="btn btn-ghost btn-sm"
@@ -195,26 +192,26 @@ function CreateTemplateModal({
 
         <div className="col" style={{ gap: 14 }}>
           <div>
-            <label className="label">Nom *</label>
+            <label className="label">{t("templates.labelName")}</label>
             <input
               className="input"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Ex: Post LinkedIn viral"
+              placeholder={t("templates.namePh")}
             />
           </div>
           <div>
-            <label className="label">Description</label>
+            <label className="label">{t("templates.labelDesc")}</label>
             <input
               className="input"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Description courte"
+              placeholder={t("templates.descPh")}
             />
           </div>
           <div className="row" style={{ gap: 12 }}>
             <div style={{ flex: 1 }}>
-              <label className="label">Type</label>
+              <label className="label">{t("templates.labelType")}</label>
               <select className="select" value={type} onChange={(e) => setType(e.target.value)}>
                 {Object.entries(TYPE_LABELS).map(([v, l]) => (
                   <option key={v} value={v}>
@@ -224,24 +221,24 @@ function CreateTemplateModal({
               </select>
             </div>
             <div style={{ flex: 1 }}>
-              <label className="label">Catégorie</label>
+              <label className="label">{t("templates.labelCategory")}</label>
               <select
                 className="select"
                 value={category}
                 onChange={(e) => setCategory(e.target.value as typeof category)}
               >
-                <option value="marketing">Marketing</option>
-                <option value="social">Réseaux sociaux</option>
-                <option value="business">Business</option>
-                <option value="creative">Créatif</option>
+                <option value="marketing">{t("templates.catMarketing")}</option>
+                <option value="social">{t("templates.catSocialOption")}</option>
+                <option value="business">{t("templates.catBusiness")}</option>
+                <option value="creative">{t("templates.catCreative")}</option>
               </select>
             </div>
           </div>
           <div>
             <label className="label">
-              Prompt template *{" "}
+              {t("templates.labelPrompt")}{" "}
               <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>
-                (utilisez {"{{variable}}"} pour les variables)
+                {t("templates.promptHint")}
               </span>
             </label>
             <textarea
@@ -249,7 +246,7 @@ function CreateTemplateModal({
               rows={4}
               value={promptSchema}
               onChange={(e) => setPromptSchema(e.target.value)}
-              placeholder="Génère un post LinkedIn sur {{sujet}} avec un ton {{ton}}."
+              placeholder={t("templates.promptPh")}
             />
           </div>
           <label className="row" style={{ gap: 8, cursor: "pointer" }}>
@@ -259,14 +256,14 @@ function CreateTemplateModal({
               onChange={(e) => setIsPublic(e.target.checked)}
             />
             <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>
-              Rendre ce template public
+              {t("templates.makePublic")}
             </span>
           </label>
         </div>
 
         <div className="row" style={{ gap: 10, marginTop: 20 }}>
           <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={onClose}>
-            Annuler
+            {t("templates.cancelBtn")}
           </button>
           <button
             type="button"
@@ -275,7 +272,7 @@ function CreateTemplateModal({
             disabled={!name || !promptSchema || mutation.isPending}
             onClick={() => mutation.mutate()}
           >
-            {mutation.isPending ? "Création…" : "Créer le template"}
+            {mutation.isPending ? t("templates.creatingBtn") : t("templates.createModalBtn")}
           </button>
         </div>
       </div>
@@ -288,6 +285,14 @@ export default function TemplatesPage() {
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
   const user = useAppSelector((s) => s.auth.user);
+  const { t } = useTranslation();
+  const CATEGORIES = [
+    { value: "all", label: t("templates.catAll") },
+    { value: "marketing", label: t("templates.catMarketing") },
+    { value: "social", label: t("templates.catSocial") },
+    { value: "business", label: t("templates.catBusiness") },
+    { value: "creative", label: t("templates.catCreative") },
+  ];
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -302,7 +307,7 @@ export default function TemplatesPage() {
     mutationFn: templateService.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["templates"] });
-      toast({ title: "Template supprimé" });
+      toast({ title: t("templates.deleted") });
     },
   });
 
@@ -311,7 +316,7 @@ export default function TemplatesPage() {
       templateService.use(template._id).catch(() => {});
       dispatch(setParams({ type: template.type }));
       navigate("/generate");
-      toast({ title: `Template "${template.name}" chargé !` });
+      toast({ title: t("templates.loaded", { name: template.name }) });
     },
     [dispatch, navigate],
   );
@@ -332,17 +337,17 @@ export default function TemplatesPage() {
       {/* Header */}
       <div className="row between" style={{ marginBottom: 6 }}>
         <h1 className="t-display" style={{ fontSize: 40, margin: 0 }}>
-          Templates
+          {t("templates.title")}
         </h1>
         {canCreateTemplates && (
           <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
             <Ico icon={CiqIcon.plus} />
-            Créer un template
+            {t("templates.createBtn")}
           </button>
         )}
       </div>
       <p style={{ color: "var(--ink-soft)", marginBottom: 22 }}>
-        {templates.length} templates disponibles · partagez les vôtres avec votre équipe.
+        {t("templates.countDesc", { n: templates.length })}
       </p>
 
       {/* Search + category tabs */}
@@ -363,7 +368,7 @@ export default function TemplatesPage() {
           <input
             className="input"
             style={{ border: "none", padding: 0, background: "transparent" }}
-            placeholder="Rechercher un template…"
+            placeholder={t("templates.searchPh")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -378,7 +383,7 @@ export default function TemplatesPage() {
               {c.label}
             </button>
           ))}
-          <button onClick={() => setSelectedCategory("mine")}>Mes templates</button>
+          <button onClick={() => setSelectedCategory("mine")}>{t("templates.myTemplates")}</button>
         </div>
       </div>
 
@@ -395,7 +400,7 @@ export default function TemplatesPage() {
           }}
         >
           <p style={{ fontSize: 13, color: "var(--ink-mute)" }}>
-            La création de templates personnalisés est disponible à partir du plan{" "}
+            {t("templates.upgradePlanNotice")}{" "}
             <a href="/pricing" style={{ color: "var(--accent-ink)", fontWeight: 600 }}>
               Pro
             </a>
@@ -469,16 +474,22 @@ export default function TemplatesPage() {
                 fontFamily: "var(--font-serif)",
               }}
             >
-              {search ? "Aucun template trouvé" : "Aucun template disponible"}
+              {search ? t("templates.noResultTitle") : t("templates.emptyCatTitle")}
             </p>
             <p
               style={{ fontSize: 13.5, color: "var(--ink-mute)", maxWidth: 340, lineHeight: 1.55 }}
             >
               {search
-                ? `Aucun template correspond à "${search}". Essayez un autre terme.`
+                ? t("templates.noResultDesc", { q: search })
                 : selectedCategory !== "all"
-                  ? `Aucun template dans la catégorie "${selectedCategory === "mine" ? "Mes templates" : (CATEGORIES.find((c) => c.value === selectedCategory)?.label ?? selectedCategory)}".`
-                  : "Les templates seront disponibles après initialisation de la base de données."}
+                  ? t("templates.emptyCatDesc", {
+                      cat:
+                        selectedCategory === "mine"
+                          ? t("templates.myTemplates")
+                          : (CATEGORIES.find((c) => c.value === selectedCategory)?.label ??
+                            selectedCategory),
+                    })
+                  : t("templates.emptyDesc")}
             </p>
           </div>
           {(search || selectedCategory !== "all") && (
@@ -490,13 +501,13 @@ export default function TemplatesPage() {
                 setSelectedCategory("all");
               }}
             >
-              Voir tous les templates
+              {t("templates.seeAll")}
             </button>
           )}
           {canCreateTemplates && !search && selectedCategory === "all" && (
             <button type="button" className="btn btn-primary" onClick={() => setShowCreate(true)}>
               <Ico icon={CiqIcon.plus} />
-              Créer mon premier template
+              {t("templates.createFirst")}
             </button>
           )}
         </div>

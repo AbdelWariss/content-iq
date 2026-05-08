@@ -6,8 +6,9 @@ import { exportService } from "@/services/export.service";
 import { useAppSelector } from "@/store/index";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { fr } from "date-fns/locale";
+import { enUS, fr } from "date-fns/locale";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -116,6 +117,8 @@ function ExportMenu({ item }: { item: ContentItem }) {
 export default function HistoryPage() {
   const queryClient = useQueryClient();
   const user = useAppSelector((s) => s.auth.user);
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === "en" ? enUS : fr;
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("");
   const [filterFavorite, setFilterFavorite] = useState(false);
@@ -148,7 +151,7 @@ export default function HistoryPage() {
     mutationFn: (id: string) => contentService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contents"] });
-      toast({ title: "Contenu archivé" });
+      toast({ title: t("history.deleteSuccess") });
     },
   });
 
@@ -161,7 +164,7 @@ export default function HistoryPage() {
     await navigator.clipboard.writeText(text);
     setCopied(item._id);
     setTimeout(() => setCopied(null), 2000);
-    toast({ title: "Copié !" });
+    toast({ title: t("history.copied") });
   };
 
   return (
@@ -169,16 +172,16 @@ export default function HistoryPage() {
       {/* Header */}
       <div className="row between" style={{ marginBottom: 18 }}>
         <h1 className="t-display" style={{ fontSize: 40, margin: 0 }}>
-          Historique
+          {t("history.title")}
         </h1>
         <div className="row" style={{ gap: 6 }}>
           <button className="btn btn-outline btn-sm">
             <Ico icon={CiqIcon.download} />
-            Export bulk ZIP
+            {t("history.exportBulk")}
           </button>
           <button className="btn btn-outline btn-sm">
             <Ico icon={CiqIcon.tag} />
-            Tagger
+            {t("history.tag")}
           </button>
         </div>
       </div>
@@ -201,7 +204,7 @@ export default function HistoryPage() {
           <input
             className="input"
             style={{ border: "none", padding: 0, background: "transparent" }}
-            placeholder="Rechercher dans tous mes contenus… ⌘K"
+            placeholder={t("history.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -216,7 +219,7 @@ export default function HistoryPage() {
             setPage(1);
           }}
         >
-          <option value="">Tous types</option>
+          <option value="">{t("history.allTypes")}</option>
           {Object.entries(TYPE_LABELS).map(([v, l]) => (
             <option key={v} value={v}>
               {l}
@@ -236,12 +239,12 @@ export default function HistoryPage() {
             icon={CiqIcon.star}
             style={{ color: filterFavorite ? "white" : "var(--ink-mute)" }}
           />
-          ⭐ Favoris
+          {t("history.favorites")}
         </button>
 
         <div className="seg" style={{ marginLeft: "auto" }}>
-          <button className="on">Liste</button>
-          <button>Grille</button>
+          <button className="on">{t("history.list")}</button>
+          <button>{t("history.grid")}</button>
         </div>
       </div>
 
@@ -313,22 +316,26 @@ export default function HistoryPage() {
                 fontFamily: "var(--font-serif)",
               }}
             >
-              {search ? "Aucun résultat" : filterFavorite ? "Aucun favori" : "Bibliothèque vide"}
+              {search
+                ? t("history.noResultTitle")
+                : filterFavorite
+                  ? t("history.noFavoriteTitle")
+                  : t("history.emptyTitle")}
             </p>
             <p
               style={{ fontSize: 13.5, color: "var(--ink-mute)", maxWidth: 340, lineHeight: 1.55 }}
             >
               {search
-                ? `Aucun contenu ne correspond à "${search}". Essayez d'autres mots-clés.`
+                ? t("history.noResultDesc", { q: search })
                 : filterFavorite
-                  ? "Marquez vos contenus préférés avec ★ pour les retrouver ici."
-                  : "Votre bibliothèque est vide. Générez votre premier contenu pour le voir apparaître ici."}
+                  ? t("history.noFavoriteDesc")
+                  : t("history.emptyDesc")}
             </p>
           </div>
           {!search && !filterFavorite && (
             <Link to="/generate" className="btn btn-primary">
               <Ico icon={CiqIcon.sparkle} />
-              Générer mon premier contenu
+              {t("history.generateFirst")}
             </Link>
           )}
           {(search || filterFavorite) && (
@@ -340,7 +347,7 @@ export default function HistoryPage() {
                 setFilterFavorite(false);
               }}
             >
-              Réinitialiser les filtres
+              {t("history.resetFilters")}
             </button>
           )}
         </div>
@@ -362,12 +369,12 @@ export default function HistoryPage() {
             }}
           >
             <span style={{ width: 18 }} />
-            <span style={{ flex: 1 }}>Contenu</span>
-            <span style={{ width: 100 }}>Type</span>
-            <span style={{ width: 90 }}>Ton</span>
-            <span style={{ width: 50 }}>Lang</span>
-            <span style={{ width: 80 }}>Tokens</span>
-            <span style={{ width: 90 }}>Quand</span>
+            <span style={{ flex: 1 }}>{t("history.colContent")}</span>
+            <span style={{ width: 100 }}>{t("history.colType")}</span>
+            <span style={{ width: 90 }}>{t("history.colTone")}</span>
+            <span style={{ width: 50 }}>{t("history.colLang")}</span>
+            <span style={{ width: 80 }}>{t("history.colTokens")}</span>
+            <span style={{ width: 90 }}>{t("history.colWhen")}</span>
             <span style={{ width: 70 }} />
           </div>
 
@@ -428,7 +435,10 @@ export default function HistoryPage() {
                 {item.tokensUsed ?? "—"}
               </span>
               <span style={{ width: 90, fontSize: 12, color: "var(--ink-mute)" }}>
-                {formatDistanceToNow(new Date(item.createdAt), { addSuffix: false, locale: fr })}
+                {formatDistanceToNow(new Date(item.createdAt), {
+                  addSuffix: false,
+                  locale: dateLocale,
+                })}
               </span>
               <div className="row" style={{ width: 70, gap: 2, justifyContent: "flex-end" }}>
                 <button
@@ -474,7 +484,7 @@ export default function HistoryPage() {
           className="row between"
           style={{ marginTop: 14, fontSize: 12, color: "var(--ink-mute)" }}
         >
-          <span>{pagination.total} contenus au total</span>
+          <span>{t("history.totalContents", { n: pagination.total })}</span>
           <div className="row" style={{ gap: 4 }}>
             <button
               className="btn btn-outline btn-sm"

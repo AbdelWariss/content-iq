@@ -3,59 +3,61 @@ import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import { stripeService } from "@/services/stripe.service";
 import { useAppSelector } from "@/store/index";
 import { useState } from "react";
-
-const PLANS = [
-  {
-    id: "free",
-    name: "Free",
-    price: { monthly: "0", annual: "0" },
-    tag: "Pour découvrir",
-    bullets: ["50 crédits / mois", "6 types de contenu", "Export PDF", "IQ Assistant — 5 msg/j"],
-    striked: ["Voice commands"],
-    cta: "Commencer",
-    featured: false,
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    price: { monthly: "9.99", annual: "7.99" },
-    tag: "Le plus populaire",
-    bullets: [
-      "500 crédits / mois",
-      "Tous les types",
-      "Voice commands · 25 cmd",
-      "IQ Assistant illimité",
-      "Exports PDF · DOCX · MD",
-      "Templates personnalisés",
-    ],
-    striked: [],
-    cta: "Choisir Pro",
-    featured: true,
-  },
-  {
-    id: "business",
-    name: "Business",
-    price: { monthly: "29.99", annual: "23.99" },
-    tag: "Agences & équipes",
-    bullets: [
-      "2 000 crédits / mois",
-      "5 sièges inclus",
-      "Export bulk ZIP",
-      "API · 100K req/mois",
-      "Templates partagés",
-      "Support 4h dédié",
-    ],
-    striked: [],
-    cta: "Choisir Business",
-    featured: false,
-  },
-];
+import { useTranslation } from "react-i18next";
 
 export default function PricingPage() {
   const user = useAppSelector((s) => s.auth.user);
+  const { t } = useTranslation();
   const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
   const [loading, setLoading] = useState<string | null>(null);
   const currentPlan = user?.role ?? "free";
+
+  const PLANS = [
+    {
+      id: "free",
+      name: "Free",
+      price: { monthly: "0", annual: "0" },
+      tag: t("pricing.freeTag"),
+      bullets: ["50 crédits / mois", "6 types de contenu", "Export PDF", "IQ Assistant — 5 msg/j"],
+      striked: ["Voice commands"],
+      cta: t("pricing.freeCta"),
+      featured: false,
+    },
+    {
+      id: "pro",
+      name: "Pro",
+      price: { monthly: "9.99", annual: "7.99" },
+      tag: t("pricing.proTag"),
+      bullets: [
+        "500 crédits / mois",
+        "Tous les types",
+        "Voice commands · 25 cmd",
+        "IQ Assistant illimité",
+        "Exports PDF · DOCX · MD",
+        "Templates personnalisés",
+      ],
+      striked: [],
+      cta: t("pricing.proCta"),
+      featured: true,
+    },
+    {
+      id: "business",
+      name: "Business",
+      price: { monthly: "29.99", annual: "23.99" },
+      tag: t("pricing.businessTag"),
+      bullets: [
+        "2 000 crédits / mois",
+        "5 sièges inclus",
+        "Export bulk ZIP",
+        "API · 100K req/mois",
+        "Templates partagés",
+        "Support 4h dédié",
+      ],
+      striked: [],
+      cta: t("pricing.businessCta"),
+      featured: false,
+    },
+  ];
 
   const handleUpgrade = async (planId: string) => {
     if (loading || planId === "free" || planId === currentPlan) return;
@@ -65,7 +67,7 @@ export default function PricingPage() {
     } catch {
       toast({
         title: "Erreur",
-        description: "Impossible d'ouvrir le paiement. Réessayez.",
+        description: t("pricing.payError"),
         variant: "destructive",
       });
     } finally {
@@ -81,7 +83,7 @@ export default function PricingPage() {
     } catch {
       toast({
         title: "Erreur",
-        description: "Portail de facturation indisponible.",
+        description: t("pricing.portalError"),
         variant: "destructive",
       });
     } finally {
@@ -93,26 +95,24 @@ export default function PricingPage() {
     <div style={{ padding: "60px 56px", overflowY: "auto", maxWidth: 1280, margin: "0 auto" }}>
       {/* Header */}
       <div style={{ textAlign: "center", maxWidth: 720, margin: "0 auto 48px" }}>
-        <span className="t-eyebrow">Tarifs simples</span>
+        <span className="t-eyebrow">{t("pricing.eyebrow")}</span>
         <h1 className="t-display" style={{ fontSize: 64, margin: "10px 0 14px" }}>
-          Choisissez votre voix.
+          {t("pricing.title")}
         </h1>
-        <p style={{ fontSize: 16.5, color: "var(--ink-soft)" }}>
-          Mensuel ou annuel — 2 mois offerts. Annulation en un clic depuis le portail Stripe.
-        </p>
+        <p style={{ fontSize: 16.5, color: "var(--ink-soft)" }}>{t("pricing.subtitle")}</p>
         <div className="row" style={{ justifyContent: "center", marginTop: 22, gap: 12 }}>
           <div className="seg">
             <button
               className={billing === "monthly" ? "on" : ""}
               onClick={() => setBilling("monthly")}
             >
-              Mensuel
+              {t("pricing.monthly")}
             </button>
             <button
               className={billing === "annual" ? "on" : ""}
               onClick={() => setBilling("annual")}
             >
-              Annuel · −20%
+              {t("pricing.annual")}
             </button>
           </div>
           {currentPlan !== "free" && (
@@ -121,7 +121,7 @@ export default function PricingPage() {
               onClick={handlePortal}
               disabled={loading === "portal"}
             >
-              {loading === "portal" ? "Chargement…" : "Gérer mon abonnement"}
+              {loading === "portal" ? t("pricing.loadingBtn") : t("pricing.manageBtn")}
             </button>
           )}
         </div>
@@ -174,7 +174,7 @@ export default function PricingPage() {
                   {price}
                 </span>
                 <span style={{ fontSize: 13, color: "var(--ink-mute)" }}>
-                  /{billing === "annual" ? "mois (annuel)" : "mois"}
+                  {billing === "annual" ? t("pricing.perMonthAnnual") : t("pricing.perMonth")}
                 </span>
               </div>
 
@@ -184,7 +184,7 @@ export default function PricingPage() {
                   style={{ width: "100%", justifyContent: "center", marginBottom: 18 }}
                   disabled
                 >
-                  Plan actuel
+                  {t("pricing.currentPlan")}
                 </button>
               ) : (
                 <button
@@ -193,7 +193,7 @@ export default function PricingPage() {
                   onClick={() => handleUpgrade(plan.id)}
                   disabled={!!loading}
                 >
-                  {loading === plan.id ? "Chargement…" : plan.cta}
+                  {loading === plan.id ? t("pricing.loadingBtn") : plan.cta}
                 </button>
               )}
 
@@ -236,8 +236,9 @@ export default function PricingPage() {
       </div>
 
       <div style={{ textAlign: "center", marginTop: 56, color: "var(--ink-mute)", fontSize: 13 }}>
-        Crédits à la carte : <strong style={{ color: "var(--ink)" }}>$10 / 100 cr.</strong> · 1
-        crédit ≈ 350 mots générés.
+        {t("pricing.creditsALaCarte")}{" "}
+        <strong style={{ color: "var(--ink)" }}>{t("pricing.creditPrice")}</strong> ·{" "}
+        {t("pricing.creditDesc")}
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
 
@@ -110,6 +111,7 @@ function StatCounter({
 }
 
 export function DynamicPanel() {
+  const { t: trans } = useTranslation();
   const [index, setIndex] = useState(0);
   const [statsActive, setStatsActive] = useState(true);
   const t = TESTIMONIALS[index];
@@ -160,7 +162,7 @@ export function DynamicPanel() {
         ))}
       </div>
       <span className="t-eyebrow" style={{ marginBottom: 20, fontSize: 12 }}>
-        ★ Témoignage
+        {trans("auth.testimonialLabel")}
       </span>
       <div
         className="t-display"
@@ -213,7 +215,7 @@ export function DynamicPanel() {
         }}
       >
         <div className="row between" style={{ marginBottom: 22 }}>
-          <span className="t-eyebrow">Aujourd'hui sur CONTENT.IQ</span>
+          <span className="t-eyebrow">{trans("auth.todayLabel")}</span>
           <span className="t-mono" style={{ fontSize: 11, color: "var(--ink-mute)" }}>
             06.05.26
           </span>
@@ -239,6 +241,7 @@ export function DynamicPanel() {
 
 function LoginForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
   const { login } = useAuth();
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
   const {
@@ -257,8 +260,8 @@ function LoginForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
-          ?.message ?? "Erreur de connexion";
-      toast({ title: "Connexion échouée", description: msg, variant: "destructive" });
+          ?.message ?? t("auth.loginError");
+      toast({ title: t("auth.loginFailed"), description: msg, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -267,10 +270,10 @@ function LoginForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
   return (
     <div>
       <h1 className="t-display" style={{ fontSize: 58, margin: "0 0 10px" }}>
-        Bon retour.
+        {t("auth.loginTitle")}
       </h1>
       <p style={{ color: "var(--ink-soft)", marginBottom: 30, fontSize: 17 }}>
-        Connectez-vous pour reprendre vos brouillons.
+        {t("auth.loginSubtitle")}
       </p>
       <button
         type="button"
@@ -281,23 +284,23 @@ function LoginForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
         }}
       >
         <Ico icon={CiqIcon.google} size={22} />
-        Continuer avec Google
+        {t("auth.continueGoogle")}
       </button>
       <div className="row" style={{ gap: 10, margin: "22px 0" }}>
         <div className="hr" style={{ flex: 1 }} />
         <span className="t-eyebrow" style={{ fontSize: 13, color: "var(--ink-mute)" }}>
-          OU
+          {t("auth.or")}
         </span>
         <div className="hr" style={{ flex: 1 }} />
       </div>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="col" style={{ gap: 16 }}>
           <div>
-            <label className="label">Email</label>
+            <label className="label">{t("auth.labelEmail")}</label>
             <input
               className="input"
               type="email"
-              placeholder="vous@exemple.com"
+              placeholder={t("auth.emailPh")}
               autoComplete="email"
               {...register("email")}
             />
@@ -309,7 +312,7 @@ function LoginForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
           </div>
           <div>
             <div className="row between">
-              <label className="label">Mot de passe</label>
+              <label className="label">{t("auth.labelPassword")}</label>
               <button
                 type="button"
                 className="lnk"
@@ -322,7 +325,7 @@ function LoginForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
                 }}
                 onClick={() => onSwitch("forgot")}
               >
-                Oublié ?
+                {t("auth.forgotPwd")}
               </button>
             </div>
             <div style={{ position: "relative" }}>
@@ -363,13 +366,13 @@ function LoginForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
             className="btn btn-primary btn-lg"
             style={{ width: "100%", justifyContent: "center", marginTop: 8 }}
           >
-            {isLoading ? "Connexion…" : "Se connecter"}
+            {isLoading ? t("auth.loggingInBtn") : t("auth.loginBtn")}
             {!isLoading && <Ico icon={CiqIcon.arrow} size={18} />}
           </button>
         </div>
       </form>
       <div style={{ marginTop: 26, fontSize: 15, color: "var(--ink-soft)" }}>
-        Pas encore de compte ?{" "}
+        {t("auth.noAccount")}{" "}
         <button
           type="button"
           className="lnk"
@@ -382,7 +385,7 @@ function LoginForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
           }}
           onClick={() => onSwitch("register")}
         >
-          Créer un compte
+          {t("auth.createAccount")}
         </button>
       </div>
     </div>
@@ -391,6 +394,7 @@ function LoginForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
 
 function RegisterForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
   const { register: registerUser } = useAuth();
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const {
     register,
@@ -409,7 +413,13 @@ function RegisterForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
     pwd.length >= 12 && /[^A-Za-z0-9]/.test(pwd),
   ];
   const level = strength.filter(Boolean).length;
-  const levelLabel = ["", "Faible", "Correct", "Solide", "Fort"][level];
+  const levelLabel = [
+    "",
+    t("auth.pwdWeak"),
+    t("auth.pwdOk"),
+    t("auth.pwdSolid"),
+    t("auth.pwdStrong"),
+  ][level];
 
   async function onSubmit(data: RegisterInput) {
     setIsLoading(true);
@@ -418,8 +428,8 @@ function RegisterForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
-          ?.message ?? "Erreur d'inscription";
-      toast({ title: "Inscription échouée", description: msg, variant: "destructive" });
+          ?.message ?? t("auth.registerError");
+      toast({ title: t("auth.registerFailed"), description: msg, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -428,10 +438,10 @@ function RegisterForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
   return (
     <div>
       <h1 className="t-display" style={{ fontSize: 54, margin: "0 0 8px" }}>
-        Créez votre compte
+        {t("auth.registerTitle")}
       </h1>
       <p style={{ color: "var(--ink-soft)", marginBottom: 26, fontSize: 17 }}>
-        50 crédits offerts. Sans CB.
+        {t("auth.registerSubtitle")}
       </p>
       <button
         type="button"
@@ -442,22 +452,22 @@ function RegisterForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
         }}
       >
         <Ico icon={CiqIcon.google} size={22} />
-        Continuer avec Google
+        {t("auth.continueGoogle")}
       </button>
       <div className="row" style={{ gap: 10, marginBottom: 20 }}>
         <div className="hr" style={{ flex: 1 }} />
         <span className="t-eyebrow" style={{ fontSize: 13, color: "var(--ink-mute)" }}>
-          OU PAR EMAIL
+          {t("auth.orEmail")}
         </span>
         <div className="hr" style={{ flex: 1 }} />
       </div>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="col" style={{ gap: 16 }}>
           <div>
-            <label className="label">Nom complet</label>
+            <label className="label">{t("auth.labelFullName")}</label>
             <input
               className="input"
-              placeholder="Abdel Wariss Osseni"
+              placeholder={t("auth.fullNamePh")}
               autoComplete="name"
               {...register("name")}
             />
@@ -468,11 +478,11 @@ function RegisterForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
             )}
           </div>
           <div>
-            <label className="label">Email</label>
+            <label className="label">{t("auth.labelEmail")}</label>
             <input
               className="input"
               type="email"
-              placeholder="vous@exemple.com"
+              placeholder={t("auth.emailPh")}
               autoComplete="email"
               {...register("email")}
             />
@@ -484,8 +494,10 @@ function RegisterForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
           </div>
           <div>
             <label className="label">
-              Mot de passe{" "}
-              <span style={{ color: "var(--ink-mute)", fontWeight: 400 }}>· min. 8 caractères</span>
+              {t("auth.labelPasswordStrength")}{" "}
+              <span style={{ color: "var(--ink-mute)", fontWeight: 400 }}>
+                {t("auth.passwordHint")}
+              </span>
             </label>
             <input
               className="input"
@@ -521,13 +533,13 @@ function RegisterForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
             )}
           </div>
           <div>
-            <label className="label">Vous êtes…</label>
+            <label className="label">{t("auth.labelYouAre")}</label>
             <select className="select">
-              <option>Créateur de contenu</option>
-              <option>Agence de communication</option>
-              <option>PME / Startup</option>
-              <option>Freelance</option>
-              <option>ONG / Association</option>
+              <option>{t("auth.contentCreator")}</option>
+              <option>{t("auth.agency")}</option>
+              <option>{t("auth.sme")}</option>
+              <option>{t("auth.freelance")}</option>
+              <option>{t("auth.ngo")}</option>
             </select>
           </div>
           <label
@@ -535,7 +547,7 @@ function RegisterForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
             style={{ gap: 10, fontSize: 14, color: "var(--ink-soft)", cursor: "pointer" }}
           >
             <input type="checkbox" defaultChecked />
-            J'accepte les conditions et la politique de confidentialité.
+            {t("auth.acceptTerms")}
           </label>
           <button
             type="submit"
@@ -543,13 +555,13 @@ function RegisterForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
             className="btn btn-primary btn-lg"
             style={{ width: "100%", justifyContent: "center" }}
           >
-            {isLoading ? "Création…" : "Créer mon compte"}
+            {isLoading ? t("auth.creatingBtn") : t("auth.createBtn")}
             {!isLoading && <Ico icon={CiqIcon.arrow} size={18} />}
           </button>
         </div>
       </form>
       <div style={{ marginTop: 22, fontSize: 15, color: "var(--ink-soft)" }}>
-        Déjà inscrit ?{" "}
+        {t("auth.alreadyAccount")}{" "}
         <button
           type="button"
           className="lnk"
@@ -562,7 +574,7 @@ function RegisterForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
           }}
           onClick={() => onSwitch("login")}
         >
-          Se connecter
+          {t("auth.signIn")}
         </button>
       </div>
     </div>
@@ -570,6 +582,7 @@ function RegisterForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
 }
 
 function ForgotForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
+  const { t } = useTranslation();
   const [sent, setSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [sentEmail, setSentEmail] = useState("");
@@ -600,7 +613,7 @@ function ForgotForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
     } catch {
       toast({
         title: "Erreur",
-        description: "Impossible d'envoyer l'email.",
+        description: t("auth.sendError"),
         variant: "destructive",
       });
     } finally {
@@ -614,9 +627,9 @@ function ForgotForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
     try {
       await authService.forgotPassword(sentEmail);
       setTimer(60);
-      toast({ title: "Email renvoyé !" });
+      toast({ title: t("auth.emailResent") });
     } catch {
-      toast({ title: "Erreur", variant: "destructive" });
+      toast({ title: t("auth.resendError"), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -625,14 +638,14 @@ function ForgotForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
   if (sent) {
     return (
       <div>
-        <span className="t-eyebrow">Étape 2 / 3</span>
+        <span className="t-eyebrow">{t("auth.emailSentStep")}</span>
         <h1 className="t-display" style={{ fontSize: 50, margin: "10px 0 10px" }}>
-          On vous a envoyé un lien.
+          {t("auth.emailSentTitle")}
         </h1>
         <p style={{ color: "var(--ink-soft)", fontSize: 17, marginBottom: 26 }}>
-          Email envoyé à{" "}
-          <strong className="t-mono">{sentEmail.replace(/^(.).*@/, (_, c) => c + "***@")}</strong>.{" "}
-          Le lien expire dans 1h.
+          {t("auth.emailSentDesc", {
+            email: sentEmail.replace(/^(.).*@/, (_, c) => `${c}***@`),
+          })}
         </p>
         <div
           style={{
@@ -644,7 +657,7 @@ function ForgotForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
           }}
         >
           <div className="t-eyebrow" style={{ marginBottom: 8 }}>
-            Pas reçu ?
+            {t("auth.notReceived")}
           </div>
           <ul
             style={{
@@ -655,9 +668,9 @@ function ForgotForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
               lineHeight: 1.7,
             }}
           >
-            <li>Vérifiez votre dossier spam</li>
-            <li>Patientez ~30 secondes</li>
-            <li>Renvoyez le lien ci-dessous</li>
+            <li>{t("auth.spamCheck")}</li>
+            <li>{t("auth.wait30s")}</li>
+            <li>{t("auth.resendBelow")}</li>
           </ul>
         </div>
         <div className="row" style={{ gap: 8 }}>
@@ -668,7 +681,9 @@ function ForgotForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
             disabled={timer > 0 || isLoading}
             onClick={handleResend}
           >
-            {timer > 0 ? `Renvoyer · 0:${String(timer).padStart(2, "0")}` : "Renvoyer"}
+            {timer > 0
+              ? t("auth.resendTimer", { s: String(timer).padStart(2, "0") })
+              : t("auth.resendBtn")}
           </button>
           <button
             type="button"
@@ -676,7 +691,7 @@ function ForgotForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
             style={{ flex: 1, justifyContent: "center" }}
             onClick={() => onSwitch("login")}
           >
-            Retour au login
+            {t("auth.backToLoginBtn")}
           </button>
         </div>
       </div>
@@ -686,19 +701,19 @@ function ForgotForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
   return (
     <div>
       <h1 className="t-display" style={{ fontSize: 54, margin: "0 0 10px" }}>
-        Mot de passe oublié
+        {t("auth.forgotTitle")}
       </h1>
       <p style={{ color: "var(--ink-soft)", fontSize: 17, marginBottom: 30 }}>
-        Entrez votre email pour recevoir un lien de réinitialisation.
+        {t("auth.forgotSubtitle")}
       </p>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="col" style={{ gap: 18 }}>
           <div>
-            <label className="label">Email</label>
+            <label className="label">{t("auth.labelEmail")}</label>
             <input
               className="input"
               type="email"
-              placeholder="vous@exemple.com"
+              placeholder={t("auth.emailPh")}
               {...register("email")}
             />
             {errors.email && (
@@ -714,7 +729,7 @@ function ForgotForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
             style={{ width: "100%", justifyContent: "center" }}
           >
             <Ico icon={CiqIcon.send} size={17} />
-            {isLoading ? "Envoi…" : "Envoyer le lien"}
+            {isLoading ? t("auth.sendingBtn") : t("auth.sendLinkBtn")}
           </button>
         </div>
       </form>
@@ -731,7 +746,7 @@ function ForgotForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
           }}
           onClick={() => onSwitch("login")}
         >
-          ← Retour à la connexion
+          {t("auth.backToLogin")}
         </button>
       </div>
     </div>

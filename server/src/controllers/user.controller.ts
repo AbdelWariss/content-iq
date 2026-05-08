@@ -1,8 +1,17 @@
 import { UpdateProfileSchema } from "@contentiq/shared";
 import type { Request, Response } from "express";
+import { z } from "zod";
 import { NotFoundError } from "../middleware/errorHandler.js";
 import { User } from "../models/User.model.js";
 import { getAuthUser } from "../utils/requestHelpers.js";
+
+const AvatarSchema = z.object({
+  avatarUrl: z
+    .string()
+    .url()
+    .max(500)
+    .refine((u) => u.startsWith("https://"), { message: "URL must use HTTPS" }),
+});
 
 export async function getProfile(req: Request, res: Response): Promise<void> {
   const { userId } = getAuthUser(req);
@@ -34,12 +43,7 @@ export async function updateProfile(req: Request, res: Response): Promise<void> 
 
 export async function updateAvatar(req: Request, res: Response): Promise<void> {
   const { userId } = getAuthUser(req);
-  const { avatarUrl } = req.body as { avatarUrl?: string };
-
-  if (!avatarUrl) {
-    res.status(400).json({ success: false, error: { message: "avatarUrl requis" } });
-    return;
-  }
+  const { avatarUrl } = AvatarSchema.parse(req.body);
 
   const user = await User.findByIdAndUpdate(userId, { avatarUrl }, { new: true });
   if (!user) throw new NotFoundError("Utilisateur");

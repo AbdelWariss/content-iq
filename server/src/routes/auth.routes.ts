@@ -19,7 +19,7 @@ const router: import("express").Router = Router();
 router.post("/register", authLimiter, register);
 router.post("/login", authLimiter, login);
 router.post("/logout", authenticate, logout);
-router.post("/refresh", refresh);
+router.post("/refresh", authLimiter, refresh);
 
 router.get(
   "/google",
@@ -35,7 +35,7 @@ router.get(
 );
 
 router.post("/forgot-password", authLimiter, forgotPassword);
-router.post("/reset-password", resetPassword);
+router.post("/reset-password", authLimiter, resetPassword);
 router.get("/verify-email/:token", verifyEmail);
 router.get("/me", authenticate, getMe);
 

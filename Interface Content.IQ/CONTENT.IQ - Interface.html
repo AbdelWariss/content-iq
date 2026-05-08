@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CONTENT.IQ — Interface design</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    html, body, #root { height: 100%; margin: 0; }
+    body { background: oklch(0.96 0.005 80); }
+    [data-theme="dark"] body { background: oklch(0.13 0.008 70); }
+
+    /* canvas container background hooks */
+    .dc-host { font-family: var(--font-sans, system-ui); }
+  </style>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="primitives.jsx"></script>
+  <script type="text/babel" src="screens-public.jsx"></script>
+  <script type="text/babel" src="screens-app.jsx"></script>
+  <script type="text/babel" src="screens-generate.jsx"></script>
+  <script type="text/babel" src="screens-voice.jsx"></script>
+
+  <script type="text/babel" data-presets="env,react">
+    const { useState, useEffect } = React;
+
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "theme": "light",
+      "lang": "fr",
+      "accent": "#E5704C",
+      "density": "comfortable",
+      "voiceState": "idle",
+      "plan": "Pro"
+    }/*EDITMODE-END*/;
+
+    function App() {
+      const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+      // Apply theme + accent to root
+      useEffect(() => {
+        document.documentElement.setAttribute("data-theme", t.theme);
+        if (t.accent) {
+          // Convert hex to oklch via a quick CSS variable override
+          document.documentElement.style.setProperty("--accent-override", t.accent);
+        }
+      }, [t.theme, t.accent]);
+
+      // Inject accent override
+      useEffect(() => {
+        const styleId = "ciq-accent-override";
+        let s = document.getElementById(styleId);
+        if (!s) { s = document.createElement("style"); s.id = styleId; document.head.appendChild(s); }
+        s.textContent = `:root { --accent: ${t.accent}; }`;
+      }, [t.accent]);
+
+      const lang = t.lang;
+      const onLang = (v) => setTweak("lang", v);
+      const onTheme = () => setTweak("theme", t.theme === "dark" ? "light" : "dark");
+
+      // Common props for screens
+      const sp = { lang };
+
+      return (
+        <>
+          <DesignCanvas
+            title="CONTENT.IQ"
+            subtitle="CODEXA Solutions · Plateforme SaaS de génération de contenu IA · Plan de développement v1.0 — Mai 2026"
+          >
+            {/* ────────── 01 · Public surfaces ────────── */}
+            <DCSection id="public" title="01 · Surfaces publiques">
+              <DCArtboard id="landing" label="Landing page" width={1320} height={900}>
+                <Browser url="contentiq.app">
+                  <Landing {...sp} />
+                </Browser>
+              </DCArtboard>
+              <DCArtboard id="pricing" label="Pricing — 3 plans" width={1180} height={820}>
+                <Browser url="contentiq.app/pricing">
+                  <Pricing {...sp} />
+                </Browser>
+              </DCArtboard>
+            </DCSection>
+
+            {/* ────────── 02 · Auth ────────── */}
+            <DCSection id="auth" title="02 · Authentification">
+              <DCArtboard id="login" label="Sign in (split, témoignage à droite)" width={1100} height={680}>
+                <Browser url="contentiq.app/login">
+                  <AuthLogin {...sp} />
+                </Browser>
+              </DCArtboard>
+              <DCArtboard id="register" label="Sign up (centré, fonctionnel)" width={760} height={780}>
+                <Browser url="contentiq.app/register">
+                  <AuthRegister {...sp} />
+                </Browser>
+              </DCArtboard>
+              <DCArtboard id="reset" label="Reset password — étape 2" width={580} height={580}>
+                <Browser url="contentiq.app/reset">
+                  <AuthReset {...sp} />
+                </Browser>
+              </DCArtboard>
+            </DCSection>
+
+            {/* ────────── 03 · Dashboard utilisateur ────────── */}
+            <DCSection id="dashboard" title="03 · Dashboard utilisateur">
+              <DCArtboard id="dash" label="Dashboard — crédits, activité, voix" width={1320} height={820}>
+                <Browser url="app.contentiq.app/dashboard">
+                  <Dashboard {...sp} />
+                </Browser>
+              </DCArtboard>
+            </DCSection>
+
+            {/* ────────── 04 · Generate — 3 variations ────────── */}
+            <DCSection id="generate" title="04 · Page Generate — 3 variations divergentes">
+              <DCArtboard id="gen-split" label="V1 · Split-screen classique (formulaire ↔ éditeur)" width={1320} height={820}>
+                <Browser url="app.contentiq.app/generate">
+                  <GenerateSplit {...sp} />
+                </Browser>
+              </DCArtboard>
+              <DCArtboard id="gen-conv" label="V2 · Conversationnel (chat-first, l'éditeur émerge)" width={1320} height={820}>
+                <Browser url="app.contentiq.app/generate">
+                  <GenerateConversational {...sp} />
+                </Browser>
+              </DCArtboard>
+              <DCArtboard id="gen-full" label="V3 · Pleine largeur (brief en haut, éditeur dessous, side-panel d'amélioration)" width={1320} height={820}>
+                <Browser url="app.contentiq.app/generate">
+                  <GenerateFullWidth {...sp} />
+                </Browser>
+              </DCArtboard>
+            </DCSection>
+
+            {/* ────────── 05 · Voice & Assistant — 3 modes ────────── */}
+            <DCSection id="voice" title="05 · IQ Assistant & couche vocale — 3 mises en scène">
+              <DCArtboard id="widget" label="Mode A · Widget flottant classique (chat + voix discrète)" width={420} height={620}>
+                <div style={{ width: "100%", height: "100%", padding: 20, background: "var(--bg-sunk)", display: "grid", placeItems: "center" }}>
+                  <AssistantWidget {...sp} />
+                </div>
+              </DCArtboard>
+              <DCArtboard id="palette" label="Mode B · Palette de commandes vocale (style ⌘K, overlay sur l'app)" width={1100} height={620}>
+                <Browser url="app.contentiq.app/generate">
+                  <div style={{ width: "100%", height: "100%", position: "relative" }}>
+                    <div style={{ position: "absolute", inset: 0, opacity: 0.35, pointerEvents: "none" }}>
+                      <GenerateSplit {...sp} />
+                    </div>
+                    <div style={{ position: "absolute", inset: 0 }}>
+                      <VoiceCommandPalette {...sp} />
+                    </div>
+                  </div>
+                </Browser>
+              </DCArtboard>
+              <DCArtboard id="orb" label="Mode C · Conversation vocale plein écran (orb ambiante)" width={1320} height={820}>
+                <Browser url="app.contentiq.app/voice">
+                  <VoiceOrb {...sp} />
+                </Browser>
+              </DCArtboard>
+            </DCSection>
+
+            {/* ────────── 06 · Templates / History / Profile ────────── */}
+            <DCSection id="library" title="06 · Templates, Historique, Profil">
+              <DCArtboard id="templates" label="Templates — système + personnels" width={1320} height={820}>
+                <Browser url="app.contentiq.app/templates">
+                  <Templates {...sp} />
+                </Browser>
+              </DCArtboard>
+              <DCArtboard id="history" label="Historique — recherche, filtres, export bulk" width={1320} height={820}>
+                <Browser url="app.contentiq.app/history">
+                  <History {...sp} />
+                </Browser>
+              </DCArtboard>
+              <DCArtboard id="profile" label="Profil & préférences vocales (voix ElevenLabs, micro, plan)" width={1180} height={1000}>
+                <Browser url="app.contentiq.app/profile">
+                  <Profile {...sp} />
+                </Browser>
+              </DCArtboard>
+            </DCSection>
+
+            {/* ────────── 07 · Mobile ────────── */}
+            <DCSection id="mobile" title="07 · Mobile — Generate & conversation vocale">
+              <DCArtboard id="m-gen" label="Mobile · Generate (mic central dans la dock bar)" width={420} height={800}>
+                <div style={{ width: "100%", height: "100%", padding: 12, background: "var(--bg-sunk)", display: "grid", placeItems: "center" }}>
+                  <MobileGenerate {...sp} />
+                </div>
+              </DCArtboard>
+              <DCArtboard id="m-voice" label="Mobile · Conversation vocale (orb ambiante)" width={420} height={800}>
+                <div style={{ width: "100%", height: "100%", padding: 12, background: "var(--bg-sunk)", display: "grid", placeItems: "center" }}>
+                  <MobileVoice {...sp} />
+                </div>
+              </DCArtboard>
+            </DCSection>
+          </DesignCanvas>
+
+          <TweaksPanel title="Tweaks">
+            <TweakSection title="Apparence">
+              <TweakRadio label="Thème" value={t.theme} options={[{ value: "light", label: "Clair" }, { value: "dark", label: "Sombre" }]} onChange={(v) => setTweak("theme", v)} />
+              <TweakColor label="Accent" value={t.accent} options={["#E5704C", "#7B5CE5", "#3DA68A", "#D4A24E"]} onChange={(v) => setTweak("accent", v)} />
+              <TweakRadio label="Densité" value={t.density} options={[{ value: "compact", label: "Compact" }, { value: "comfortable", label: "Confort" }]} onChange={(v) => setTweak("density", v)} />
+            </TweakSection>
+            <TweakSection title="Contenu">
+              <TweakRadio label="Langue affichée" value={t.lang} options={[{ value: "fr", label: "Français" }, { value: "en", label: "English" }]} onChange={(v) => setTweak("lang", v)} />
+              <TweakRadio label="Plan utilisateur" value={t.plan} options={[{ value: "Free", label: "Free" }, { value: "Pro", label: "Pro" }, { value: "Business", label: "Business" }]} onChange={(v) => setTweak("plan", v)} />
+            </TweakSection>
+            <TweakSection title="Voix">
+              <TweakRadio label="État du micro" value={t.voiceState} options={[{ value: "idle", label: "Idle" }, { value: "listening", label: "Écoute" }, { value: "speaking", label: "Parle" }]} onChange={(v) => setTweak("voiceState", v)} />
+            </TweakSection>
+          </TweaksPanel>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>

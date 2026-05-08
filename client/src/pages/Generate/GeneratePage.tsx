@@ -14,6 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 
 const LANGUAGES: Array<{ value: GenerateContentInput["language"]; label: string }> = [
   { value: "fr", label: "Français" },
@@ -26,9 +27,16 @@ export default function GeneratePage() {
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const viewContentId = searchParams.get("view");
+
   const { isGenerating, streamedContent, tokensGenerated, currentParams, savedContentId } =
     useAppSelector((s) => s.content);
   const userLang = useAppSelector((s) => s.auth.user?.language ?? "fr");
+
+  // View mode: loaded from existing content via ?view=:id
+  const [viewMode, setViewMode] = useState(!!viewContentId);
+  const [viewTitle, setViewTitle] = useState<string | null>(null);
 
   const CONTENT_TYPES: Array<{
     value: GenerateContentInput["type"];
@@ -97,6 +105,26 @@ export default function GeneratePage() {
   const watchedLength = watch("length");
   const watchedLang = watch("language");
   const displayContent = streamedContent;
+
+  // Load existing content when ?view=:id is present
+  useEffect(() => {
+    if (!viewContentId) return;
+    contentService
+      .getById(viewContentId)
+      .then(({ data }) => {
+        const c = data.content;
+        setViewTitle(c.title ?? null);
+        setValue("type", c.type as GenerateContentInput["type"]);
+        setValue("tone", (c.prompt?.tone ?? "inspiring") as GenerateContentInput["tone"]);
+        setValue("language", (c.prompt?.language ?? "fr") as GenerateContentInput["language"]);
+        setValue("length", (c.prompt?.length ?? "medium") as GenerateContentInput["length"]);
+        setValue("subject", c.prompt?.subject ?? "");
+        if (c.prompt?.keywords) setKeywords(c.prompt.keywords);
+        dispatch(setEditorContent(c.body ?? ""));
+      })
+      .catch(() => toast({ title: "Contenu introuvable", variant: "destructive" }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewContentId]);
 
   const onSubmit = useCallback(
     async (data: GenerateContentInput) => {
@@ -226,173 +254,231 @@ export default function GeneratePage() {
         }}
         className="scrollbar-thin"
       >
-        <h2 className="t-display" style={{ fontSize: 28, margin: "0 0 18px" }}>
-          {t("generate.title")}
-        </h2>
-
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="col" style={{ gap: 14 }}>
-            {/* Brief header */}
+        {/* View mode banner */}
+        {viewMode ? (
+          <div
+            className="card"
+            style={{
+              padding: "12px 14px",
+              marginBottom: 16,
+              background: "var(--accent-soft)",
+              border: "1px solid rgba(229,112,76,0.3)",
+              borderRadius: 10,
+            }}
+          >
             <div className="row between">
-              <span className="t-eyebrow">{t("generate.briefHeader")}</span>
+              <div className="col" style={{ gap: 2 }}>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: "var(--accent-ink)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  Contenu chargé
+                </span>
+                <span
+                  style={{
+                    fontSize: 13,
+                    color: "var(--accent-ink)",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    maxWidth: 240,
+                  }}
+                >
+                  {viewTitle ?? "…"}
+                </span>
+              </div>
               <button
                 type="button"
-                className="btn btn-ghost btn-sm"
-                style={{ color: "var(--accent)" }}
+                className="btn btn-sm"
+                style={{ background: "var(--accent)", color: "white", border: "none" }}
+                onClick={() => setViewMode(false)}
               >
-                <Ico icon={CiqIcon.mic} />
-                {t("generate.dictate")}
+                <Ico icon={CiqIcon.refresh} size={13} />
+                Modifier
               </button>
             </div>
+          </div>
+        ) : (
+          <h2 className="t-display" style={{ fontSize: 28, margin: "0 0 18px" }}>
+            {t("generate.title")}
+          </h2>
+        )}
 
-            {/* Content type */}
-            <div>
-              <label className="label">{t("generate.contentType")}</label>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
-                {CONTENT_TYPES.map(({ value, label, icon }) => {
-                  const on = watchedType === value;
-                  return (
-                    <div
-                      key={value}
-                      className="card"
-                      onClick={() => setValue("type", value)}
-                      style={{
-                        padding: "10px 8px",
-                        textAlign: "center",
-                        border: on ? "1.5px solid var(--ink)" : undefined,
-                        background: on ? "var(--bg-elev)" : "var(--bg-sunk)",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <Ico icon={icon} style={{ color: on ? "var(--ink)" : "var(--ink-mute)" }} />
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <fieldset
+            disabled={viewMode}
+            style={{ border: "none", padding: 0, margin: 0, opacity: viewMode ? 0.65 : 1 }}
+          >
+            <div className="col" style={{ gap: 14 }}>
+              {/* Brief header */}
+              <div className="row between">
+                <span className="t-eyebrow">{t("generate.briefHeader")}</span>
+                {!viewMode && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    style={{ color: "var(--accent)" }}
+                  >
+                    <Ico icon={CiqIcon.mic} />
+                    {t("generate.dictate")}
+                  </button>
+                )}
+              </div>
+
+              {/* Content type */}
+              <div>
+                <label className="label">{t("generate.contentType")}</label>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
+                  {CONTENT_TYPES.map(({ value, label, icon }) => {
+                    const on = watchedType === value;
+                    return (
                       <div
+                        key={value}
+                        className="card"
+                        onClick={() => setValue("type", value)}
                         style={{
-                          fontSize: 11.5,
-                          marginTop: 4,
-                          color: on ? "var(--ink)" : "var(--ink-soft)",
+                          padding: "10px 8px",
+                          textAlign: "center",
+                          border: on ? "1.5px solid var(--ink)" : undefined,
+                          background: on ? "var(--bg-elev)" : "var(--bg-sunk)",
+                          cursor: "pointer",
                         }}
                       >
-                        {label}
+                        <Ico icon={icon} style={{ color: on ? "var(--ink)" : "var(--ink-mute)" }} />
+                        <div
+                          style={{
+                            fontSize: 11.5,
+                            marginTop: 4,
+                            color: on ? "var(--ink)" : "var(--ink-soft)",
+                          }}
+                        >
+                          {label}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
 
-            {/* Subject */}
-            <div>
-              <label className="label">{t("generate.subject")}</label>
-              <textarea
-                className="textarea"
-                rows={3}
-                placeholder={t("generate.subjectPlaceholder")}
-                {...register("subject")}
-              />
-              {errors.subject && (
-                <p style={{ fontSize: 11, color: "var(--accent)", marginTop: 4 }}>
-                  {errors.subject.message}
-                </p>
-              )}
-            </div>
+              {/* Subject */}
+              <div>
+                <label className="label">{t("generate.subject")}</label>
+                <textarea
+                  className="textarea"
+                  rows={3}
+                  placeholder={t("generate.subjectPlaceholder")}
+                  {...register("subject")}
+                />
+                {errors.subject && (
+                  <p style={{ fontSize: 11, color: "var(--accent)", marginTop: 4 }}>
+                    {errors.subject.message}
+                  </p>
+                )}
+              </div>
 
-            {/* Tone + Length + Language */}
-            <div className="row" style={{ gap: 10 }}>
-              <div style={{ flex: 1 }}>
-                <label className="label">{t("generate.tone")}</label>
-                <select className="select" {...register("tone")}>
-                  {TONES.map(({ value, label }) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
+              {/* Tone + Length + Language */}
+              <div className="row" style={{ gap: 10 }}>
+                <div style={{ flex: 1 }}>
+                  <label className="label">{t("generate.tone")}</label>
+                  <select className="select" {...register("tone")}>
+                    {TONES.map(({ value, label }) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label className="label">{t("generate.length")}</label>
+                  <select className="select" {...register("length")}>
+                    {LENGTHS.map(({ value, label }) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ flex: 0.7 }}>
+                  <label className="label">{t("generate.language")}</label>
+                  <select className="select" {...register("language")}>
+                    {LANGUAGES.map(({ value, label }) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div style={{ flex: 1 }}>
-                <label className="label">{t("generate.length")}</label>
-                <select className="select" {...register("length")}>
-                  {LENGTHS.map(({ value, label }) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div style={{ flex: 0.7 }}>
-                <label className="label">{t("generate.language")}</label>
-                <select className="select" {...register("language")}>
-                  {LANGUAGES.map(({ value, label }) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
 
-            {/* Keywords */}
-            <div>
-              <label className="label">{t("generate.keywords")}</label>
-              <div
-                className="row"
-                style={{
-                  gap: 6,
-                  flexWrap: "wrap",
-                  padding: "6px 8px",
-                  border: "1px solid var(--line)",
-                  borderRadius: 10,
-                  background: "var(--bg-elev)",
-                }}
-              >
-                {keywords.map((kw) => (
-                  <span
-                    key={kw}
-                    className="chip"
-                    style={{
-                      background: "var(--accent-soft)",
-                      color: "var(--accent-ink)",
-                      border: "none",
-                      cursor: "pointer",
-                    }}
-                    onClick={() => setKeywords((k) => k.filter((x) => x !== kw))}
-                  >
-                    {kw} ×
-                  </span>
-                ))}
-                <input
+              {/* Keywords */}
+              <div>
+                <label className="label">{t("generate.keywords")}</label>
+                <div
+                  className="row"
                   style={{
-                    border: "none",
-                    outline: "none",
-                    background: "transparent",
-                    flex: 1,
-                    fontSize: 13,
-                    padding: "2px 4px",
+                    gap: 6,
+                    flexWrap: "wrap",
+                    padding: "6px 8px",
+                    border: "1px solid var(--line)",
+                    borderRadius: 10,
+                    background: "var(--bg-elev)",
                   }}
-                  placeholder={t("generate.keywordPlaceholder")}
-                  value={keyword}
-                  onChange={(e) => setKeyword(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addKeyword();
-                    }
-                  }}
+                >
+                  {keywords.map((kw) => (
+                    <span
+                      key={kw}
+                      className="chip"
+                      style={{
+                        background: "var(--accent-soft)",
+                        color: "var(--accent-ink)",
+                        border: "none",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => setKeywords((k) => k.filter((x) => x !== kw))}
+                    >
+                      {kw} ×
+                    </span>
+                  ))}
+                  <input
+                    style={{
+                      border: "none",
+                      outline: "none",
+                      background: "transparent",
+                      flex: 1,
+                      fontSize: 13,
+                      padding: "2px 4px",
+                    }}
+                    placeholder={t("generate.keywordPlaceholder")}
+                    value={keyword}
+                    onChange={(e) => setKeyword(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addKeyword();
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Audience */}
+              <div>
+                <label className="label">{t("generate.audience")}</label>
+                <input
+                  className="input"
+                  placeholder={t("generate.audiencePlaceholder")}
+                  {...register("audience")}
                 />
               </div>
             </div>
+          </fieldset>
 
-            {/* Audience */}
-            <div>
-              <label className="label">{t("generate.audience")}</label>
-              <input
-                className="input"
-                placeholder={t("generate.audiencePlaceholder")}
-                {...register("audience")}
-              />
-            </div>
-          </div>
-
-          {/* Generate button */}
+          {/* Generate / Regenerate button */}
           <button
             type="submit"
             disabled={isGenerating}
@@ -400,7 +486,11 @@ export default function GeneratePage() {
             style={{ width: "100%", justifyContent: "center", marginTop: 18 }}
           >
             <Ico icon={CiqIcon.sparkle} />
-            {isGenerating ? t("generate.generatingBtn") : t("generate.generateBtn")}
+            {isGenerating
+              ? t("generate.generatingBtn")
+              : viewMode
+                ? t("generate.regenerate")
+                : t("generate.generateBtn")}
           </button>
 
           {isGenerating && (
@@ -415,11 +505,18 @@ export default function GeneratePage() {
             </button>
           )}
 
-          <div
-            style={{ fontSize: 11.5, color: "var(--ink-mute)", textAlign: "center", marginTop: 8 }}
-          >
-            {t("generate.hint")}
-          </div>
+          {!viewMode && (
+            <div
+              style={{
+                fontSize: 11.5,
+                color: "var(--ink-mute)",
+                textAlign: "center",
+                marginTop: 8,
+              }}
+            >
+              {t("generate.hint")}
+            </div>
+          )}
         </form>
       </div>
 

@@ -194,7 +194,7 @@ export default function DashboardPage() {
               style={{
                 padding: 28,
                 display: "flex",
-                gap: 24,
+                gap: 28,
                 alignItems: "center",
                 position: "relative",
                 overflow: "hidden",
@@ -203,50 +203,51 @@ export default function DashboardPage() {
               {/* BG icon */}
               <Ico
                 icon={CiqIcon.zap}
-                size={140}
+                size={160}
                 style={{
                   position: "absolute",
-                  right: -20,
-                  bottom: -24,
+                  right: -24,
+                  bottom: -28,
                   color: "var(--accent)",
                   opacity: 0.06,
                   pointerEvents: "none",
                 }}
               />
-              <div style={{ width: 104, height: 104, flexShrink: 0, zIndex: 1 }}>
+              {/* Ring : fills as credits are CONSUMED (empty = full credits, full = no credits) */}
+              <div style={{ width: 150, height: 150, flexShrink: 0, zIndex: 1 }}>
                 <RadialBarChart
-                  width={104}
-                  height={104}
-                  cx={52}
-                  cy={52}
-                  innerRadius={34}
-                  outerRadius={50}
+                  width={150}
+                  height={150}
+                  cx={75}
+                  cy={75}
+                  innerRadius={52}
+                  outerRadius={70}
                   startAngle={90}
                   endAngle={-270}
-                  data={[{ value: Math.round(ringPct * 100), fill: "var(--accent)" }]}
-                  barSize={10}
+                  data={[{ value: Math.round((1 - ringPct) * 100), fill: "var(--accent)" }]}
+                  barSize={12}
                 >
                   <RadialBar
                     background={{ fill: "var(--bg-sunk)" }}
                     dataKey="value"
-                    cornerRadius={5}
+                    cornerRadius={6}
                   />
                 </RadialBarChart>
               </div>
-              <div className="col" style={{ flex: 1, zIndex: 1 }}>
+              <div className="col" style={{ flex: 1, zIndex: 1, marginLeft: 4 }}>
                 <span className="t-eyebrow">{t("dashboard.creditsRemaining")}</span>
-                <div className="row" style={{ alignItems: "baseline", gap: 6, marginTop: 6 }}>
-                  <span className="t-mono" style={{ fontSize: 52, fontWeight: 600, lineHeight: 1 }}>
+                <div className="row" style={{ alignItems: "baseline", gap: 8, marginTop: 8 }}>
+                  <span className="t-mono" style={{ fontSize: 56, fontWeight: 600, lineHeight: 1 }}>
                     {remaining}
                   </span>
-                  <span style={{ color: "var(--ink-mute)", fontSize: 17 }}>/ {total}</span>
+                  <span style={{ color: "var(--ink-mute)", fontSize: 18 }}>/ {total}</span>
                 </div>
-                <div style={{ fontSize: 14, color: "var(--ink-mute)", marginTop: 5 }}>
+                <div style={{ fontSize: 14, color: "var(--ink-mute)", marginTop: 6 }}>
                   {t("dashboard.renewsIn", { days: daysUntilReset })}
                 </div>
                 <button
                   className="btn btn-outline btn-sm"
-                  style={{ alignSelf: "flex-start", marginTop: 14 }}
+                  style={{ alignSelf: "flex-start", marginTop: 16 }}
                   onClick={() => navigate("/pricing")}
                 >
                   {t("dashboard.topUp")}
@@ -536,21 +537,34 @@ export default function DashboardPage() {
                     <div
                       key={item._id}
                       className="row"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => navigate(`/generate?view=${item._id}`)}
+                      onKeyDown={(e) => e.key === "Enter" && navigate(`/generate?view=${item._id}`)}
                       style={{
                         gap: 12,
-                        padding: "10px 8px",
-                        borderRadius: 8,
+                        padding: "11px 10px",
+                        borderRadius: 10,
                         borderBottom: i < arr.length - 1 ? "1px solid var(--line-soft)" : "none",
+                        cursor: "pointer",
+                        transition: "background 0.1s",
                       }}
+                      onMouseEnter={(e) =>
+                        ((e.currentTarget as HTMLDivElement).style.background = "var(--bg-sunk)")
+                      }
+                      onMouseLeave={(e) =>
+                        ((e.currentTarget as HTMLDivElement).style.background = "transparent")
+                      }
                     >
                       <Ico
                         icon={TYPE_ICON[item.type] ?? CiqIcon.blog}
-                        style={{ color: "var(--ink-mute)", width: 18, height: 18 }}
+                        size={18}
+                        style={{ color: "var(--ink-mute)", flexShrink: 0 }}
                       />
                       <div className="col" style={{ flex: 1, minWidth: 0 }}>
                         <span
                           style={{
-                            fontSize: 13.5,
+                            fontSize: 15,
                             fontWeight: 500,
                             overflow: "hidden",
                             textOverflow: "ellipsis",
@@ -570,7 +584,7 @@ export default function DashboardPage() {
                       {item.isFavorite && (
                         <Ico icon={CiqIcon.star} style={{ color: "var(--accent)" }} />
                       )}
-                      <Ico icon={CiqIcon.chevR} style={{ color: "var(--ink-mute)" }} />
+                      <Ico icon={CiqIcon.chevR} size={14} style={{ color: "var(--ink-mute)" }} />
                     </div>
                   ))
                 ) : (

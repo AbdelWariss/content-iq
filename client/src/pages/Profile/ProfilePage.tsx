@@ -1,20 +1,20 @@
+import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { CiqIcon, Ico, MicWave } from "@/lib/ciq-icons";
+import api from "@/services/axios";
+import { stripeService } from "@/services/stripe.service";
+import { useAppSelector } from "@/store/index";
+import { type UpdateProfileInput, UpdateProfileSchema } from "@contentiq/shared";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { UpdateProfileSchema, type UpdateProfileInput } from "@contentiq/shared";
-import { CiqIcon, Ico, MicWave } from "@/lib/ciq-icons";
-import { useAppSelector } from "@/store/index";
-import { useAuth } from "@/hooks/useAuth";
-import api from "@/services/axios";
-import { toast } from "@/hooks/use-toast";
-import { stripeService } from "@/services/stripe.service";
 
 const VOICES = [
   { name: "Aïssata", meta: "FR · F", voiceId: "21m00Tcm4TlvDq8ikWAM", lang: "fr" as const },
-  { name: "Camille",  meta: "FR · F", voiceId: "EXAVITQu4vr4xnSDxMaL", lang: "fr" as const },
-  { name: "Théo",    meta: "FR · M", voiceId: "ErXwobaYiN019PkySvjV", lang: "fr" as const },
-  { name: "Olivia",  meta: "EN · F", voiceId: "MF3mGyEYCl7XYWbV9V6O", lang: "en" as const },
-  { name: "Marcus",  meta: "EN · M", voiceId: "TxGEqnHWrfWFTfGW9XjX", lang: "en" as const },
+  { name: "Camille", meta: "FR · F", voiceId: "EXAVITQu4vr4xnSDxMaL", lang: "fr" as const },
+  { name: "Théo", meta: "FR · M", voiceId: "ErXwobaYiN019PkySvjV", lang: "fr" as const },
+  { name: "Olivia", meta: "EN · F", voiceId: "MF3mGyEYCl7XYWbV9V6O", lang: "en" as const },
+  { name: "Marcus", meta: "EN · M", voiceId: "TxGEqnHWrfWFTfGW9XjX", lang: "en" as const },
 ];
 
 const SPEEDS = ["0.75×", "1×", "1.25×", "1.5×"];
@@ -31,7 +31,11 @@ export default function ProfilePage() {
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const [previewing, setPreviewing] = useState<string | null>(null);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<UpdateProfileInput>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<UpdateProfileInput>({
     resolver: zodResolver(UpdateProfileSchema),
     defaultValues: { name: user?.name ?? "", bio: "" },
   });
@@ -67,8 +71,16 @@ export default function ProfilePage() {
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
         currentAudioRef.current = audio;
-        audio.onended = () => { setPreviewing(null); URL.revokeObjectURL(url); currentAudioRef.current = null; };
-        audio.onerror = () => { setPreviewing(null); URL.revokeObjectURL(url); currentAudioRef.current = null; };
+        audio.onended = () => {
+          setPreviewing(null);
+          URL.revokeObjectURL(url);
+          currentAudioRef.current = null;
+        };
+        audio.onerror = () => {
+          setPreviewing(null);
+          URL.revokeObjectURL(url);
+          currentAudioRef.current = null;
+        };
         audio.play().catch(() => setPreviewing(null));
       } else {
         const json = JSON.parse(new TextDecoder().decode(res.data as ArrayBuffer)) as {
@@ -108,8 +120,18 @@ export default function ProfilePage() {
 
   if (!user) return null;
 
-  const initials = user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
-  const planLabel: Record<string, string> = { free: "Free", pro: "Pro", business: "Business", admin: "Admin" };
+  const initials = user.name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+  const planLabel: Record<string, string> = {
+    free: "Free",
+    pro: "Pro",
+    business: "Business",
+    admin: "Admin",
+  };
 
   return (
     <div style={{ padding: "32px 40px", overflowY: "auto", maxWidth: 980 }}>
@@ -127,7 +149,15 @@ export default function ProfilePage() {
           <div className="row" style={{ gap: 18, marginTop: 16, alignItems: "flex-start" }}>
             <div
               className="imgph"
-              style={{ width: 88, height: 88, borderRadius: "50%", fontSize: 24, color: "var(--ink)", fontFamily: "var(--font-serif)", flexShrink: 0 }}
+              style={{
+                width: 88,
+                height: 88,
+                borderRadius: "50%",
+                fontSize: 24,
+                color: "var(--ink)",
+                fontFamily: "var(--font-serif)",
+                flexShrink: 0,
+              }}
             >
               {initials}
             </div>
@@ -135,15 +165,28 @@ export default function ProfilePage() {
               <div>
                 <label className="label">Nom</label>
                 <input className="input" {...register("name")} />
-                {errors.name && <p style={{ fontSize: 11, color: "var(--accent)", marginTop: 4 }}>{errors.name.message}</p>}
+                {errors.name && (
+                  <p style={{ fontSize: 11, color: "var(--accent)", marginTop: 4 }}>
+                    {errors.name.message}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="label">Email</label>
-                <input className="input" defaultValue={user.email} readOnly style={{ opacity: 0.7 }} />
+                <input
+                  className="input"
+                  defaultValue={user.email}
+                  readOnly
+                  style={{ opacity: 0.7 }}
+                />
               </div>
               <div>
                 <label className="label">Bio courte</label>
-                <input className="input" placeholder="Copywriter & consultant" {...register("bio")} />
+                <input
+                  className="input"
+                  placeholder="Copywriter & consultant"
+                  {...register("bio")}
+                />
               </div>
               <div>
                 <label className="label">Langue interface</label>
@@ -158,7 +201,12 @@ export default function ProfilePage() {
             <button type="submit" disabled={isSaving} className="btn btn-primary">
               {isSaving ? "Sauvegarde…" : "Sauvegarder"}
             </button>
-            <button type="button" className="btn btn-outline" style={{ color: "var(--accent)" }} onClick={logout}>
+            <button
+              type="button"
+              className="btn btn-outline"
+              style={{ color: "var(--accent)" }}
+              onClick={logout}
+            >
               Se déconnecter
             </button>
           </div>
@@ -190,8 +238,8 @@ export default function ProfilePage() {
                   border: isSelected
                     ? "1.5px solid var(--ink)"
                     : isPlaying
-                    ? "1.5px solid var(--voice)"
-                    : undefined,
+                      ? "1.5px solid var(--voice)"
+                      : undefined,
                   cursor: "pointer",
                   transition: "border-color 0.2s",
                 }}
@@ -201,7 +249,10 @@ export default function ProfilePage() {
                   <strong style={{ fontSize: 14 }}>{name}</strong>
                   <button
                     type="button"
-                    onClick={(e) => { e.stopPropagation(); previewVoice(name, voiceId, lang); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      previewVoice(name, voiceId, lang);
+                    }}
                     title={isPlaying ? "Arrêter" : "Écouter un aperçu"}
                     style={{
                       background: "none",
@@ -217,8 +268,17 @@ export default function ProfilePage() {
                     <Ico icon={isPlaying ? CiqIcon.mic : CiqIcon.play} />
                   </button>
                 </div>
-                <div className="t-mono" style={{ fontSize: 11, color: "var(--ink-mute)", marginTop: 2 }}>{meta}</div>
-                <MicWave size="sm" listening={isPlaying} color={isPlaying ? "var(--voice)" : undefined} />
+                <div
+                  className="t-mono"
+                  style={{ fontSize: 11, color: "var(--ink-mute)", marginTop: 2 }}
+                >
+                  {meta}
+                </div>
+                <MicWave
+                  size="sm"
+                  listening={isPlaying}
+                  color={isPlaying ? "var(--voice)" : undefined}
+                />
               </div>
             );
           })}
@@ -247,7 +307,13 @@ export default function ProfilePage() {
             <label className="label">Lecture auto des réponses</label>
             <div
               className="row between"
-              style={{ background: "var(--bg-sunk)", border: "1px solid var(--line)", borderRadius: 10, padding: "10px 14px", cursor: "pointer" }}
+              style={{
+                background: "var(--bg-sunk)",
+                border: "1px solid var(--line)",
+                borderRadius: 10,
+                padding: "10px 14px",
+                cursor: "pointer",
+              }}
               onClick={() => setAutoPlay((v) => !v)}
             >
               <span style={{ fontSize: 13 }}>L'assistant lit ses réponses à voix haute.</span>
@@ -301,25 +367,60 @@ export default function ProfilePage() {
                 className={engine === "web" ? "on" : ""}
                 style={{ flex: 1 }}
                 onClick={() => setEngine("web")}
-              >Web Speech</button>
+              >
+                Web Speech
+              </button>
               <button
                 type="button"
                 className={engine === "whisper" ? "on" : ""}
                 style={{ flex: 1 }}
                 onClick={() => setEngine("whisper")}
-              >Whisper</button>
+              >
+                Whisper
+              </button>
             </div>
           </div>
           <div style={{ gridColumn: "1 / -1" }}>
             <div className="row between">
               <label className="label">Sensibilité du micro</label>
-              <span className="t-mono" style={{ fontSize: 12, color: "var(--ink-mute)" }}>−42 dB</span>
+              <span className="t-mono" style={{ fontSize: 12, color: "var(--ink-mute)" }}>
+                −42 dB
+              </span>
             </div>
-            <div style={{ background: "var(--bg-sunk)", border: "1px solid var(--line)", borderRadius: 10, padding: 14 }}>
-              <div style={{ height: 4, background: "var(--bg)", borderRadius: 2, position: "relative", marginBottom: 16 }}>
-                <div style={{ position: "absolute", left: "62%", top: -6, width: 16, height: 16, borderRadius: "50%", background: "var(--ink)", cursor: "pointer" }} />
+            <div
+              style={{
+                background: "var(--bg-sunk)",
+                border: "1px solid var(--line)",
+                borderRadius: 10,
+                padding: 14,
+              }}
+            >
+              <div
+                style={{
+                  height: 4,
+                  background: "var(--bg)",
+                  borderRadius: 2,
+                  position: "relative",
+                  marginBottom: 16,
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    left: "62%",
+                    top: -6,
+                    width: 16,
+                    height: 16,
+                    borderRadius: "50%",
+                    background: "var(--ink)",
+                    cursor: "pointer",
+                  }}
+                />
               </div>
-              <div className="row between" style={{ fontSize: 11, color: "var(--ink-mute)", fontFamily: "var(--font-mono)" }}>
+              <div
+                className="row between"
+                style={{ fontSize: 11, color: "var(--ink-mute)", fontFamily: "var(--font-mono)" }}
+              >
                 <span>Plus sensible</span>
                 <span>Test live</span>
                 <span>Plus tolérant au bruit</span>
@@ -330,7 +431,9 @@ export default function ProfilePage() {
                   Tester mon micro
                 </button>
                 <MicWave size="md" color="var(--voice)" listening={false} />
-                <span className="t-mono" style={{ fontSize: 11.5, color: "var(--ink-mute)" }}>Bonjour, ceci est un test…</span>
+                <span className="t-mono" style={{ fontSize: 11.5, color: "var(--ink-mute)" }}>
+                  Bonjour, ceci est un test…
+                </span>
               </div>
             </div>
           </div>
@@ -345,7 +448,11 @@ export default function ProfilePage() {
             <div className="row" style={{ gap: 10, marginTop: 8 }}>
               <span className="pill accent">{planLabel[user.role] ?? "Free"}</span>
               <span style={{ fontSize: 14, color: "var(--ink-soft)" }}>
-                {user.role === "pro" ? "$9.99 / mois" : user.role === "business" ? "$29.99 / mois" : "Gratuit"}
+                {user.role === "pro"
+                  ? "$9.99 / mois"
+                  : user.role === "business"
+                    ? "$29.99 / mois"
+                    : "Gratuit"}
               </span>
             </div>
           </div>
@@ -363,7 +470,11 @@ export default function ProfilePage() {
               <button
                 type="button"
                 className="btn btn-primary"
-                onClick={() => stripeService.createCheckout(user.role === "free" ? "pro" : "business").catch(() => {})}
+                onClick={() =>
+                  stripeService
+                    .createCheckout(user.role === "free" ? "pro" : "business")
+                    .catch(() => {})
+                }
               >
                 {user.role === "free" ? "Passer Pro" : "Passer Business"}
               </button>

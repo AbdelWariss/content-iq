@@ -1,14 +1,18 @@
+import { GenerateContentSchema, PaginationSchema } from "@contentiq/shared";
+import type { ContentLanguage } from "@contentiq/shared";
 import type { Request, Response } from "express";
+import { CREDITS_PER_GENERATION } from "../middleware/checkCredits.js";
+import { AppError, ForbiddenError, NotFoundError } from "../middleware/errorHandler.js";
 import { Content } from "../models/Content.model.js";
 import { Template } from "../models/Template.model.js";
-import { streamContentGeneration, improveContent, generateTitle } from "../services/claude.service.js";
+import {
+  generateTitle,
+  improveContent,
+  streamContentGeneration,
+} from "../services/claude.service.js";
 import { deductCredits } from "../services/credits.service.js";
-import { getAuthUser } from "../utils/requestHelpers.js";
-import { NotFoundError, ForbiddenError, AppError } from "../middleware/errorHandler.js";
-import { GenerateContentSchema, PaginationSchema } from "@contentiq/shared";
 import { logger } from "../utils/logger.js";
-import { CREDITS_PER_GENERATION } from "../middleware/checkCredits.js";
-import type { ContentLanguage } from "@contentiq/shared";
+import { getAuthUser } from "../utils/requestHelpers.js";
 
 export async function generate(req: Request, res: Response): Promise<void> {
   const { userId } = getAuthUser(req);
@@ -45,7 +49,13 @@ export async function generate(req: Request, res: Response): Promise<void> {
 export async function listContents(req: Request, res: Response): Promise<void> {
   const { userId } = getAuthUser(req);
   const { page, limit } = PaginationSchema.parse(req.query);
-  const { type, language, favorite, tag, status = "complete" } = req.query as Record<string, string>;
+  const {
+    type,
+    language,
+    favorite,
+    tag,
+    status = "complete",
+  } = req.query as Record<string, string>;
 
   const filter: Record<string, unknown> = { userId, status };
   if (type) filter.type = type;

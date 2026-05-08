@@ -1,5 +1,5 @@
-import mongoose, { type Document, Schema } from "mongoose";
 import type { VoiceCommandSource } from "@contentiq/shared";
+import mongoose, { type Document, Schema } from "mongoose";
 
 export interface IVoiceCommand extends Document {
   userId: mongoose.Types.ObjectId;

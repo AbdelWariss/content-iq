@@ -1,7 +1,7 @@
-import { useCallback, useRef } from "react";
-import { useAppDispatch, useAppSelector } from "@/store/index";
-import { startGeneration, appendToken, stopGeneration } from "@/store/contentSlice";
 import { toast } from "@/hooks/use-toast";
+import { appendToken, startGeneration, stopGeneration } from "@/store/contentSlice";
+import { useAppDispatch, useAppSelector } from "@/store/index";
+import { useCallback, useRef } from "react";
 
 interface StreamOptions {
   onToken?: (token: string) => void;
@@ -82,7 +82,10 @@ export function useStreaming() {
                 options.onDone?.(parsed.tokensUsed ?? 0, parsed.contentId);
               }
             } catch (parseError) {
-              if (parseError instanceof Error && parseError.message !== "Unexpected end of JSON input") {
+              if (
+                parseError instanceof Error &&
+                parseError.message !== "Unexpected end of JSON input"
+              ) {
                 throw parseError;
               }
             }

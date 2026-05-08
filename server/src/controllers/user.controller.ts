@@ -1,7 +1,7 @@
-import type { Request, Response } from "express";
-import { User } from "../models/User.model.js";
-import { NotFoundError } from "../middleware/errorHandler.js";
 import { UpdateProfileSchema } from "@contentiq/shared";
+import type { Request, Response } from "express";
+import { NotFoundError } from "../middleware/errorHandler.js";
+import { User } from "../models/User.model.js";
 import { getAuthUser } from "../utils/requestHelpers.js";
 
 export async function getProfile(req: Request, res: Response): Promise<void> {

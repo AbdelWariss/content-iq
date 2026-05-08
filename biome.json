@@ -13,7 +13,8 @@
       "build",
       ".next",
       "coverage",
-      "**/*.d.ts"
+      "**/*.d.ts",
+      "Interface Content.IQ/**"
     ]
   },
   "formatter": {
@@ -34,14 +35,34 @@
       "recommended": true,
       "correctness": {
         "noUnusedImports": "warn",
-        "noUnusedVariables": "warn"
+        "noUnusedVariables": "warn",
+        "useExhaustiveDependencies": "warn"
       },
       "suspicious": {
-        "noExplicitAny": "warn"
+        "noExplicitAny": "warn",
+        "noArrayIndexKey": "off",
+        "noAssignInExpressions": "warn"
       },
       "style": {
         "noNonNullAssertion": "warn",
-        "useImportType": "error"
+        "useImportType": "error",
+        "useSingleVarDeclarator": "off",
+        "useNodejsImportProtocol": "warn",
+        "useExponentiationOperator": "off",
+        "useTemplate": "warn",
+        "useSelfClosingElements": "warn",
+        "noUnusedTemplateLiteral": "warn"
+      },
+      "complexity": {
+        "useOptionalChain": "warn",
+        "noForEach": "warn"
+      },
+      "a11y": {
+        "noSvgWithoutTitle": "off",
+        "useButtonType": "off",
+        "useSemanticElements": "warn",
+        "useKeyWithClickEvents": "warn",
+        "noLabelWithoutControl": "warn"
       },
       "performance": {
         "noBarrelFile": "off"

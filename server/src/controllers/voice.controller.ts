@@ -1,11 +1,11 @@
+import Anthropic from "@anthropic-ai/sdk";
+import { PLAN_LIMITS } from "@contentiq/shared";
 import type { Request, Response } from "express";
 import { z } from "zod";
-import { getAuthUser } from "../utils/requestHelpers.js";
-import { VoiceCommand } from "../models/VoiceCommand.model.js";
 import { env } from "../config/env.js";
-import Anthropic from "@anthropic-ai/sdk";
 import { ForbiddenError } from "../middleware/errorHandler.js";
-import { PLAN_LIMITS } from "@contentiq/shared";
+import { VoiceCommand } from "../models/VoiceCommand.model.js";
+import { getAuthUser } from "../utils/requestHelpers.js";
 
 const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
 
@@ -55,21 +55,18 @@ export async function synthesize(req: Request, res: Response): Promise<void> {
 
   if (env.ELEVENLABS_API_KEY) {
     const selectedVoice = voiceId ?? env.ELEVENLABS_DEFAULT_VOICE_ID ?? "21m00Tcm4TlvDq8ikWAM";
-    const elevenRes = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${selectedVoice}`,
-      {
-        method: "POST",
-        headers: {
-          "xi-api-key": env.ELEVENLABS_API_KEY,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          text,
-          model_id: "eleven_multilingual_v2",
-          voice_settings: { stability: 0.5, similarity_boost: 0.75, speed },
-        }),
+    const elevenRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoice}`, {
+      method: "POST",
+      headers: {
+        "xi-api-key": env.ELEVENLABS_API_KEY,
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        text,
+        model_id: "eleven_multilingual_v2",
+        voice_settings: { stability: 0.5, similarity_boost: 0.75, speed },
+      }),
+    });
 
     if (!elevenRes.ok) {
       const err = await elevenRes.text();
@@ -104,9 +101,7 @@ export async function getVoices(req: Request, res: Response): Promise<void> {
   // Fallback: voix navigateur
   res.json({
     success: true,
-    data: [
-      { voice_id: "native", name: "Voix navigateur (par défaut)", preview_url: null },
-    ],
+    data: [{ voice_id: "native", name: "Voix navigateur (par défaut)", preview_url: null }],
   });
 }
 
@@ -168,6 +163,8 @@ export async function transcribe(req: Request, res: Response): Promise<void> {
   // Le client utilise Web Speech API nativement, ce endpoint est un fallback
   res.status(501).json({
     success: false,
-    error: { message: "Transcription serveur non disponible — utilisez l'API Web Speech du navigateur." },
+    error: {
+      message: "Transcription serveur non disponible — utilisez l'API Web Speech du navigateur.",
+    },
   });
 }

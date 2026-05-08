@@ -1,8 +1,8 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import { env } from "./env.js";
 import { User } from "../models/User.model.js";
 import { logger } from "../utils/logger.js";
+import { env } from "./env.js";
 
 // Passport opère avec les documents Mongoose — on caste via unknown pour éviter
 // le conflit de type Express.User vs IUser dans ce contexte de session

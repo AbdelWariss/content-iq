@@ -1,11 +1,11 @@
-import { describe, it, expect } from "vitest";
 import jwt from "jsonwebtoken";
+import { describe, expect, it } from "vitest";
 import {
   generateAccessToken,
   generateRefreshToken,
-  verifyRefreshToken,
   generateSecureToken,
   hashToken,
+  verifyRefreshToken,
 } from "../utils/token.js";
 
 describe("generateAccessToken", () => {

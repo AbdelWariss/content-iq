@@ -32,12 +32,7 @@ export type ExportFormat = "pdf" | "docx" | "markdown" | "txt" | "zip";
 export type AssistantMessageRole = "user" | "assistant";
 export type VoiceCommandSource = "web_speech" | "whisper";
 
-export type CreditTransactionType =
-  | "consume"
-  | "topup"
-  | "monthly_reset"
-  | "bonus"
-  | "refund";
+export type CreditTransactionType = "consume" | "topup" | "monthly_reset" | "bonus" | "refund";
 
 export interface UserCredits {
   remaining: number;

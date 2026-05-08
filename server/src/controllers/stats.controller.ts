@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
-import { getAuthUser } from "../utils/requestHelpers.js";
 import { Content } from "../models/Content.model.js";
 import { CreditTransaction } from "../models/CreditTransaction.model.js";
 import { User } from "../models/User.model.js";
+import { getAuthUser } from "../utils/requestHelpers.js";
 
 export async function getDashboardStats(req: Request, res: Response): Promise<void> {
   const { userId, role } = getAuthUser(req);
@@ -86,9 +86,7 @@ export async function getDashboardStats(req: Request, res: Response): Promise<vo
     ]),
 
     // Utilisateurs actifs (admin only)
-    isAdmin
-      ? User.countDocuments({ updatedAt: { $gte: last7Days } })
-      : Promise.resolve(0),
+    isAdmin ? User.countDocuments({ updatedAt: { $gte: last7Days } }) : Promise.resolve(0),
   ]);
 
   const user = isAdmin ? null : await User.findById(userId).select("credits");
@@ -104,20 +102,18 @@ export async function getDashboardStats(req: Request, res: Response): Promise<vo
         creditsConsumedThisMonth: (creditTransactions[0]?.total as number) ?? 0,
         ...(isAdmin && { activeUsers: userCount }),
       },
-      credits: user
-        ? { remaining: user.credits.remaining, total: user.credits.total }
-        : null,
+      credits: user ? { remaining: user.credits.remaining, total: user.credits.total } : null,
       typeBreakdown: (typeBreakdown as Array<{ _id: string; count: number }>).map((t) => ({
         type: t._id,
         count: t.count,
       })),
-      dailyActivity: (
-        dailyActivity as Array<{ _id: string; count: number; tokens: number }>
-      ).map((d) => ({
-        date: d._id,
-        count: d.count,
-        tokens: d.tokens,
-      })),
+      dailyActivity: (dailyActivity as Array<{ _id: string; count: number; tokens: number }>).map(
+        (d) => ({
+          date: d._id,
+          count: d.count,
+          tokens: d.tokens,
+        }),
+      ),
     },
   });
 }

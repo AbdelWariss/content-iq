@@ -7,15 +7,23 @@ export function Navbar() {
   const navigate = useNavigate();
 
   const plan =
-    user?.role === "admin" ? "Admin"
-    : user?.role === "business" ? "Business"
-    : user?.role === "pro" ? "Pro"
-    : "Free";
+    user?.role === "admin"
+      ? "Admin"
+      : user?.role === "business"
+        ? "Business"
+        : user?.role === "pro"
+          ? "Pro"
+          : "Free";
 
   const credits = user?.credits?.remaining ?? 0;
 
   const initials = user?.name
-    ? user.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
     : "U";
 
   return (

@@ -1,12 +1,12 @@
-import { useCallback, useRef, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/index";
 import {
+  resetVoice,
+  setPermissionGranted,
   setStatus,
   setTranscript,
-  setPermissionGranted,
-  resetVoice,
   setTtsSpeaking,
 } from "@/store/voiceSlice";
+import { useCallback, useEffect, useRef } from "react";
 
 // Définitions locales pour éviter les incompatibilités de typings DOM
 interface SpeechResult {

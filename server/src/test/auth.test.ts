@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
+import bcrypt from "bcryptjs";
 import type { NextFunction, Request, Response } from "express";
 import request from "supertest";
-import bcrypt from "bcryptjs";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "../app.js";
 import { generateAccessToken } from "../utils/token.js";
 
@@ -40,7 +40,9 @@ vi.mock("../services/credits.service.js", () => ({
 
 let app: ReturnType<typeof createApp>;
 
-beforeAll(() => { app = createApp(); });
+beforeAll(() => {
+  app = createApp();
+});
 beforeEach(() => vi.clearAllMocks());
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -98,9 +100,7 @@ describe("POST /api/auth/login", () => {
 
   it("retourne 401 si le mot de passe est incorrect", async () => {
     const { User } = await import("../models/User.model.js");
-    vi.mocked(User.findOne).mockReturnValue(
-      mockFindOneSelect(await fakeUser()) as never,
-    );
+    vi.mocked(User.findOne).mockReturnValue(mockFindOneSelect(await fakeUser()) as never);
 
     const res = await request(app)
       .post("/api/auth/login")
@@ -111,9 +111,7 @@ describe("POST /api/auth/login", () => {
 
   it("retourne 200 avec accessToken si les credentials sont valides", async () => {
     const { User } = await import("../models/User.model.js");
-    vi.mocked(User.findOne).mockReturnValue(
-      mockFindOneSelect(await fakeUser()) as never,
-    );
+    vi.mocked(User.findOne).mockReturnValue(mockFindOneSelect(await fakeUser()) as never);
 
     const res = await request(app)
       .post("/api/auth/login")
@@ -129,15 +127,13 @@ describe("POST /api/auth/login", () => {
 
 describe("POST /api/auth/register", () => {
   it("retourne 422 si des champs obligatoires manquent", async () => {
-    const res = await request(app)
-      .post("/api/auth/register")
-      .send({ email: "new@example.com" });
+    const res = await request(app).post("/api/auth/register").send({ email: "new@example.com" });
     expect(res.status).toBe(422);
   });
 
   it("retourne 4xx si l'email est déjà utilisé", async () => {
     const { User } = await import("../models/User.model.js");
-    vi.mocked(User.findOne).mockResolvedValue(await fakeUser() as never);
+    vi.mocked(User.findOne).mockResolvedValue((await fakeUser()) as never);
 
     const res = await request(app)
       .post("/api/auth/register")
@@ -150,7 +146,7 @@ describe("POST /api/auth/register", () => {
   it("retourne 201 avec accessToken si l'inscription réussit", async () => {
     const { User } = await import("../models/User.model.js");
     vi.mocked(User.findOne).mockResolvedValue(null);
-    vi.mocked(User.create).mockResolvedValue(await fakeUser() as never);
+    vi.mocked(User.create).mockResolvedValue((await fakeUser()) as never);
 
     const res = await request(app)
       .post("/api/auth/register")
@@ -174,9 +170,7 @@ describe("GET /api/auth/me", () => {
     const user = await fakeUser();
     vi.mocked(User.findById).mockResolvedValue(user as never);
 
-    const res = await request(app)
-      .get("/api/auth/me")
-      .set("Authorization", bearerToken());
+    const res = await request(app).get("/api/auth/me").set("Authorization", bearerToken());
 
     expect(res.status).toBe(200);
     // getMe retourne { success, data: { user: {...} } }
@@ -194,11 +188,9 @@ describe("POST /api/auth/logout", () => {
 
   it("retourne 200 et efface le cookie refresh token", async () => {
     const { User } = await import("../models/User.model.js");
-    vi.mocked(User.findById).mockResolvedValue(await fakeUser() as never);
+    vi.mocked(User.findById).mockResolvedValue((await fakeUser()) as never);
 
-    const res = await request(app)
-      .post("/api/auth/logout")
-      .set("Authorization", bearerToken());
+    const res = await request(app).post("/api/auth/logout").set("Authorization", bearerToken());
 
     expect(res.status).toBe(200);
   });

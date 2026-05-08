@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { CiqIcon, Ico } from "@/lib/ciq-icons";
-import { useAppSelector } from "@/store/index";
-import { stripeService } from "@/services/stripe.service";
 import { toast } from "@/hooks/use-toast";
+import { CiqIcon, Ico } from "@/lib/ciq-icons";
+import { stripeService } from "@/services/stripe.service";
+import { useAppSelector } from "@/store/index";
+import { useState } from "react";
 
 const PLANS = [
   {
@@ -10,12 +10,7 @@ const PLANS = [
     name: "Free",
     price: { monthly: "0", annual: "0" },
     tag: "Pour découvrir",
-    bullets: [
-      "50 crédits / mois",
-      "6 types de contenu",
-      "Export PDF",
-      "IQ Assistant — 5 msg/j",
-    ],
+    bullets: ["50 crédits / mois", "6 types de contenu", "Export PDF", "IQ Assistant — 5 msg/j"],
     striked: ["Voice commands"],
     cta: "Commencer",
     featured: false,
@@ -68,7 +63,11 @@ export default function PricingPage() {
     try {
       await stripeService.createCheckout(planId as "pro" | "business");
     } catch {
-      toast({ title: "Erreur", description: "Impossible d'ouvrir le paiement. Réessayez.", variant: "destructive" });
+      toast({
+        title: "Erreur",
+        description: "Impossible d'ouvrir le paiement. Réessayez.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(null);
     }
@@ -80,7 +79,11 @@ export default function PricingPage() {
     try {
       await stripeService.openPortal();
     } catch {
-      toast({ title: "Erreur", description: "Portail de facturation indisponible.", variant: "destructive" });
+      toast({
+        title: "Erreur",
+        description: "Portail de facturation indisponible.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(null);
     }
@@ -102,11 +105,15 @@ export default function PricingPage() {
             <button
               className={billing === "monthly" ? "on" : ""}
               onClick={() => setBilling("monthly")}
-            >Mensuel</button>
+            >
+              Mensuel
+            </button>
             <button
               className={billing === "annual" ? "on" : ""}
               onClick={() => setBilling("annual")}
-            >Annuel · −20%</button>
+            >
+              Annuel · −20%
+            </button>
           </div>
           {currentPlan !== "free" && (
             <button
@@ -121,7 +128,15 @@ export default function PricingPage() {
       </div>
 
       {/* Plan cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, maxWidth: 1100, margin: "0 auto" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: 16,
+          maxWidth: 1100,
+          margin: "0 auto",
+        }}
+      >
         {PLANS.map((plan) => {
           const isCurrent = currentPlan === plan.id;
           const price = billing === "annual" ? plan.price.annual : plan.price.monthly;
@@ -143,9 +158,14 @@ export default function PricingPage() {
               )}
 
               <div className="t-eyebrow">{plan.featured ? "PLAN" : plan.tag}</div>
-              <div style={{ fontSize: 32, fontFamily: "var(--font-serif)", marginTop: 8 }}>{plan.name}</div>
+              <div style={{ fontSize: 32, fontFamily: "var(--font-serif)", marginTop: 8 }}>
+                {plan.name}
+              </div>
 
-              <div className="row" style={{ alignItems: "baseline", gap: 4, margin: "16px 0 22px" }}>
+              <div
+                className="row"
+                style={{ alignItems: "baseline", gap: 4, margin: "16px 0 22px" }}
+              >
                 <span style={{ fontSize: 12, color: "var(--ink-mute)" }}>$</span>
                 <span
                   className="t-mono"
@@ -159,7 +179,11 @@ export default function PricingPage() {
               </div>
 
               {isCurrent ? (
-                <button className="btn btn-outline btn-lg" style={{ width: "100%", justifyContent: "center", marginBottom: 18 }} disabled>
+                <button
+                  className="btn btn-outline btn-lg"
+                  style={{ width: "100%", justifyContent: "center", marginBottom: 18 }}
+                  disabled
+                >
                   Plan actuel
                 </button>
               ) : (
@@ -175,15 +199,32 @@ export default function PricingPage() {
 
               <div className="hr" style={{ marginBottom: 14 }} />
 
-              <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
+              <ul
+                style={{
+                  margin: 0,
+                  padding: 0,
+                  listStyle: "none",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 10,
+                }}
+              >
                 {plan.bullets.map((b) => (
-                  <li key={b} className="row" style={{ gap: 10, fontSize: 13.5, color: "var(--ink-soft)" }}>
+                  <li
+                    key={b}
+                    className="row"
+                    style={{ gap: 10, fontSize: 13.5, color: "var(--ink-soft)" }}
+                  >
                     <Ico icon={CiqIcon.check} style={{ color: "var(--accent)", flexShrink: 0 }} />
                     <span>{b}</span>
                   </li>
                 ))}
                 {plan.striked.map((b) => (
-                  <li key={b} className="row" style={{ gap: 10, fontSize: 13.5, color: "var(--ink-mute)" }}>
+                  <li
+                    key={b}
+                    className="row"
+                    style={{ gap: 10, fontSize: 13.5, color: "var(--ink-mute)" }}
+                  >
                     <Ico icon={CiqIcon.x} style={{ flexShrink: 0 }} />
                     <s>{b}</s>
                   </li>
@@ -195,9 +236,8 @@ export default function PricingPage() {
       </div>
 
       <div style={{ textAlign: "center", marginTop: 56, color: "var(--ink-mute)", fontSize: 13 }}>
-        Crédits à la carte :{" "}
-        <strong style={{ color: "var(--ink)" }}>$10 / 100 cr.</strong>
-        {" "}· 1 crédit ≈ 350 mots générés.
+        Crédits à la carte : <strong style={{ color: "var(--ink)" }}>$10 / 100 cr.</strong> · 1
+        crédit ≈ 350 mots générés.
       </div>
     </div>
   );

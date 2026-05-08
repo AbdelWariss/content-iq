@@ -1,7 +1,12 @@
 import { Router } from "express";
+import {
+  executeCommand,
+  getVoices,
+  synthesize,
+  transcribe,
+} from "../controllers/voice.controller.js";
 import { authenticate } from "../middleware/authenticate.js";
 import { voiceLimiter } from "../middleware/rateLimiter.js";
-import { synthesize, getVoices, executeCommand, transcribe } from "../controllers/voice.controller.js";
 
 const router: import("express").Router = Router();
 

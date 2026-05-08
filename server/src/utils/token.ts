@@ -1,5 +1,5 @@
+import crypto from "node:crypto";
 import jwt from "jsonwebtoken";
-import crypto from "crypto";
 import { env } from "../config/env.js";
 import type { AuthPayload } from "../middleware/authenticate.js";
 

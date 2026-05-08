@@ -13,7 +13,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 
-const CONTENT_TYPES: Array<{ value: GenerateContentInput["type"]; label: string; icon: React.ReactNode }> = [
+const CONTENT_TYPES: Array<{
+  value: GenerateContentInput["type"];
+  label: string;
+  icon: React.ReactNode;
+}> = [
   { value: "linkedin", label: "LinkedIn", icon: CiqIcon.linkedin },
   { value: "blog", label: "Article", icon: CiqIcon.blog },
   { value: "email", label: "Email", icon: CiqIcon.email },
@@ -48,9 +52,8 @@ const LENGTHS: Array<{ value: GenerateContentInput["length"]; label: string }> =
 
 export default function GeneratePage() {
   const dispatch = useAppDispatch();
-  const { isGenerating, streamedContent, tokensGenerated, currentParams, savedContentId } = useAppSelector(
-    (s) => s.content,
-  );
+  const { isGenerating, streamedContent, tokensGenerated, currentParams, savedContentId } =
+    useAppSelector((s) => s.content);
   const [isExporting, setIsExporting] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const { stream, stop } = useStreaming();
@@ -94,9 +97,13 @@ export default function GeneratePage() {
     async (data: GenerateContentInput) => {
       dispatch(setParams({ ...data }));
       dispatch(resetEditor());
-      await stream(contentService.getGenerateUrl(), { ...data, keywords }, {
-        onDone: () => toast({ title: "Contenu généré !", variant: "default" }),
-      });
+      await stream(
+        contentService.getGenerateUrl(),
+        { ...data, keywords },
+        {
+          onDone: () => toast({ title: "Contenu généré !", variant: "default" }),
+        },
+      );
     },
     [dispatch, stream, keywords],
   );
@@ -151,7 +158,11 @@ export default function GeneratePage() {
         await exportService.download(savedContentId, format, currentParams.subject);
         toast({ title: `Export ${format.toUpperCase()} prêt !` });
       } catch {
-        toast({ title: "Export échoué", description: "Vérifiez votre plan ou réessayez.", variant: "destructive" });
+        toast({
+          title: "Export échoué",
+          description: "Vérifiez votre plan ou réessayez.",
+          variant: "destructive",
+        });
       } finally {
         setIsExporting(false);
       }
@@ -168,16 +179,30 @@ export default function GeneratePage() {
   }, [displayContent, dispatch]);
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 55px)", overflow: "hidden", position: "relative" }}>
+    <div
+      style={{
+        display: "flex",
+        height: "calc(100vh - 55px)",
+        overflow: "hidden",
+        position: "relative",
+      }}
+    >
       {/* VoiceOrb overlay */}
       {showVoiceOrb && (
         <VoiceOrb
           transcript={voiceTranscript}
           elapsed={voiceElapsed}
-          onClose={() => { setShowVoiceOrb(false); stopListening(); clearInterval(voiceTimer.current); }}
+          onClose={() => {
+            setShowVoiceOrb(false);
+            stopListening();
+            clearInterval(voiceTimer.current);
+          }}
           onEnd={handleVoiceEnd}
           onPause={() => stopListening()}
-          onRestart={() => { setVoiceTranscript(""); setVoiceElapsed(0); }}
+          onRestart={() => {
+            setVoiceTranscript("");
+            setVoiceElapsed(0);
+          }}
         />
       )}
       {/* Left — form */}
@@ -192,14 +217,20 @@ export default function GeneratePage() {
         }}
         className="scrollbar-thin"
       >
-        <h2 className="t-display" style={{ fontSize: 28, margin: "0 0 18px" }}>Nouveau contenu</h2>
+        <h2 className="t-display" style={{ fontSize: 28, margin: "0 0 18px" }}>
+          Nouveau contenu
+        </h2>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="col" style={{ gap: 14 }}>
             {/* Brief header */}
             <div className="row between">
               <span className="t-eyebrow">Brief de génération</span>
-              <button type="button" className="btn btn-ghost btn-sm" style={{ color: "var(--accent)" }}>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                style={{ color: "var(--accent)" }}
+              >
                 <Ico icon={CiqIcon.mic} />
                 Dicter le brief
               </button>
@@ -225,7 +256,13 @@ export default function GeneratePage() {
                       }}
                     >
                       <Ico icon={icon} style={{ color: on ? "var(--ink)" : "var(--ink-mute)" }} />
-                      <div style={{ fontSize: 11.5, marginTop: 4, color: on ? "var(--ink)" : "var(--ink-soft)" }}>
+                      <div
+                        style={{
+                          fontSize: 11.5,
+                          marginTop: 4,
+                          color: on ? "var(--ink)" : "var(--ink-soft)",
+                        }}
+                      >
                         {label}
                       </div>
                     </div>
@@ -244,7 +281,9 @@ export default function GeneratePage() {
                 {...register("subject")}
               />
               {errors.subject && (
-                <p style={{ fontSize: 11, color: "var(--accent)", marginTop: 4 }}>{errors.subject.message}</p>
+                <p style={{ fontSize: 11, color: "var(--accent)", marginTop: 4 }}>
+                  {errors.subject.message}
+                </p>
               )}
             </div>
 
@@ -254,7 +293,9 @@ export default function GeneratePage() {
                 <label className="label">Ton</label>
                 <select className="select" {...register("tone")}>
                   {TONES.map(({ value, label }) => (
-                    <option key={value} value={value}>{label}</option>
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -262,7 +303,9 @@ export default function GeneratePage() {
                 <label className="label">Longueur</label>
                 <select className="select" {...register("length")}>
                   {LENGTHS.map(({ value, label }) => (
-                    <option key={value} value={value}>{label}</option>
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -270,7 +313,9 @@ export default function GeneratePage() {
                 <label className="label">Langue</label>
                 <select className="select" {...register("language")}>
                   {LANGUAGES.map(({ value, label }) => (
-                    <option key={value} value={value}>{label}</option>
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -294,19 +339,34 @@ export default function GeneratePage() {
                   <span
                     key={kw}
                     className="chip"
-                    style={{ background: "var(--accent-soft)", color: "var(--accent-ink)", border: "none", cursor: "pointer" }}
+                    style={{
+                      background: "var(--accent-soft)",
+                      color: "var(--accent-ink)",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
                     onClick={() => setKeywords((k) => k.filter((x) => x !== kw))}
                   >
                     {kw} ×
                   </span>
                 ))}
                 <input
-                  style={{ border: "none", outline: "none", background: "transparent", flex: 1, fontSize: 13, padding: "2px 4px" }}
+                  style={{
+                    border: "none",
+                    outline: "none",
+                    background: "transparent",
+                    flex: 1,
+                    fontSize: 13,
+                    padding: "2px 4px",
+                  }}
                   placeholder="+ ajouter…"
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") { e.preventDefault(); addKeyword(); }
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addKeyword();
+                    }
                   }}
                 />
               </div>
@@ -346,7 +406,9 @@ export default function GeneratePage() {
             </button>
           )}
 
-          <div style={{ fontSize: 11.5, color: "var(--ink-mute)", textAlign: "center", marginTop: 8 }}>
+          <div
+            style={{ fontSize: 11.5, color: "var(--ink-mute)", textAlign: "center", marginTop: 8 }}
+          >
             ⌘ + ↵ ou dites « génère »
           </div>
         </form>
@@ -389,13 +451,16 @@ export default function GeneratePage() {
               flexShrink: 0,
             }}
           >
-            {voiceStatus === "listening"
-              ? <MicWave size="sm" color="white" />
-              : <Ico icon={CiqIcon.mic} size={16} />
-            }
+            {voiceStatus === "listening" ? (
+              <MicWave size="sm" color="white" />
+            ) : (
+              <Ico icon={CiqIcon.mic} size={16} />
+            )}
           </div>
           <div className="col" style={{ gap: 2 }}>
-            <div style={{ fontSize: 11.5, color: "var(--ink-mute)", fontFamily: "var(--font-mono)" }}>
+            <div
+              style={{ fontSize: 11.5, color: "var(--ink-mute)", fontFamily: "var(--font-mono)" }}
+            >
               {voiceStatus === "listening" ? "En écoute" : "Dicter le brief"}
             </div>
             <div style={{ fontSize: 13, fontWeight: 500 }}>
@@ -419,15 +484,26 @@ export default function GeneratePage() {
         {/* Editor toolbar header */}
         <div
           className="row between"
-          style={{ paddingBottom: 12, borderBottom: "1px solid var(--line)", marginBottom: 0, flexShrink: 0 }}
+          style={{
+            paddingBottom: 12,
+            borderBottom: "1px solid var(--line)",
+            marginBottom: 0,
+            flexShrink: 0,
+          }}
         >
           <div className="row" style={{ gap: 10 }}>
             {isGenerating ? (
-              <span className="pill accent" style={{ padding: "2px 10px" }}>● Génération en cours</span>
+              <span className="pill accent" style={{ padding: "2px 10px" }}>
+                ● Génération en cours
+              </span>
             ) : displayContent ? (
-              <span className="pill" style={{ padding: "2px 10px", color: "var(--ink-soft)" }}>✓ Contenu prêt</span>
+              <span className="pill" style={{ padding: "2px 10px", color: "var(--ink-soft)" }}>
+                ✓ Contenu prêt
+              </span>
             ) : (
-              <span className="pill" style={{ padding: "2px 10px" }}>Configurez et générez</span>
+              <span className="pill" style={{ padding: "2px 10px" }}>
+                Configurez et générez
+              </span>
             )}
             {isGenerating && (
               <span className="t-mono" style={{ fontSize: 12, color: "var(--ink-mute)" }}>
@@ -437,11 +513,7 @@ export default function GeneratePage() {
           </div>
           {displayContent && (
             <div className="row" style={{ gap: 6 }}>
-              <button
-                type="button"
-                className="btn btn-outline btn-sm"
-                onClick={handleCopy}
-              >
+              <button type="button" className="btn btn-outline btn-sm" onClick={handleCopy}>
                 <Ico icon={copied ? CiqIcon.check : CiqIcon.copy} />
                 {copied ? "Copié !" : "Copier"}
               </button>
@@ -482,10 +554,20 @@ export default function GeneratePage() {
                           key={fmt}
                           type="button"
                           className="btn btn-ghost btn-sm"
-                          style={{ width: "100%", justifyContent: "flex-start", padding: "7px 10px" }}
+                          style={{
+                            width: "100%",
+                            justifyContent: "flex-start",
+                            padding: "7px 10px",
+                          }}
                           onClick={() => handleExport(fmt)}
                         >
-                          {fmt === "pdf" ? "PDF" : fmt === "docx" ? "Word (.docx)" : fmt === "markdown" ? "Markdown" : "Texte (.txt)"}
+                          {fmt === "pdf"
+                            ? "PDF"
+                            : fmt === "docx"
+                              ? "Word (.docx)"
+                              : fmt === "markdown"
+                                ? "Markdown"
+                                : "Texte (.txt)"}
                         </button>
                       ))}
                     </div>

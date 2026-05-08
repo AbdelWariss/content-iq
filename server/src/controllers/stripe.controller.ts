@@ -1,11 +1,11 @@
 import type { Request, Response } from "express";
 import type Stripe from "stripe";
-import { getStripe } from "../config/stripe.js";
-import { getAuthUser } from "../utils/requestHelpers.js";
-import { User } from "../models/User.model.js";
 import { env } from "../config/env.js";
+import { getStripe } from "../config/stripe.js";
 import { AppError } from "../middleware/errorHandler.js";
+import { User } from "../models/User.model.js";
 import { logger } from "../utils/logger.js";
+import { getAuthUser } from "../utils/requestHelpers.js";
 
 const PLAN_PRICE_IDS: Record<string, string | undefined> = {
   pro: env.STRIPE_PRO_PRICE_ID,
@@ -121,7 +121,9 @@ export async function handleWebhook(req: Request, res: Response): Promise<void> 
         if (!userId) break;
         await User.findByIdAndUpdate(userId, {
           "subscription.status": sub.status,
-          "subscription.currentPeriodEnd": new Date((sub as unknown as { current_period_end: number }).current_period_end * 1000),
+          "subscription.currentPeriodEnd": new Date(
+            (sub as unknown as { current_period_end: number }).current_period_end * 1000,
+          ),
         });
         break;
       }

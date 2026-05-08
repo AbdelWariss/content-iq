@@ -18,7 +18,9 @@ export const assistantService = {
   },
 
   async getSession(): Promise<AssistantSession> {
-    const { data } = await api.get<{ success: boolean; data: AssistantSession }>("/assistant/session");
+    const { data } = await api.get<{ success: boolean; data: AssistantSession }>(
+      "/assistant/session",
+    );
     return data.data;
   },
 

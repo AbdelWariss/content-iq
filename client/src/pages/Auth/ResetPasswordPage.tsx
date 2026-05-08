@@ -1,11 +1,11 @@
-import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "@/hooks/use-toast";
 import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import { authService } from "@/services/auth.service";
-import { toast } from "@/hooks/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { z } from "zod";
 import { DynamicPanel } from "./AuthPage";
 
 const Schema = z
@@ -51,7 +51,11 @@ export default function ResetPasswordPage() {
 
   async function onSubmit({ password }: FormData) {
     if (!token) {
-      toast({ title: "Lien invalide", description: "Ce lien de réinitialisation est invalide.", variant: "destructive" });
+      toast({
+        title: "Lien invalide",
+        description: "Ce lien de réinitialisation est invalide.",
+        variant: "destructive",
+      });
       return;
     }
     setIsLoading(true);
@@ -61,8 +65,8 @@ export default function ResetPasswordPage() {
       setTimeout(() => navigate("/login"), 3000);
     } catch (err: unknown) {
       const message =
-        (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ??
-        "Lien invalide ou expiré";
+        (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
+          ?.message ?? "Lien invalide ou expiré";
       toast({ title: "Erreur", description: message, variant: "destructive" });
     } finally {
       setIsLoading(false);
@@ -71,32 +75,44 @@ export default function ResetPasswordPage() {
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1.1fr", height: "100%" }}>
-
       {/* ── Left — form ── */}
-      <div style={{ display: "grid", gridTemplateRows: "auto 1fr auto", padding: "44px 64px", overflowY: "auto" }}>
-
+      <div
+        style={{
+          display: "grid",
+          gridTemplateRows: "auto 1fr auto",
+          padding: "44px 64px",
+          overflowY: "auto",
+        }}
+      >
         <Link to="/" style={{ textDecoration: "none" }}>
           <div className="ciq-mark">
             <span className="dot">C</span>
-            <span className="name"><b>CONTENT</b><span>.IQ</span></span>
+            <span className="name">
+              <b>CONTENT</b>
+              <span>.IQ</span>
+            </span>
           </div>
         </Link>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div className="auth-form" style={{ width: "100%", maxWidth: 500, animation: "fadeSlideIn 0.3s ease" }}>
-
+          <div
+            className="auth-form"
+            style={{ width: "100%", maxWidth: 500, animation: "fadeSlideIn 0.3s ease" }}
+          >
             {success ? (
               <div style={{ textAlign: "center" }}>
-                <div style={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: "50%",
-                  background: "var(--accent-soft)",
-                  border: "2px solid var(--accent)",
-                  display: "grid",
-                  placeItems: "center",
-                  margin: "0 auto 28px",
-                }}>
+                <div
+                  style={{
+                    width: 72,
+                    height: 72,
+                    borderRadius: "50%",
+                    background: "var(--accent-soft)",
+                    border: "2px solid var(--accent)",
+                    display: "grid",
+                    placeItems: "center",
+                    margin: "0 auto 28px",
+                  }}
+                >
                   <Ico icon={CiqIcon.check} size={32} style={{ color: "var(--accent)" }} />
                 </div>
                 <h1 className="t-display" style={{ fontSize: 48, margin: "0 0 12px" }}>
@@ -128,7 +144,9 @@ export default function ResetPasswordPage() {
                     <div>
                       <label className="label">
                         Nouveau mot de passe{" "}
-                        <span style={{ color: "var(--ink-mute)", fontWeight: 400 }}>· min. 8 caractères</span>
+                        <span style={{ color: "var(--ink-mute)", fontWeight: 400 }}>
+                          · min. 8 caractères
+                        </span>
                       </label>
                       <div style={{ position: "relative" }}>
                         <input
@@ -177,7 +195,9 @@ export default function ResetPasswordPage() {
                         </div>
                       )}
                       {errors.password && (
-                        <p style={{ fontSize: 13, color: "var(--accent)", marginTop: 4 }}>{errors.password.message}</p>
+                        <p style={{ fontSize: 13, color: "var(--accent)", marginTop: 4 }}>
+                          {errors.password.message}
+                        </p>
                       )}
                     </div>
 
@@ -191,7 +211,9 @@ export default function ResetPasswordPage() {
                         {...register("confirm")}
                       />
                       {errors.confirm && (
-                        <p style={{ fontSize: 13, color: "var(--accent)", marginTop: 4 }}>{errors.confirm.message}</p>
+                        <p style={{ fontSize: 13, color: "var(--accent)", marginTop: 4 }}>
+                          {errors.confirm.message}
+                        </p>
                       )}
                     </div>
 
@@ -217,7 +239,9 @@ export default function ResetPasswordPage() {
           </div>
         </div>
 
-        <div style={{ fontSize: 14, color: "var(--ink-mute)" }}>© 2026 CODEXA · Document confidentiel</div>
+        <div style={{ fontSize: 14, color: "var(--ink-mute)" }}>
+          © 2026 CODEXA · Document confidentiel
+        </div>
       </div>
 
       {/* ── Right — dynamic panel ── */}

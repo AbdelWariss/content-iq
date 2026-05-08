@@ -1,19 +1,16 @@
+import { PLAN_LIMITS, PaginationSchema, TemplateSchema } from "@contentiq/shared";
 import type { Request, Response } from "express";
-import { getAuthUser } from "../utils/requestHelpers.js";
-import { Template } from "../models/Template.model.js";
-import { TemplateSchema, PaginationSchema, PLAN_LIMITS } from "@contentiq/shared";
 import { ForbiddenError, NotFoundError } from "../middleware/errorHandler.js";
+import { Template } from "../models/Template.model.js";
+import { getAuthUser } from "../utils/requestHelpers.js";
 
 export async function listTemplates(req: Request, res: Response): Promise<void> {
-  const { userId, role } = getAuthUser(req);
+  const { userId } = getAuthUser(req);
   const { page, limit } = PaginationSchema.parse(req.query);
   const { category, type } = req.query;
 
   const filter: Record<string, unknown> = {
-    $or: [
-      { isPublic: true },
-      { userId },
-    ],
+    $or: [{ isPublic: true }, { userId }],
   };
 
   if (category) filter.category = category;
@@ -52,7 +49,9 @@ export async function createTemplate(req: Request, res: Response): Promise<void>
 
   const planLimits = PLAN_LIMITS[role as keyof typeof PLAN_LIMITS];
   if (!planLimits.customTemplates) {
-    throw new ForbiddenError("La création de templates personnalisés nécessite le plan Pro ou supérieur.");
+    throw new ForbiddenError(
+      "La création de templates personnalisés nécessite le plan Pro ou supérieur.",
+    );
   }
 
   const parsed = TemplateSchema.safeParse(req.body);

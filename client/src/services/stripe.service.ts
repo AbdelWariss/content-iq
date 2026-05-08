@@ -10,9 +10,7 @@ export const stripeService = {
   },
 
   async openPortal(): Promise<void> {
-    const { data } = await api.post<{ success: boolean; data: { url: string } }>(
-      "/stripe/portal",
-    );
+    const { data } = await api.post<{ success: boolean; data: { url: string } }>("/stripe/portal");
     if (data.data.url) window.location.href = data.data.url;
   },
 };

@@ -1,5 +1,5 @@
-import { Resend } from "resend";
 import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { env } from "../config/env.js";
 import { logger } from "../utils/logger.js";
 
@@ -20,7 +20,7 @@ async function sendWithResend({ to, subject, html }: EmailPayload): Promise<void
   if (error) throw new Error(`Resend error: ${error.message}`);
 }
 
-async function sendWithNodemailer({ to, subject, html }: EmailPayload): Promise<void> {
+async function _sendWithNodemailer({ to, subject, html }: EmailPayload): Promise<void> {
   const transporter = nodemailer.createTransport({
     host: "smtp.ethereal.email",
     port: 587,

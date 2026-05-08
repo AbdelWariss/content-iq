@@ -1,7 +1,7 @@
-import { Navigate, Outlet } from "react-router-dom";
-import { useAppSelector } from "@/store/index";
 import { PageLoader } from "@/components/ui/PageLoader";
+import { useAppSelector } from "@/store/index";
 import type { UserRole } from "@contentiq/shared";
+import { Navigate, Outlet } from "react-router-dom";
 
 interface ProtectedRouteProps {
   requiredRole?: UserRole;

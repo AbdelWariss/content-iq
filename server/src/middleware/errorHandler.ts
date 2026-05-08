@@ -5,7 +5,7 @@ import { logger } from "../utils/logger.js";
 export class AppError extends Error {
   constructor(
     public message: string,
-    public statusCode: number = 500,
+    public statusCode = 500,
     public code?: string,
   ) {
     super(message);
@@ -84,9 +84,7 @@ export const errorHandler: ErrorRequestHandler = (
     error: {
       code: "INTERNAL_ERROR",
       message:
-        process.env.NODE_ENV === "production"
-          ? "Une erreur interne est survenue"
-          : error.message,
+        process.env.NODE_ENV === "production" ? "Une erreur interne est survenue" : error.message,
     },
   });
 };

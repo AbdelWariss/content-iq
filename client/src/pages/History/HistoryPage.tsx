@@ -11,22 +11,42 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 const TYPE_LABELS: Record<string, string> = {
-  blog: "Article", linkedin: "LinkedIn", instagram: "Instagram",
-  twitter: "X / Thread", email: "Email", newsletter: "Newsletter",
-  product: "Produit", pitch: "Pitch", youtube: "YouTube",
-  bio: "Bio", press: "Communiqué", slogan: "Slogan",
+  blog: "Article",
+  linkedin: "LinkedIn",
+  instagram: "Instagram",
+  twitter: "X / Thread",
+  email: "Email",
+  newsletter: "Newsletter",
+  product: "Produit",
+  pitch: "Pitch",
+  youtube: "YouTube",
+  bio: "Bio",
+  press: "Communiqué",
+  slogan: "Slogan",
 };
 
 const TYPE_ICON: Record<string, React.ReactNode> = {
-  blog: CiqIcon.blog, linkedin: CiqIcon.linkedin, instagram: CiqIcon.insta,
-  twitter: CiqIcon.twitter, email: CiqIcon.email, newsletter: CiqIcon.email,
-  product: CiqIcon.product, pitch: CiqIcon.pitch, youtube: CiqIcon.yt,
-  bio: CiqIcon.bio, press: CiqIcon.press, slogan: CiqIcon.bolt,
+  blog: CiqIcon.blog,
+  linkedin: CiqIcon.linkedin,
+  instagram: CiqIcon.insta,
+  twitter: CiqIcon.twitter,
+  email: CiqIcon.email,
+  newsletter: CiqIcon.email,
+  product: CiqIcon.product,
+  pitch: CiqIcon.pitch,
+  youtube: CiqIcon.yt,
+  bio: CiqIcon.bio,
+  press: CiqIcon.press,
+  slogan: CiqIcon.bolt,
 };
 
 const TON_LABELS: Record<string, string> = {
-  professional: "pro", casual: "casual", inspiring: "inspirant",
-  technical: "tech", humorous: "humour", persuasive: "persuasif",
+  professional: "pro",
+  casual: "casual",
+  inspiring: "inspirant",
+  technical: "tech",
+  humorous: "humour",
+  persuasive: "persuasif",
 };
 
 const EXPORT_FORMATS = [
@@ -65,7 +85,15 @@ function ExportMenu({ item }: { item: ContentItem }) {
           <div style={{ position: "fixed", inset: 0, zIndex: 10 }} onClick={() => setOpen(false)} />
           <div
             className="card"
-            style={{ position: "absolute", right: 0, zIndex: 20, marginTop: 4, padding: 4, minWidth: 80, background: "var(--bg-elev)" }}
+            style={{
+              position: "absolute",
+              right: 0,
+              zIndex: 20,
+              marginTop: 4,
+              padding: 4,
+              minWidth: 80,
+              background: "var(--bg-elev)",
+            }}
           >
             {EXPORT_FORMATS.map(({ format, label }) => (
               <button
@@ -97,7 +125,12 @@ export default function HistoryPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["contents", { page, type: filterType, favorite: filterFavorite }],
     queryFn: () =>
-      contentService.list({ page, limit: 20, type: filterType || undefined, favorite: filterFavorite || undefined }),
+      contentService.list({
+        page,
+        limit: 20,
+        type: filterType || undefined,
+        favorite: filterFavorite || undefined,
+      }),
   });
 
   const { data: searchData, isLoading: isSearching } = useQuery({
@@ -135,7 +168,9 @@ export default function HistoryPage() {
     <div style={{ padding: "32px 40px", overflow: "auto" }}>
       {/* Header */}
       <div className="row between" style={{ marginBottom: 18 }}>
-        <h1 className="t-display" style={{ fontSize: 40, margin: 0 }}>Historique</h1>
+        <h1 className="t-display" style={{ fontSize: 40, margin: 0 }}>
+          Historique
+        </h1>
         <div className="row" style={{ gap: 6 }}>
           <button className="btn btn-outline btn-sm">
             <Ico icon={CiqIcon.download} />
@@ -176,20 +211,31 @@ export default function HistoryPage() {
           className="select"
           style={{ width: "auto" }}
           value={filterType}
-          onChange={(e) => { setFilterType(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setFilterType(e.target.value);
+            setPage(1);
+          }}
         >
           <option value="">Tous types</option>
           {Object.entries(TYPE_LABELS).map(([v, l]) => (
-            <option key={v} value={v}>{l}</option>
+            <option key={v} value={v}>
+              {l}
+            </option>
           ))}
         </select>
 
         <button
           type="button"
           className={`btn btn-outline btn-sm${filterFavorite ? " btn-accent" : ""}`}
-          onClick={() => { setFilterFavorite((f) => !f); setPage(1); }}
+          onClick={() => {
+            setFilterFavorite((f) => !f);
+            setPage(1);
+          }}
         >
-          <Ico icon={CiqIcon.star} style={{ color: filterFavorite ? "white" : "var(--ink-mute)" }} />
+          <Ico
+            icon={CiqIcon.star}
+            style={{ color: filterFavorite ? "white" : "var(--ink-mute)" }}
+          />
           ⭐ Favoris
         </button>
 
@@ -202,11 +248,21 @@ export default function HistoryPage() {
       {/* Table */}
       {loading ? (
         <div className="card" style={{ overflow: "hidden" }}>
-          <div style={{ padding: "10px 16px", background: "var(--bg-sunk)", borderBottom: "1px solid var(--line)" }}>
+          <div
+            style={{
+              padding: "10px 16px",
+              background: "var(--bg-sunk)",
+              borderBottom: "1px solid var(--line)",
+            }}
+          >
             <Skeleton className="h-3 rounded" style={{ width: 180 }} />
           </div>
           {[1, 2, 3, 4, 5].map((k) => (
-            <div key={k} className="row" style={{ padding: "14px 16px", gap: 12, borderBottom: "1px solid var(--line-soft)" }}>
+            <div
+              key={k}
+              className="row"
+              style={{ padding: "14px 16px", gap: 12, borderBottom: "1px solid var(--line-soft)" }}
+            >
               <Skeleton style={{ width: 18, height: 18, borderRadius: "50%", flexShrink: 0 }} />
               <Skeleton style={{ flex: 1, height: 14, borderRadius: 4 }} />
               <Skeleton style={{ width: 80, height: 14, borderRadius: 4, flexShrink: 0 }} />
@@ -219,28 +275,54 @@ export default function HistoryPage() {
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingTop: 80, paddingBottom: 80, gap: 18, textAlign: "center" }}>
-          <div style={{
-            width: 80,
-            height: 80,
-            borderRadius: "50%",
-            background: "var(--bg-sunk)",
-            border: "1px solid var(--line)",
-            display: "grid",
-            placeItems: "center",
-          }}>
-            <Ico icon={search ? CiqIcon.search : CiqIcon.history} size={32} style={{ color: "var(--ink-mute)" }} />
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            paddingTop: 80,
+            paddingBottom: 80,
+            gap: 18,
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: "50%",
+              background: "var(--bg-sunk)",
+              border: "1px solid var(--line)",
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
+            <Ico
+              icon={search ? CiqIcon.search : CiqIcon.history}
+              size={32}
+              style={{ color: "var(--ink-mute)" }}
+            />
           </div>
           <div>
-            <p style={{ fontSize: 18, fontWeight: 600, margin: "0 0 8px", fontFamily: "var(--font-serif)" }}>
+            <p
+              style={{
+                fontSize: 18,
+                fontWeight: 600,
+                margin: "0 0 8px",
+                fontFamily: "var(--font-serif)",
+              }}
+            >
               {search ? "Aucun résultat" : filterFavorite ? "Aucun favori" : "Bibliothèque vide"}
             </p>
-            <p style={{ fontSize: 13.5, color: "var(--ink-mute)", maxWidth: 340, lineHeight: 1.55 }}>
+            <p
+              style={{ fontSize: 13.5, color: "var(--ink-mute)", maxWidth: 340, lineHeight: 1.55 }}
+            >
               {search
                 ? `Aucun contenu ne correspond à "${search}". Essayez d'autres mots-clés.`
                 : filterFavorite
-                ? "Marquez vos contenus préférés avec ★ pour les retrouver ici."
-                : "Votre bibliothèque est vide. Générez votre premier contenu pour le voir apparaître ici."}
+                  ? "Marquez vos contenus préférés avec ★ pour les retrouver ici."
+                  : "Votre bibliothèque est vide. Générez votre premier contenu pour le voir apparaître ici."}
             </p>
           </div>
           {!search && !filterFavorite && (
@@ -253,7 +335,10 @@ export default function HistoryPage() {
             <button
               type="button"
               className="btn btn-outline"
-              onClick={() => { setSearch(""); setFilterFavorite(false); }}
+              onClick={() => {
+                setSearch("");
+                setFilterFavorite(false);
+              }}
             >
               Réinitialiser les filtres
             </button>
@@ -321,10 +406,25 @@ export default function HistoryPage() {
                   {TON_LABELS[item.prompt?.tone ?? ""] ?? item.prompt?.tone ?? "—"}
                 </span>
               </span>
-              <span style={{ width: 50, fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--ink-soft)", textTransform: "uppercase" }}>
+              <span
+                style={{
+                  width: 50,
+                  fontSize: 12,
+                  fontFamily: "var(--font-mono)",
+                  color: "var(--ink-soft)",
+                  textTransform: "uppercase",
+                }}
+              >
                 {item.prompt?.language ?? "FR"}
               </span>
-              <span style={{ width: 80, fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--ink-mute)" }}>
+              <span
+                style={{
+                  width: 80,
+                  fontSize: 12,
+                  fontFamily: "var(--font-mono)",
+                  color: "var(--ink-mute)",
+                }}
+              >
                 {item.tokensUsed ?? "—"}
               </span>
               <span style={{ width: 90, fontSize: 12, color: "var(--ink-mute)" }}>
@@ -343,7 +443,10 @@ export default function HistoryPage() {
                 <button
                   type="button"
                   className="btn btn-ghost btn-sm"
-                  style={{ padding: "4px 6px", color: item.isFavorite ? "var(--accent)" : "var(--ink-mute)" }}
+                  style={{
+                    padding: "4px 6px",
+                    color: item.isFavorite ? "var(--accent)" : "var(--ink-mute)",
+                  }}
                   onClick={() => toggleFavMutation.mutate(item._id)}
                   title="Favori"
                 >
@@ -367,14 +470,19 @@ export default function HistoryPage() {
 
       {/* Pagination */}
       {pagination && pagination.pages > 1 && !search && (
-        <div className="row between" style={{ marginTop: 14, fontSize: 12, color: "var(--ink-mute)" }}>
+        <div
+          className="row between"
+          style={{ marginTop: 14, fontSize: 12, color: "var(--ink-mute)" }}
+        >
           <span>{pagination.total} contenus au total</span>
           <div className="row" style={{ gap: 4 }}>
             <button
               className="btn btn-outline btn-sm"
               disabled={page === 1}
               onClick={() => setPage((p) => p - 1)}
-            >‹</button>
+            >
+              ‹
+            </button>
             {Array.from({ length: Math.min(pagination.pages, 5) }, (_, i) => i + 1).map((p) => (
               <button
                 key={p}
@@ -390,7 +498,9 @@ export default function HistoryPage() {
               className="btn btn-outline btn-sm"
               disabled={page === pagination.pages}
               onClick={() => setPage((p) => p + 1)}
-            >›</button>
+            >
+              ›
+            </button>
           </div>
         </div>
       )}

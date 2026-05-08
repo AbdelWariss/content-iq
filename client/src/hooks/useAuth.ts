@@ -1,10 +1,10 @@
+import { toast } from "@/hooks/use-toast";
+import { authService } from "@/services/auth.service";
+import { logout as logoutAction, setCredentials, setLoading } from "@/store/authSlice";
+import { useAppDispatch, useAppSelector } from "@/store/index";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { useAppDispatch, useAppSelector } from "@/store/index";
-import { setCredentials, logout as logoutAction, setLoading } from "@/store/authSlice";
-import { authService } from "@/services/auth.service";
-import { toast } from "@/hooks/use-toast";
 
 export function useAuth() {
   const dispatch = useAppDispatch();

@@ -1,8 +1,8 @@
-import type { Request, Response } from "express";
-import { getAuthUser } from "../utils/requestHelpers.js";
-import { User } from "../models/User.model.js";
-import { CreditTransaction } from "../models/CreditTransaction.model.js";
 import { PaginationSchema } from "@contentiq/shared";
+import type { Request, Response } from "express";
+import { CreditTransaction } from "../models/CreditTransaction.model.js";
+import { User } from "../models/User.model.js";
+import { getAuthUser } from "../utils/requestHelpers.js";
 
 export async function getCredits(req: Request, res: Response): Promise<void> {
   const { userId } = getAuthUser(req);
@@ -11,7 +11,10 @@ export async function getCredits(req: Request, res: Response): Promise<void> {
     res.status(404).json({ success: false, error: { message: "Utilisateur introuvable" } });
     return;
   }
-  res.json({ success: true, data: { credits: user.credits, subscription: user.subscription, role: user.role } });
+  res.json({
+    success: true,
+    data: { credits: user.credits, subscription: user.subscription, role: user.role },
+  });
 }
 
 export async function getHistory(req: Request, res: Response): Promise<void> {

@@ -1,6 +1,6 @@
-import { useAppSelector } from "@/store/index";
 import { useVoice } from "@/hooks/useVoice";
 import { CiqIcon, Ico, MicWave } from "@/lib/ciq-icons";
+import { useAppSelector } from "@/store/index";
 
 interface VoiceButtonProps {
   onTranscript: (text: string) => void;
@@ -9,7 +9,12 @@ interface VoiceButtonProps {
   className?: string;
 }
 
-export function VoiceButton({ onTranscript, lang = "fr-FR", size = "sm", className }: VoiceButtonProps) {
+export function VoiceButton({
+  onTranscript,
+  lang = "fr-FR",
+  size = "sm",
+  className,
+}: VoiceButtonProps) {
   const { status, isTtsSpeaking } = useAppSelector((s) => s.voice);
   const { startListening, stopListening } = useVoice();
 

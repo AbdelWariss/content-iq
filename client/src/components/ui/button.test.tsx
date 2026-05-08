@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 import { Button } from "./button";
 
 describe("Button", () => {
@@ -39,7 +39,11 @@ describe("Button", () => {
   it("n'appelle pas onClick si disabled", async () => {
     const user = userEvent.setup();
     const onClick = vi.fn();
-    render(<Button disabled onClick={onClick}>Cliquer</Button>);
+    render(
+      <Button disabled onClick={onClick}>
+        Cliquer
+      </Button>,
+    );
     await user.click(screen.getByRole("button"));
     expect(onClick).not.toHaveBeenCalled();
   });

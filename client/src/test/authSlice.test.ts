@@ -1,4 +1,3 @@
-import { describe, it, expect } from "vitest";
 import authReducer, {
   setCredentials,
   updateUser,
@@ -6,6 +5,7 @@ import authReducer, {
   logout,
   setLoading,
 } from "@/store/authSlice";
+import { describe, expect, it } from "vitest";
 
 const initialState = {
   user: null,

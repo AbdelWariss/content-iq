@@ -1,8 +1,8 @@
-import type { Request, Response } from "express";
-import { getAuthUser } from "../utils/requestHelpers.js";
-import { AssistantSession } from "../models/AssistantSession.model.js";
 import { AssistantMessageSchema, PLAN_LIMITS } from "@contentiq/shared";
+import type { Request, Response } from "express";
+import { AssistantSession } from "../models/AssistantSession.model.js";
 import { streamAssistantChat } from "../services/assistant.service.js";
+import { getAuthUser } from "../utils/requestHelpers.js";
 
 export async function chat(req: Request, res: Response): Promise<void> {
   const { userId, role } = getAuthUser(req);
@@ -22,9 +22,8 @@ export async function chat(req: Request, res: Response): Promise<void> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayCount =
-      session?.messages.filter(
-        (m) => m.role === "user" && new Date(m.timestamp) >= today,
-      ).length ?? 0;
+      session?.messages.filter((m) => m.role === "user" && new Date(m.timestamp) >= today).length ??
+      0;
 
     if (todayCount >= planLimits.assistantMessagesPerDay) {
       res.status(429).json({
@@ -48,7 +47,12 @@ export async function chat(req: Request, res: Response): Promise<void> {
   const history = session.messages.map((m) => ({ role: m.role, content: m.content }));
   session.messages.push({ role: "user", content, timestamp: new Date(), isVoice: false });
 
-  const assistantResponse = await streamAssistantChat(history, content, { pageContext, editorSnapshot }, res);
+  const assistantResponse = await streamAssistantChat(
+    history,
+    content,
+    { pageContext, editorSnapshot },
+    res,
+  );
 
   if (assistantResponse) {
     session.messages.push({

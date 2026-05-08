@@ -1,5 +1,5 @@
+import type { ContentType, TemplateInput } from "@contentiq/shared";
 import api from "./axios";
-import type { TemplateInput, ContentType } from "@contentiq/shared";
 
 export interface Template {
   _id: string;
@@ -22,8 +22,14 @@ export interface TemplateListResponse {
 }
 
 export const templateService = {
-  async list(params?: { page?: number; category?: string; type?: string }): Promise<TemplateListResponse> {
-    const { data } = await api.get<{ success: boolean } & TemplateListResponse>("/templates", { params });
+  async list(params?: {
+    page?: number;
+    category?: string;
+    type?: string;
+  }): Promise<TemplateListResponse> {
+    const { data } = await api.get<{ success: boolean } & TemplateListResponse>("/templates", {
+      params,
+    });
     return data;
   },
 
@@ -38,7 +44,10 @@ export const templateService = {
   },
 
   async update(id: string, payload: Partial<TemplateInput>): Promise<Template> {
-    const { data } = await api.put<{ success: boolean; data: Template }>(`/templates/${id}`, payload);
+    const { data } = await api.put<{ success: boolean; data: Template }>(
+      `/templates/${id}`,
+      payload,
+    );
     return data.data;
   },
 

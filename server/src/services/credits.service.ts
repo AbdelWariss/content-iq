@@ -1,9 +1,9 @@
-import { User } from "../models/User.model.js";
-import { CreditTransaction } from "../models/CreditTransaction.model.js";
-import { sendLowCreditsAlert } from "./email.service.js";
-import { logger } from "../utils/logger.js";
 import type { CreditTransactionType } from "@contentiq/shared";
 import type mongoose from "mongoose";
+import { CreditTransaction } from "../models/CreditTransaction.model.js";
+import { User } from "../models/User.model.js";
+import { logger } from "../utils/logger.js";
+import { sendLowCreditsAlert } from "./email.service.js";
 
 const LOW_CREDITS_THRESHOLD = 0.2; // 20%
 

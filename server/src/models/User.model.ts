@@ -1,9 +1,5 @@
+import type { ContentLanguage, SubscriptionStatus, UserRole } from "@contentiq/shared";
 import mongoose, { type Document, Schema } from "mongoose";
-import type {
-  UserRole,
-  SubscriptionStatus,
-  ContentLanguage,
-} from "@contentiq/shared";
 
 export interface IUser extends Document {
   email: string;

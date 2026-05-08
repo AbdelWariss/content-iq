@@ -39,7 +39,10 @@ export function AppLayout() {
           className="flex-1 overflow-y-auto scrollbar-thin"
           style={{ background: "transparent" }}
         >
-          <div key={location.pathname} style={{ animation: "fadeSlideIn 0.22s ease", minHeight: "100%" }}>
+          <div
+            key={location.pathname}
+            style={{ animation: "fadeSlideIn 0.22s ease", minHeight: "100%" }}
+          >
             <Outlet />
           </div>
         </main>

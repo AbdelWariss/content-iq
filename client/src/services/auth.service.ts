@@ -1,5 +1,5 @@
+import type { LoginInput, RegisterInput } from "@contentiq/shared";
 import api from "./axios";
-import type { RegisterInput, LoginInput } from "@contentiq/shared";
 
 export interface AuthResponse {
   success: boolean;

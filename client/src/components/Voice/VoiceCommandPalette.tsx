@@ -1,5 +1,5 @@
-import { useEffect } from "react";
 import { CiqIcon, Ico, MicWave } from "@/lib/ciq-icons";
+import { useEffect } from "react";
 
 interface MatchedCommand {
   icon: React.ReactNode;
@@ -57,7 +57,15 @@ export function VoiceCommandPalette({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Mic header */}
-        <div style={{ padding: "20px 20px 14px", display: "flex", alignItems: "center", gap: 14, borderBottom: "1px solid var(--line-soft)" }}>
+        <div
+          style={{
+            padding: "20px 20px 14px",
+            display: "flex",
+            alignItems: "center",
+            gap: 14,
+            borderBottom: "1px solid var(--line-soft)",
+          }}
+        >
           <div
             style={{
               width: 44,
@@ -92,7 +100,9 @@ export function VoiceCommandPalette({
         <div style={{ padding: 8 }}>
           {topCommand && (
             <>
-              <div className="t-eyebrow" style={{ padding: "10px 12px 6px" }}>Commande détectée</div>
+              <div className="t-eyebrow" style={{ padding: "10px 12px 6px" }}>
+                Commande détectée
+              </div>
               <div
                 style={{
                   padding: "10px 12px",
@@ -105,10 +115,16 @@ export function VoiceCommandPalette({
                 }}
                 onClick={() => onExecute(topCommand)}
               >
-                <span className="ico" style={{ color: "var(--accent-ink)" }}>{topCommand.icon}</span>
+                <span className="ico" style={{ color: "var(--accent-ink)" }}>
+                  {topCommand.icon}
+                </span>
                 <div className="col" style={{ flex: 1 }}>
-                  <strong style={{ fontSize: 13.5, color: "var(--accent-ink)" }}>{topCommand.label}</strong>
-                  <span style={{ fontSize: 11.5, color: "var(--accent-ink)", opacity: 0.75 }}>{topCommand.description}</span>
+                  <strong style={{ fontSize: 13.5, color: "var(--accent-ink)" }}>
+                    {topCommand.label}
+                  </strong>
+                  <span style={{ fontSize: 11.5, color: "var(--accent-ink)", opacity: 0.75 }}>
+                    {topCommand.description}
+                  </span>
                 </div>
                 <span className="t-mono" style={{ fontSize: 10.5, color: "var(--accent-ink)" }}>
                   {topCommand.confidence}% ↵
@@ -119,7 +135,9 @@ export function VoiceCommandPalette({
 
           {matchedCommands.length > 0 && (
             <>
-              <div className="t-eyebrow" style={{ padding: "14px 12px 6px" }}>Autres possibilités</div>
+              <div className="t-eyebrow" style={{ padding: "14px 12px 6px" }}>
+                Autres possibilités
+              </div>
               {matchedCommands.map((cmd, i) => (
                 <div
                   key={i}
@@ -133,8 +151,12 @@ export function VoiceCommandPalette({
                   }}
                   onClick={() => onExecute(cmd)}
                 >
-                  <span className="ico" style={{ color: "var(--ink-mute)" }}>{cmd.icon}</span>
-                  <span style={{ flex: 1, fontSize: 13, color: "var(--ink-soft)" }}>{cmd.label}</span>
+                  <span className="ico" style={{ color: "var(--ink-mute)" }}>
+                    {cmd.icon}
+                  </span>
+                  <span style={{ flex: 1, fontSize: 13, color: "var(--ink-soft)" }}>
+                    {cmd.label}
+                  </span>
                   <span className="t-mono" style={{ fontSize: 10.5, color: "var(--ink-mute)" }}>
                     {cmd.confidence}%
                   </span>

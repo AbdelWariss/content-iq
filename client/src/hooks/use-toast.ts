@@ -1,5 +1,5 @@
-import * as React from "react";
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast";
+import * as React from "react";
 
 const TOAST_LIMIT = 1;
 const TOAST_REMOVE_DELAY = 1000000;
@@ -55,9 +55,7 @@ export const reducer = (state: State, action: Action): State => {
     case "UPDATE_TOAST":
       return {
         ...state,
-        toasts: state.toasts.map((t) =>
-          t.id === action.toast.id ? { ...t, ...action.toast } : t,
-        ),
+        toasts: state.toasts.map((t) => (t.id === action.toast.id ? { ...t, ...action.toast } : t)),
       };
     case "DISMISS_TOAST": {
       const { toastId } = action;
@@ -90,9 +88,20 @@ type Toast = Omit<ToasterToast, "id">;
 
 function toast({ ...props }: Toast) {
   const id = genId();
-  const update = (props: ToasterToast) => dispatch({ type: "UPDATE_TOAST", toast: { ...props, id } });
+  const update = (props: ToasterToast) =>
+    dispatch({ type: "UPDATE_TOAST", toast: { ...props, id } });
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id });
-  dispatch({ type: "ADD_TOAST", toast: { ...props, id, open: true, onOpenChange: (open) => { if (!open) dismiss(); } } });
+  dispatch({
+    type: "ADD_TOAST",
+    toast: {
+      ...props,
+      id,
+      open: true,
+      onOpenChange: (open) => {
+        if (!open) dismiss();
+      },
+    },
+  });
   return { id, dismiss, update };
 }
 
@@ -100,9 +109,16 @@ function useToast() {
   const [state, setState] = React.useState<State>(memoryState);
   React.useEffect(() => {
     listeners.push(setState);
-    return () => { const index = listeners.indexOf(setState); if (index > -1) listeners.splice(index, 1); };
+    return () => {
+      const index = listeners.indexOf(setState);
+      if (index > -1) listeners.splice(index, 1);
+    };
   }, [state]);
-  return { ...state, toast, dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }) };
+  return {
+    ...state,
+    toast,
+    dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
+  };
 }
 
 export { useToast, toast };

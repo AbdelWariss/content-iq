@@ -1,8 +1,8 @@
+import type { UserRole } from "@contentiq/shared";
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { UnauthorizedError } from "./errorHandler.js";
-import type { UserRole } from "@contentiq/shared";
 
 export interface AuthPayload {
   userId: string;

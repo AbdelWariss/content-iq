@@ -1,13 +1,13 @@
 import { Router } from "express";
-import { authenticate } from "../middleware/authenticate.js";
 import {
-  listTemplates,
-  getTemplate,
   createTemplate,
-  updateTemplate,
   deleteTemplate,
+  getTemplate,
+  listTemplates,
+  updateTemplate,
   useTemplate,
 } from "../controllers/template.controller.js";
+import { authenticate } from "../middleware/authenticate.js";
 
 const router: import("express").Router = Router();
 

@@ -1,12 +1,12 @@
-import mongoose, { type Document, Schema } from "mongoose";
 import type {
-  ContentType,
-  ContentTone,
   ContentLanguage,
   ContentLength,
   ContentStatus,
+  ContentTone,
+  ContentType,
   ExportFormat,
 } from "@contentiq/shared";
+import mongoose, { type Document, Schema } from "mongoose";
 
 interface ExportRecord {
   format: ExportFormat;
@@ -49,8 +49,18 @@ const ContentSchema = new Schema<IContent>(
     type: {
       type: String,
       enum: [
-        "blog", "linkedin", "instagram", "twitter", "email",
-        "newsletter", "product", "pitch", "youtube", "bio", "press", "slogan",
+        "blog",
+        "linkedin",
+        "instagram",
+        "twitter",
+        "email",
+        "newsletter",
+        "product",
+        "pitch",
+        "youtube",
+        "bio",
+        "press",
+        "slogan",
       ],
       required: true,
     },

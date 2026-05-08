@@ -1,5 +1,5 @@
-import { useCallback } from "react";
 import { CiqIcon, Ico, MicWave } from "@/lib/ciq-icons";
+import { useCallback } from "react";
 
 interface VoiceOrbProps {
   transcript?: string;
@@ -54,13 +54,12 @@ export function VoiceOrb({
       />
 
       {/* Top bar */}
-      <div className="row between" style={{ padding: "20px 28px", position: "relative", zIndex: 2 }}>
+      <div
+        className="row between"
+        style={{ padding: "20px 28px", position: "relative", zIndex: 2 }}
+      >
         <span className="t-eyebrow">Conversation vocale · IQ Assistant</span>
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm"
-          onClick={onClose}
-        >
+        <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>
           <Ico icon={CiqIcon.x} size={14} />
           Fermer (Esc)
         </button>
@@ -80,16 +79,27 @@ export function VoiceOrb({
           padding: "0 10%",
         }}
       >
-        <span className="pill voice" style={{ padding: "5px 14px" }}>● L'assistant écoute</span>
+        <span className="pill voice" style={{ padding: "5px 14px" }}>
+          ● L'assistant écoute
+        </span>
 
         {/* Orb */}
-        <div style={{ position: "relative", width: 280, height: 280, display: "grid", placeItems: "center" }}>
+        <div
+          style={{
+            position: "relative",
+            width: 280,
+            height: 280,
+            display: "grid",
+            placeItems: "center",
+          }}
+        >
           <div
             style={{
               position: "absolute",
               inset: 0,
               borderRadius: "50%",
-              background: "radial-gradient(circle, var(--accent) 0%, oklch(0.7 0.15 30 / 0.4) 60%, transparent 100%)",
+              background:
+                "radial-gradient(circle, var(--accent) 0%, oklch(0.7 0.15 30 / 0.4) 60%, transparent 100%)",
               filter: "blur(20px)",
               animation: "orbpulse 2.4s ease-in-out infinite",
             }}
@@ -138,9 +148,7 @@ export function VoiceOrb({
         >
           {transcript ? (
             <>
-              «{" "}
-              <em style={{ color: "var(--accent)" }}>{transcript}</em>
-              {" "}»
+              « <em style={{ color: "var(--accent)" }}>{transcript}</em> »
             </>
           ) : (
             <em style={{ color: "var(--ink-mute)" }}>Parlez maintenant…</em>
@@ -148,7 +156,15 @@ export function VoiceOrb({
         </div>
 
         {/* Meta */}
-        <div className="row" style={{ gap: 22, color: "var(--ink-mute)", fontSize: 12, fontFamily: "var(--font-mono)" }}>
+        <div
+          className="row"
+          style={{
+            gap: 22,
+            color: "var(--ink-mute)",
+            fontSize: 12,
+            fontFamily: "var(--font-mono)",
+          }}
+        >
           <span>{formatTime(elapsed)} / écoute</span>
           <span>·</span>
           <span>dites « stop » pour terminer</span>
@@ -187,10 +203,14 @@ export function VoiceOrb({
           zIndex: 2,
         }}
       >
-        <div className="t-eyebrow" style={{ marginBottom: 10 }}>Essayez aussi</div>
+        <div className="t-eyebrow" style={{ marginBottom: 10 }}>
+          Essayez aussi
+        </div>
         <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
           {HINTS.map((c) => (
-            <span key={c} className="chip">{c}</span>
+            <span key={c} className="chip">
+              {c}
+            </span>
           ))}
         </div>
       </div>

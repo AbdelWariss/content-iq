@@ -1,18 +1,18 @@
 import { Router } from "express";
 import passport from "passport";
-import { authLimiter } from "../middleware/rateLimiter.js";
-import { authenticate } from "../middleware/authenticate.js";
 import {
-  register,
+  forgotPassword,
+  getMe,
+  googleCallback,
   login,
   logout,
   refresh,
-  googleCallback,
-  forgotPassword,
+  register,
   resetPassword,
   verifyEmail,
-  getMe,
 } from "../controllers/auth.controller.js";
+import { authenticate } from "../middleware/authenticate.js";
+import { authLimiter } from "../middleware/rateLimiter.js";
 
 const router: import("express").Router = Router();
 
@@ -21,8 +21,18 @@ router.post("/login", authLimiter, login);
 router.post("/logout", authenticate, logout);
 router.post("/refresh", refresh);
 
-router.get("/google", passport.authenticate("google", { scope: ["profile", "email"], session: false }));
-router.get("/google/callback", passport.authenticate("google", { session: false, failureRedirect: `${process.env.CLIENT_URL}/login?error=oauth` }), googleCallback);
+router.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"], session: false }),
+);
+router.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    session: false,
+    failureRedirect: `${process.env.CLIENT_URL}/login?error=oauth`,
+  }),
+  googleCallback,
+);
 
 router.post("/forgot-password", authLimiter, forgotPassword);
 router.post("/reset-password", resetPassword);

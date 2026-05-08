@@ -1,7 +1,7 @@
-import type { NextFunction, Request, Response } from "express";
 import type { UserRole } from "@contentiq/shared";
-import { ForbiddenError, UnauthorizedError } from "./errorHandler.js";
+import type { NextFunction, Request, Response } from "express";
 import type { AuthPayload } from "./authenticate.js";
+import { ForbiddenError, UnauthorizedError } from "./errorHandler.js";
 
 const ROLE_HIERARCHY: Record<UserRole, number> = {
   free: 0,

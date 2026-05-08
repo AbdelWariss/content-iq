@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { authenticate } from "../middleware/authenticate.js";
 import { authorize, requireAdmin } from "../middleware/authorize.js";
-import { UnauthorizedError, ForbiddenError } from "../middleware/errorHandler.js";
+import { ForbiddenError, UnauthorizedError } from "../middleware/errorHandler.js";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

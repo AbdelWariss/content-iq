@@ -1,6 +1,6 @@
-import { Link } from "react-router-dom";
 import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import { useAppSelector } from "@/store/index";
+import { Link } from "react-router-dom";
 
 export default function NotFoundPage() {
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);

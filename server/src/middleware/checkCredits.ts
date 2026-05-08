@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { User } from "../models/User.model.js";
-import { InsufficientCreditsError } from "./errorHandler.js";
 import { getAuthUser } from "../utils/requestHelpers.js";
+import { InsufficientCreditsError } from "./errorHandler.js";
 
 export const CREDITS_PER_GENERATION = 1;
 

@@ -2,8 +2,8 @@ import { createServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import { createApp } from "./app.js";
 import { connectDB } from "./config/db.js";
-import { connectRedis } from "./config/redis.js";
 import { env } from "./config/env.js";
+import { connectRedis } from "./config/redis.js";
 import { logger } from "./utils/logger.js";
 
 async function bootstrap() {
@@ -40,9 +40,7 @@ async function bootstrap() {
   (global as { io?: SocketIOServer }).io = io;
 
   httpServer.listen(env.PORT, () => {
-    logger.info(
-      `🚀 CONTENT.IQ Server démarré sur http://localhost:${env.PORT} [${env.NODE_ENV}]`,
-    );
+    logger.info(`🚀 CONTENT.IQ Server démarré sur http://localhost:${env.PORT} [${env.NODE_ENV}]`);
   });
 
   // Graceful shutdown

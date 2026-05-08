@@ -1,5 +1,4 @@
 import rateLimit from "express-rate-limit";
-import { getRedisClient } from "../config/redis.js";
 
 const createLimiter = (windowMs: number, max: number, message: string) =>
   rateLimit({

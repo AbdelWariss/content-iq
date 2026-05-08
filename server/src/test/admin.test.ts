@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 import request from "supertest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "../app.js";
 import { generateAccessToken } from "../utils/token.js";
 
@@ -43,7 +43,9 @@ vi.mock("../models/CreditTransaction.model.js", () => ({
 
 let app: ReturnType<typeof createApp>;
 
-beforeAll(() => { app = createApp(); });
+beforeAll(() => {
+  app = createApp();
+});
 beforeEach(() => vi.clearAllMocks());
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -61,9 +63,7 @@ describe("GET /api/admin/stats", () => {
   });
 
   it("retourne 403 pour un non-admin", async () => {
-    const res = await request(app)
-      .get("/api/admin/stats")
-      .set("Authorization", token("free"));
+    const res = await request(app).get("/api/admin/stats").set("Authorization", token("free"));
     expect(res.status).toBe(403);
   });
 
@@ -80,9 +80,7 @@ describe("GET /api/admin/stats", () => {
     vi.mocked(CreditTransaction.aggregate).mockResolvedValue([{ total: 500 }]);
     vi.mocked(User.countDocuments).mockResolvedValue(2);
 
-    const res = await request(app)
-      .get("/api/admin/stats")
-      .set("Authorization", token("admin"));
+    const res = await request(app).get("/api/admin/stats").set("Authorization", token("admin"));
 
     expect(res.status).toBe(200);
     expect(res.body.data.users.total).toBe(13);
@@ -100,9 +98,7 @@ describe("GET /api/admin/users", () => {
   });
 
   it("retourne 403 pour un non-admin", async () => {
-    const res = await request(app)
-      .get("/api/admin/users")
-      .set("Authorization", token("free"));
+    const res = await request(app).get("/api/admin/users").set("Authorization", token("free"));
     expect(res.status).toBe(403);
   });
 

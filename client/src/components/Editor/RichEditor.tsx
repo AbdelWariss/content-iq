@@ -1,13 +1,13 @@
-import { useEffect } from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import UnderlineExt from "@tiptap/extension-underline";
-import TextAlign from "@tiptap/extension-text-align";
+import { cn } from "@/lib/utils";
+import CharacterCount from "@tiptap/extension-character-count";
 import Highlight from "@tiptap/extension-highlight";
 import Placeholder from "@tiptap/extension-placeholder";
-import CharacterCount from "@tiptap/extension-character-count";
+import TextAlign from "@tiptap/extension-text-align";
+import UnderlineExt from "@tiptap/extension-underline";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { useEffect } from "react";
 import { EditorToolbar } from "./EditorToolbar";
-import { cn } from "@/lib/utils";
 
 interface RichEditorProps {
   content: string;

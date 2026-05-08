@@ -1,4 +1,4 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
 
 type VoiceStatus = "idle" | "listening" | "processing" | "error" | "unsupported";
 
@@ -30,10 +30,7 @@ const voiceSlice = createSlice({
     setTranscript(state, action: PayloadAction<string>) {
       state.transcript = action.payload;
     },
-    setLastCommand(
-      state,
-      action: PayloadAction<{ command: string; success: boolean }>,
-    ) {
+    setLastCommand(state, action: PayloadAction<{ command: string; success: boolean }>) {
       state.lastCommand = action.payload.command;
       state.lastCommandSuccess = action.payload.success;
     },

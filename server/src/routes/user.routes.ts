@@ -1,6 +1,6 @@
 import { Router } from "express";
+import { getProfile, updateAvatar, updateProfile } from "../controllers/user.controller.js";
 import { authenticate } from "../middleware/authenticate.js";
-import { getProfile, updateProfile, updateAvatar } from "../controllers/user.controller.js";
 
 const router: import("express").Router = Router();
 

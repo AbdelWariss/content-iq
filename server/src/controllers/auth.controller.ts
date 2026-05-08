@@ -1,30 +1,30 @@
-import type { Request, Response } from "express";
+import { LoginSchema, RegisterSchema, ResetPasswordSchema } from "@contentiq/shared";
 import bcrypt from "bcryptjs";
-import { User } from "../models/User.model.js";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-  generateSecureToken,
-  hashToken,
-  verifyRefreshToken,
-  REFRESH_TOKEN_COOKIE,
-  COOKIE_OPTIONS,
-} from "../utils/token.js";
-import {
-  sendVerificationEmail,
-  sendPasswordResetEmail,
-  sendWelcomeEmail,
-} from "../services/email.service.js";
+import type { Request, Response } from "express";
+import type { AuthPayload } from "../middleware/authenticate.js";
 import {
   AppError,
   NotFoundError,
   UnauthorizedError,
   ValidationError,
 } from "../middleware/errorHandler.js";
-import { RegisterSchema, LoginSchema, ResetPasswordSchema } from "@contentiq/shared";
+import { User } from "../models/User.model.js";
+import {
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+  sendWelcomeEmail,
+} from "../services/email.service.js";
 import { logger } from "../utils/logger.js";
-import type { AuthPayload } from "../middleware/authenticate.js";
 import { getAuthUser } from "../utils/requestHelpers.js";
+import {
+  COOKIE_OPTIONS,
+  REFRESH_TOKEN_COOKIE,
+  generateAccessToken,
+  generateRefreshToken,
+  generateSecureToken,
+  hashToken,
+  verifyRefreshToken,
+} from "../utils/token.js";
 
 const MAX_REFRESH_TOKENS = 5;
 const SALT_ROUNDS = 12;
@@ -55,7 +55,11 @@ export async function register(req: Request, res: Response): Promise<void> {
     emailVerified: false,
     emailVerificationToken: verificationTokenHash,
     emailVerificationExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    credits: { remaining: 50, total: 50, resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) },
+    credits: {
+      remaining: 50,
+      total: 50,
+      resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    },
   });
 
   await sendVerificationEmail(user.email, user.name, verificationToken).catch((err) =>
@@ -165,7 +169,9 @@ export async function refresh(req: Request, res: Response): Promise<void> {
 
 export async function googleCallback(req: Request, res: Response): Promise<void> {
   // req.user est le document Mongoose renvoyé par Passport
-  const oauthUser = req.user as unknown as { _id: unknown; role: string; email: string } | undefined;
+  const oauthUser = req.user as unknown as
+    | { _id: unknown; role: string; email: string }
+    | undefined;
   if (!oauthUser) throw new UnauthorizedError("Authentification Google échouée");
 
   const payload = buildAuthPayload(oauthUser);

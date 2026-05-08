@@ -1,5 +1,5 @@
-import mongoose, { type Document, Schema } from "mongoose";
 import type { ContentType } from "@contentiq/shared";
+import mongoose, { type Document, Schema } from "mongoose";
 
 interface TemplateVariable {
   key: string;
@@ -29,8 +29,18 @@ const TemplateSchema = new Schema<ITemplate>(
     type: {
       type: String,
       enum: [
-        "blog", "linkedin", "instagram", "twitter", "email",
-        "newsletter", "product", "pitch", "youtube", "bio", "press", "slogan",
+        "blog",
+        "linkedin",
+        "instagram",
+        "twitter",
+        "email",
+        "newsletter",
+        "product",
+        "pitch",
+        "youtube",
+        "bio",
+        "press",
+        "slogan",
       ],
       required: true,
     },

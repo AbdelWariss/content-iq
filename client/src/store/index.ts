@@ -1,8 +1,8 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { useDispatch, useSelector } from "react-redux";
+import assistantReducer from "./assistantSlice";
 import authReducer from "./authSlice";
 import contentReducer from "./contentSlice";
-import assistantReducer from "./assistantSlice";
 import voiceReducer from "./voiceSlice";
 
 export const store = configureStore({
@@ -24,5 +24,4 @@ export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
 export const useAppDispatch = () => useDispatch<AppDispatch>();
-export const useAppSelector = <T>(selector: (state: RootState) => T): T =>
-  useSelector(selector);
+export const useAppSelector = <T>(selector: (state: RootState) => T): T => useSelector(selector);

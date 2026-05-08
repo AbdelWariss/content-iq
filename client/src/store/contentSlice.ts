@@ -1,5 +1,5 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { ContentType, ContentTone, ContentLanguage, ContentLength } from "@contentiq/shared";
+import type { ContentLanguage, ContentLength, ContentTone, ContentType } from "@contentiq/shared";
+import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
 
 interface GenerationParams {
   type: ContentType;

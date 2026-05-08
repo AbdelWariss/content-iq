@@ -1,17 +1,17 @@
 import { Router } from "express";
+import {
+  deleteContent,
+  generate,
+  getContent,
+  improveContentHandler,
+  listContents,
+  searchContents,
+  toggleFavorite,
+  updateContent,
+} from "../controllers/content.controller.js";
 import { authenticate } from "../middleware/authenticate.js";
 import { checkCredits } from "../middleware/checkCredits.js";
 import { generateLimiter } from "../middleware/rateLimiter.js";
-import {
-  generate,
-  listContents,
-  getContent,
-  updateContent,
-  deleteContent,
-  toggleFavorite,
-  searchContents,
-  improveContentHandler,
-} from "../controllers/content.controller.js";
 
 const router: import("express").Router = Router();
 

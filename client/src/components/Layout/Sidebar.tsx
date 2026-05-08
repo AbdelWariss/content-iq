@@ -1,4 +1,4 @@
-import { CiqIcon, Ico, MicWave } from "@/lib/ciq-icons";
+import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import { useAppSelector } from "@/store/index";
 import { NavLink } from "react-router-dom";
 
@@ -45,7 +45,10 @@ export function Sidebar() {
           <Ico icon={it.icon} />
           {it.label}
           {it.badge && (
-            <span className="pill accent" style={{ marginLeft: "auto", padding: "1px 6px", fontSize: 10 }}>
+            <span
+              className="pill accent"
+              style={{ marginLeft: "auto", padding: "1px 6px", fontSize: 10 }}
+            >
               {it.badge}
             </span>
           )}
@@ -67,10 +70,7 @@ export function Sidebar() {
       ))}
 
       {isAdmin && (
-        <NavLink
-          to="/admin"
-          className={({ isActive }) => `nav-item${isActive ? " on" : ""}`}
-        >
+        <NavLink to="/admin" className={({ isActive }) => `nav-item${isActive ? " on" : ""}`}>
           <Ico icon={CiqIcon.shield} />
           Admin
         </NavLink>

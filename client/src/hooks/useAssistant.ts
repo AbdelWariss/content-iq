@@ -1,12 +1,12 @@
-import { useCallback, useRef } from "react";
-import { useAppDispatch, useAppSelector } from "@/store/index";
+import { assistantService } from "@/services/assistant.service";
 import {
   addMessage,
   appendToLastMessage,
-  setStreaming,
   clearSession,
+  setStreaming,
 } from "@/store/assistantSlice";
-import { assistantService } from "@/services/assistant.service";
+import { useAppDispatch, useAppSelector } from "@/store/index";
+import { useCallback, useRef } from "react";
 
 export function useAssistant() {
   const dispatch = useAppDispatch();
@@ -15,10 +15,7 @@ export function useAssistant() {
   const abortRef = useRef<AbortController | null>(null);
 
   const sendMessage = useCallback(
-    async (
-      content: string,
-      context?: { pageContext?: string; editorSnapshot?: string },
-    ) => {
+    async (content: string, context?: { pageContext?: string; editorSnapshot?: string }) => {
       if (isStreaming || !content.trim()) return;
 
       dispatch(addMessage({ role: "user", content }));
@@ -39,7 +36,7 @@ export function useAssistant() {
         });
 
         if (!res.ok) {
-          const err = await res.json() as { error?: { message?: string } };
+          const err = (await res.json()) as { error?: { message?: string } };
           dispatch(appendToLastMessage(`⚠️ ${err.error?.message ?? "Erreur"}`));
           return;
         }
@@ -61,7 +58,11 @@ export function useAssistant() {
           for (const line of lines) {
             if (!line.startsWith("data: ")) continue;
             try {
-              const evt = JSON.parse(line.slice(6)) as { token?: string; done?: boolean; error?: string };
+              const evt = JSON.parse(line.slice(6)) as {
+                token?: string;
+                done?: boolean;
+                error?: string;
+              };
               if (evt.token) dispatch(appendToLastMessage(evt.token));
               if (evt.error) dispatch(appendToLastMessage(`⚠️ ${evt.error}`));
             } catch {

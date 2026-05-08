@@ -1,5 +1,5 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { UserRole } from "@contentiq/shared";
+import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
 
 interface UserState {
   id: string;
@@ -61,6 +61,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setCredentials, updateUser, updateCredits, logout, setLoading } =
-  authSlice.actions;
+export const { setCredentials, updateUser, updateCredits, logout, setLoading } = authSlice.actions;
 export default authSlice.reducer;

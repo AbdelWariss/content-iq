@@ -17,16 +17,33 @@ const CATEGORIES = [
 ];
 
 const TYPE_ICON: Record<string, React.ReactNode> = {
-  blog: CiqIcon.blog, linkedin: CiqIcon.linkedin, instagram: CiqIcon.insta,
-  twitter: CiqIcon.twitter, email: CiqIcon.email, newsletter: CiqIcon.email,
-  product: CiqIcon.product, pitch: CiqIcon.pitch, youtube: CiqIcon.yt,
-  bio: CiqIcon.bio, press: CiqIcon.press, slogan: CiqIcon.bolt,
+  blog: CiqIcon.blog,
+  linkedin: CiqIcon.linkedin,
+  instagram: CiqIcon.insta,
+  twitter: CiqIcon.twitter,
+  email: CiqIcon.email,
+  newsletter: CiqIcon.email,
+  product: CiqIcon.product,
+  pitch: CiqIcon.pitch,
+  youtube: CiqIcon.yt,
+  bio: CiqIcon.bio,
+  press: CiqIcon.press,
+  slogan: CiqIcon.bolt,
 };
 
 const TYPE_LABELS: Record<string, string> = {
-  blog: "Blog", linkedin: "LinkedIn", instagram: "Instagram", twitter: "Thread X",
-  email: "Email", newsletter: "Newsletter", product: "Produit", pitch: "Pitch",
-  youtube: "YouTube", bio: "Bio", press: "Communiqué", slogan: "Slogan",
+  blog: "Blog",
+  linkedin: "LinkedIn",
+  instagram: "Instagram",
+  twitter: "Thread X",
+  email: "Email",
+  newsletter: "Newsletter",
+  product: "Produit",
+  pitch: "Pitch",
+  youtube: "YouTube",
+  bio: "Bio",
+  press: "Communiqué",
+  slogan: "Slogan",
 };
 
 function TemplateCard({
@@ -59,9 +76,13 @@ function TemplateCard({
           <Ico icon={TYPE_ICON[template.type] ?? CiqIcon.templ} />
         </div>
         {isMine ? (
-          <span className="pill accent" style={{ padding: "1px 8px", fontSize: 10 }}>perso</span>
+          <span className="pill accent" style={{ padding: "1px 8px", fontSize: 10 }}>
+            perso
+          </span>
         ) : (
-          <span className="pill" style={{ padding: "1px 8px", fontSize: 10 }}>{template.category}</span>
+          <span className="pill" style={{ padding: "1px 8px", fontSize: 10 }}>
+            {template.category}
+          </span>
         )}
       </div>
 
@@ -73,12 +94,18 @@ function TemplateCard({
       {template.variables.length > 0 && (
         <div className="row" style={{ gap: 4, flexWrap: "wrap", marginBottom: 10 }}>
           {template.variables.slice(0, 3).map((v) => (
-            <span key={v.key} className="chip" style={{ fontFamily: "var(--font-mono)", fontSize: 10.5 }}>
+            <span
+              key={v.key}
+              className="chip"
+              style={{ fontFamily: "var(--font-mono)", fontSize: 10.5 }}
+            >
               {`{{${v.key}}}`}
             </span>
           ))}
           {template.variables.length > 3 && (
-            <span style={{ fontSize: 10.5, color: "var(--ink-mute)" }}>+{template.variables.length - 3}</span>
+            <span style={{ fontSize: 10.5, color: "var(--ink-mute)" }}>
+              +{template.variables.length - 3}
+            </span>
           )}
         </div>
       )}
@@ -99,11 +126,7 @@ function TemplateCard({
               <Ico icon={CiqIcon.x} size={13} />
             </button>
           )}
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm"
-            onClick={() => onUse(template)}
-          >
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => onUse(template)}>
             Utiliser →
           </button>
         </div>
@@ -112,31 +135,60 @@ function TemplateCard({
   );
 }
 
-function CreateTemplateModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+function CreateTemplateModal({
+  onClose,
+  onSuccess,
+}: { onClose: () => void; onSuccess: () => void }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState("blog");
-  const [category, setCategory] = useState<"marketing" | "social" | "business" | "creative">("marketing");
+  const [category, setCategory] = useState<"marketing" | "social" | "business" | "creative">(
+    "marketing",
+  );
   const [promptSchema, setPromptSchema] = useState("");
   const [isPublic, setIsPublic] = useState(false);
 
   const mutation = useMutation({
     mutationFn: () =>
       templateService.create({
-        name, description,
+        name,
+        description,
         type: type as Parameters<typeof templateService.create>[0]["type"],
-        category, promptSchema, variables: [], isPublic,
+        category,
+        promptSchema,
+        variables: [],
+        isPublic,
       }),
-    onSuccess: () => { toast({ title: "Template créé !" }); onSuccess(); onClose(); },
+    onSuccess: () => {
+      toast({ title: "Template créé !" });
+      onSuccess();
+      onClose();
+    },
     onError: () => toast({ title: "Erreur lors de la création", variant: "destructive" }),
   });
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)" }}>
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 50,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(0,0,0,0.5)",
+        backdropFilter: "blur(8px)",
+      }}
+    >
       <div className="card" style={{ width: "100%", maxWidth: 520, padding: 28, margin: "0 16px" }}>
         <div className="row between" style={{ marginBottom: 20 }}>
           <h2 style={{ fontSize: 22, fontWeight: 600, margin: 0 }}>Nouveau template</h2>
-          <button type="button" className="btn btn-ghost btn-sm" style={{ padding: 6 }} onClick={onClose}>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            style={{ padding: 6 }}
+            onClick={onClose}
+          >
             <Ico icon={CiqIcon.x} />
           </button>
         </div>
@@ -144,22 +196,40 @@ function CreateTemplateModal({ onClose, onSuccess }: { onClose: () => void; onSu
         <div className="col" style={{ gap: 14 }}>
           <div>
             <label className="label">Nom *</label>
-            <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Post LinkedIn viral" />
+            <input
+              className="input"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ex: Post LinkedIn viral"
+            />
           </div>
           <div>
             <label className="label">Description</label>
-            <input className="input" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description courte" />
+            <input
+              className="input"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Description courte"
+            />
           </div>
           <div className="row" style={{ gap: 12 }}>
             <div style={{ flex: 1 }}>
               <label className="label">Type</label>
               <select className="select" value={type} onChange={(e) => setType(e.target.value)}>
-                {Object.entries(TYPE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                {Object.entries(TYPE_LABELS).map(([v, l]) => (
+                  <option key={v} value={v}>
+                    {l}
+                  </option>
+                ))}
               </select>
             </div>
             <div style={{ flex: 1 }}>
               <label className="label">Catégorie</label>
-              <select className="select" value={category} onChange={(e) => setCategory(e.target.value as typeof category)}>
+              <select
+                className="select"
+                value={category}
+                onChange={(e) => setCategory(e.target.value as typeof category)}
+              >
                 <option value="marketing">Marketing</option>
                 <option value="social">Réseaux sociaux</option>
                 <option value="business">Business</option>
@@ -183,13 +253,21 @@ function CreateTemplateModal({ onClose, onSuccess }: { onClose: () => void; onSu
             />
           </div>
           <label className="row" style={{ gap: 8, cursor: "pointer" }}>
-            <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
-            <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>Rendre ce template public</span>
+            <input
+              type="checkbox"
+              checked={isPublic}
+              onChange={(e) => setIsPublic(e.target.checked)}
+            />
+            <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>
+              Rendre ce template public
+            </span>
           </label>
         </div>
 
         <div className="row" style={{ gap: 10, marginTop: 20 }}>
-          <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={onClose}>Annuler</button>
+          <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={onClose}>
+            Annuler
+          </button>
           <button
             type="button"
             className="btn btn-primary"
@@ -240,9 +318,10 @@ export default function TemplatesPage() {
 
   const templates = data?.data ?? [];
   const filtered = search
-    ? templates.filter((t) =>
-        t.name.toLowerCase().includes(search.toLowerCase()) ||
-        t.description?.toLowerCase().includes(search.toLowerCase()),
+    ? templates.filter(
+        (t) =>
+          t.name.toLowerCase().includes(search.toLowerCase()) ||
+          t.description?.toLowerCase().includes(search.toLowerCase()),
       )
     : templates;
 
@@ -252,7 +331,9 @@ export default function TemplatesPage() {
     <div style={{ padding: "32px 40px", overflow: "auto" }}>
       {/* Header */}
       <div className="row between" style={{ marginBottom: 6 }}>
-        <h1 className="t-display" style={{ fontSize: 40, margin: 0 }}>Templates</h1>
+        <h1 className="t-display" style={{ fontSize: 40, margin: 0 }}>
+          Templates
+        </h1>
         {canCreateTemplates && (
           <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
             <Ico icon={CiqIcon.plus} />
@@ -305,18 +386,33 @@ export default function TemplatesPage() {
       {!canCreateTemplates && (
         <div
           className="card"
-          style={{ padding: 14, textAlign: "center", marginBottom: 18, borderStyle: "dashed", background: "transparent" }}
+          style={{
+            padding: 14,
+            textAlign: "center",
+            marginBottom: 18,
+            borderStyle: "dashed",
+            background: "transparent",
+          }}
         >
           <p style={{ fontSize: 13, color: "var(--ink-mute)" }}>
             La création de templates personnalisés est disponible à partir du plan{" "}
-            <a href="/pricing" style={{ color: "var(--accent-ink)", fontWeight: 600 }}>Pro</a>.
+            <a href="/pricing" style={{ color: "var(--accent-ink)", fontWeight: 600 }}>
+              Pro
+            </a>
+            .
           </p>
         </div>
       )}
 
       {/* Grid */}
       {isLoading ? (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+            gap: 14,
+          }}
+        >
           {[1, 2, 3, 4, 5, 6].map((k) => (
             <div key={k} className="card" style={{ padding: 20 }}>
               <div className="row between" style={{ marginBottom: 14 }}>
@@ -339,35 +435,60 @@ export default function TemplatesPage() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingTop: 80, paddingBottom: 80, gap: 18, textAlign: "center" }}>
-          <div style={{
-            width: 80,
-            height: 80,
-            borderRadius: "50%",
-            background: "var(--bg-sunk)",
-            border: "1px solid var(--line)",
-            display: "grid",
-            placeItems: "center",
-          }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            paddingTop: 80,
+            paddingBottom: 80,
+            gap: 18,
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: "50%",
+              background: "var(--bg-sunk)",
+              border: "1px solid var(--line)",
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
             <Ico icon={CiqIcon.templ} size={32} style={{ color: "var(--ink-mute)" }} />
           </div>
           <div>
-            <p style={{ fontSize: 18, fontWeight: 600, margin: "0 0 8px", fontFamily: "var(--font-serif)" }}>
+            <p
+              style={{
+                fontSize: 18,
+                fontWeight: 600,
+                margin: "0 0 8px",
+                fontFamily: "var(--font-serif)",
+              }}
+            >
               {search ? "Aucun template trouvé" : "Aucun template disponible"}
             </p>
-            <p style={{ fontSize: 13.5, color: "var(--ink-mute)", maxWidth: 340, lineHeight: 1.55 }}>
+            <p
+              style={{ fontSize: 13.5, color: "var(--ink-mute)", maxWidth: 340, lineHeight: 1.55 }}
+            >
               {search
                 ? `Aucun template correspond à "${search}". Essayez un autre terme.`
                 : selectedCategory !== "all"
-                ? `Aucun template dans la catégorie "${selectedCategory === "mine" ? "Mes templates" : (CATEGORIES.find((c) => c.value === selectedCategory)?.label ?? selectedCategory)}".`
-                : "Les templates seront disponibles après initialisation de la base de données."}
+                  ? `Aucun template dans la catégorie "${selectedCategory === "mine" ? "Mes templates" : (CATEGORIES.find((c) => c.value === selectedCategory)?.label ?? selectedCategory)}".`
+                  : "Les templates seront disponibles après initialisation de la base de données."}
             </p>
           </div>
           {(search || selectedCategory !== "all") && (
             <button
               type="button"
               className="btn btn-outline"
-              onClick={() => { setSearch(""); setSelectedCategory("all"); }}
+              onClick={() => {
+                setSearch("");
+                setSelectedCategory("all");
+              }}
             >
               Voir tous les templates
             </button>
@@ -380,7 +501,13 @@ export default function TemplatesPage() {
           )}
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+            gap: 14,
+          }}
+        >
           {filtered.map((template) => (
             <TemplateCard
               key={template._id}

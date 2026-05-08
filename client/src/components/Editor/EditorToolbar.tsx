@@ -1,11 +1,22 @@
+import { cn } from "@/lib/utils";
 import type { Editor } from "@tiptap/react";
 import {
-  Bold, Italic, Underline, Strikethrough,
-  AlignLeft, AlignCenter, AlignRight,
-  List, ListOrdered, Heading1, Heading2, Heading3,
-  Link, Highlighter, Undo, Redo,
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
+  Bold,
+  Heading1,
+  Heading2,
+  Heading3,
+  Highlighter,
+  Italic,
+  List,
+  ListOrdered,
+  Redo,
+  Strikethrough,
+  Underline,
+  Undo,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface ToolbarButtonProps {
   onClick: () => void;
@@ -19,7 +30,10 @@ function ToolbarButton({ onClick, active, disabled, title, children }: ToolbarBu
   return (
     <button
       type="button"
-      onMouseDown={(e) => { e.preventDefault(); onClick(); }}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        onClick();
+      }}
       disabled={disabled}
       title={title}
       className={cn(

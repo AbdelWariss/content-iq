@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
-import { cn, stripHtml, truncate, formatCredits, debounce } from "@/lib/utils";
+import { cn, debounce, formatCredits, stripHtml, truncate } from "@/lib/utils";
+import { describe, expect, it, vi } from "vitest";
 
 describe("cn()", () => {
   it("concatène des classes simples", () => {

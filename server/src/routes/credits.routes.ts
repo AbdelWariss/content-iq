@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { authenticate } from "../middleware/authenticate.js";
 import { getCredits, getHistory } from "../controllers/credits.controller.js";
+import { authenticate } from "../middleware/authenticate.js";
 
 const router: import("express").Router = Router();
 

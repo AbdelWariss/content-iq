@@ -1,5 +1,5 @@
-import mongoose, { type Document, Schema } from "mongoose";
 import type { CreditTransactionType } from "@contentiq/shared";
+import mongoose, { type Document, Schema } from "mongoose";
 
 export interface ICreditTransaction extends Document {
   userId: mongoose.Types.ObjectId;

@@ -1,5 +1,4 @@
 import api from "./axios";
-import type { GenerateContentInput } from "@contentiq/shared";
 
 export interface ContentItem {
   _id: string;

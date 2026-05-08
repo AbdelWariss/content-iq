@@ -1,9 +1,15 @@
-import axios from "axios";
-import { store } from "@/store/index";
 import { logout, setCredentials } from "@/store/authSlice";
+import { store } from "@/store/index";
+import axios from "axios";
 
 // Routes d'auth qui NE doivent PAS déclencher un refresh silencieux
-const AUTH_ROUTES = ["/auth/login", "/auth/register", "/auth/refresh", "/auth/forgot-password", "/auth/reset-password"];
+const AUTH_ROUTES = [
+  "/auth/login",
+  "/auth/register",
+  "/auth/refresh",
+  "/auth/forgot-password",
+  "/auth/reset-password",
+];
 
 const isAuthRoute = (url?: string) => AUTH_ROUTES.some((r) => url?.includes(r));
 

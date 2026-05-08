@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { authenticate } from "../middleware/authenticate.js";
 import { createCheckoutSession, createPortalSession } from "../controllers/stripe.controller.js";
+import { authenticate } from "../middleware/authenticate.js";
 
 const router: import("express").Router = Router();
 

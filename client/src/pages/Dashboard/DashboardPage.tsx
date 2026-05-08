@@ -191,20 +191,40 @@ export default function DashboardPage() {
             {/* Credits ring — glass card */}
             <div
               className="card"
-              style={{ padding: 24, display: "flex", gap: 22, alignItems: "center" }}
+              style={{
+                padding: 28,
+                display: "flex",
+                gap: 24,
+                alignItems: "center",
+                position: "relative",
+                overflow: "hidden",
+              }}
             >
-              <div style={{ width: 96, height: 96, flexShrink: 0 }}>
+              {/* BG icon */}
+              <Ico
+                icon={CiqIcon.zap}
+                size={140}
+                style={{
+                  position: "absolute",
+                  right: -20,
+                  bottom: -24,
+                  color: "var(--accent)",
+                  opacity: 0.06,
+                  pointerEvents: "none",
+                }}
+              />
+              <div style={{ width: 104, height: 104, flexShrink: 0, zIndex: 1 }}>
                 <RadialBarChart
-                  width={96}
-                  height={96}
-                  cx={48}
-                  cy={48}
-                  innerRadius={32}
-                  outerRadius={46}
+                  width={104}
+                  height={104}
+                  cx={52}
+                  cy={52}
+                  innerRadius={34}
+                  outerRadius={50}
                   startAngle={90}
                   endAngle={-270}
                   data={[{ value: Math.round(ringPct * 100), fill: "var(--accent)" }]}
-                  barSize={9}
+                  barSize={10}
                 >
                   <RadialBar
                     background={{ fill: "var(--bg-sunk)" }}
@@ -213,20 +233,20 @@ export default function DashboardPage() {
                   />
                 </RadialBarChart>
               </div>
-              <div className="col" style={{ flex: 1 }}>
+              <div className="col" style={{ flex: 1, zIndex: 1 }}>
                 <span className="t-eyebrow">{t("dashboard.creditsRemaining")}</span>
-                <div className="row" style={{ alignItems: "baseline", gap: 6, marginTop: 5 }}>
-                  <span className="t-mono" style={{ fontSize: 44, fontWeight: 600, lineHeight: 1 }}>
+                <div className="row" style={{ alignItems: "baseline", gap: 6, marginTop: 6 }}>
+                  <span className="t-mono" style={{ fontSize: 52, fontWeight: 600, lineHeight: 1 }}>
                     {remaining}
                   </span>
-                  <span style={{ color: "var(--ink-mute)", fontSize: 15 }}>/ {total}</span>
+                  <span style={{ color: "var(--ink-mute)", fontSize: 17 }}>/ {total}</span>
                 </div>
-                <div style={{ fontSize: 13, color: "var(--ink-mute)", marginTop: 4 }}>
+                <div style={{ fontSize: 14, color: "var(--ink-mute)", marginTop: 5 }}>
                   {t("dashboard.renewsIn", { days: daysUntilReset })}
                 </div>
                 <button
                   className="btn btn-outline btn-sm"
-                  style={{ alignSelf: "flex-start", marginTop: 12 }}
+                  style={{ alignSelf: "flex-start", marginTop: 14 }}
                   onClick={() => navigate("/pricing")}
                 >
                   {t("dashboard.topUp")}
@@ -235,31 +255,75 @@ export default function DashboardPage() {
             </div>
 
             {/* KPI: Contenus ce mois */}
-            <div className="card" style={{ padding: 22 }}>
-              <div className="row between" style={{ marginBottom: 12 }}>
+            <div className="card" style={{ padding: 24, position: "relative", overflow: "hidden" }}>
+              <Ico
+                icon={CiqIcon.sparkle}
+                size={120}
+                style={{
+                  position: "absolute",
+                  right: -16,
+                  bottom: -20,
+                  color: "var(--accent)",
+                  opacity: 0.08,
+                  pointerEvents: "none",
+                }}
+              />
+              <div className="row between" style={{ marginBottom: 14, position: "relative" }}>
                 <span className="t-eyebrow">{t("dashboard.contentsThisMonth")}</span>
-                <Ico icon={CiqIcon.sparkle} style={{ color: "var(--accent)" }} size={24} />
+                <Ico icon={CiqIcon.sparkle} style={{ color: "var(--accent)" }} size={22} />
               </div>
-              <div className="t-mono" style={{ fontSize: 40, fontWeight: 600, lineHeight: 1 }}>
+              <div
+                className="t-mono"
+                style={{ fontSize: 48, fontWeight: 600, lineHeight: 1, position: "relative" }}
+              >
                 {stats.totals.contentsThisMonth}
               </div>
-              <div style={{ fontSize: 14, color: "var(--ink-mute)", marginTop: 8 }}>
+              <div
+                style={{
+                  fontSize: 15,
+                  color: "var(--ink-mute)",
+                  marginTop: 10,
+                  position: "relative",
+                }}
+              >
                 {t("dashboard.thisMonth", { n: stats.totals.contentsThisMonth })}
               </div>
             </div>
 
             {/* KPI: Tokens */}
-            <div className="card" style={{ padding: 22 }}>
-              <div className="row between" style={{ marginBottom: 12 }}>
+            <div className="card" style={{ padding: 24, position: "relative", overflow: "hidden" }}>
+              <Ico
+                icon={CiqIcon.zap}
+                size={120}
+                style={{
+                  position: "absolute",
+                  right: -16,
+                  bottom: -20,
+                  color: "var(--ink)",
+                  opacity: 0.06,
+                  pointerEvents: "none",
+                }}
+              />
+              <div className="row between" style={{ marginBottom: 14, position: "relative" }}>
                 <span className="t-eyebrow">{t("dashboard.tokensUsed")}</span>
-                <Ico icon={CiqIcon.zap} style={{ color: "var(--ink)" }} size={24} />
+                <Ico icon={CiqIcon.zap} style={{ color: "var(--ink)" }} size={22} />
               </div>
-              <div className="t-mono" style={{ fontSize: 40, fontWeight: 600, lineHeight: 1 }}>
+              <div
+                className="t-mono"
+                style={{ fontSize: 48, fontWeight: 600, lineHeight: 1, position: "relative" }}
+              >
                 {stats.totals.tokensUsed > 1000
                   ? `${(stats.totals.tokensUsed / 1000).toFixed(1)}K`
                   : stats.totals.tokensUsed}
               </div>
-              <div style={{ fontSize: 14, color: "var(--ink-mute)", marginTop: 8 }}>
+              <div
+                style={{
+                  fontSize: 15,
+                  color: "var(--ink-mute)",
+                  marginTop: 10,
+                  position: "relative",
+                }}
+              >
                 {stats.totals.contentsThisMonth > 0
                   ? `Moy. ${Math.round(stats.totals.tokensUsed / stats.totals.contentsThisMonth)} / gén.`
                   : t("dashboard.totalCumul")}
@@ -267,15 +331,37 @@ export default function DashboardPage() {
             </div>
 
             {/* KPI: CMD Vocales */}
-            <div className="card" style={{ padding: 22 }}>
-              <div className="row between" style={{ marginBottom: 12 }}>
+            <div className="card" style={{ padding: 24, position: "relative", overflow: "hidden" }}>
+              <Ico
+                icon={CiqIcon.mic}
+                size={120}
+                style={{
+                  position: "absolute",
+                  right: -16,
+                  bottom: -20,
+                  color: "var(--voice)",
+                  opacity: 0.09,
+                  pointerEvents: "none",
+                }}
+              />
+              <div className="row between" style={{ marginBottom: 14, position: "relative" }}>
                 <span className="t-eyebrow">CMD Vocales</span>
-                <Ico icon={CiqIcon.mic} style={{ color: "var(--voice)" }} size={24} />
+                <Ico icon={CiqIcon.mic} style={{ color: "var(--voice)" }} size={22} />
               </div>
-              <div className="t-mono" style={{ fontSize: 40, fontWeight: 600, lineHeight: 1 }}>
+              <div
+                className="t-mono"
+                style={{ fontSize: 48, fontWeight: 600, lineHeight: 1, position: "relative" }}
+              >
                 {stats.voice?.commandsThisMonth ?? 0}
               </div>
-              <div style={{ fontSize: 14, color: "var(--ink-mute)", marginTop: 8 }}>
+              <div
+                style={{
+                  fontSize: 15,
+                  color: "var(--ink-mute)",
+                  marginTop: 10,
+                  position: "relative",
+                }}
+              >
                 {stats.voice?.successRate
                   ? `${stats.voice.successRate}% reconnues`
                   : "pas encore de données"}
@@ -290,7 +376,14 @@ export default function DashboardPage() {
             {/* Activity bar chart */}
             <div className="card" style={{ padding: 22 }}>
               <div className="row between">
-                <span className="t-eyebrow">{t("dashboard.activityChart")}</span>
+                <span className="t-eyebrow">
+                  {t("dashboard.activityChartBase")} —{" "}
+                  {activePeriod === "7"
+                    ? t("dashboard.period7d")
+                    : activePeriod === "365"
+                      ? t("dashboard.periodYear")
+                      : t("dashboard.period30d")}
+                </span>
                 <div className="seg">
                   <button
                     type="button"

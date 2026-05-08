@@ -38,6 +38,7 @@ const fr = {
     favorites: "Favoris",
     savedContents: "contenus sauvegardés",
     activityChart: "Activité — 30 jours",
+    activityChartBase: "Activité",
     topTypes: "Types les plus utilisés",
     recentContents: "Derniers contenus",
     seeAll: "Tout voir →",

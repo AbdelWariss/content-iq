@@ -38,6 +38,7 @@ const en = {
     favorites: "Favorites",
     savedContents: "saved contents",
     activityChart: "Activity — 30 days",
+    activityChartBase: "Activity",
     topTypes: "Most used types",
     recentContents: "Recent contents",
     seeAll: "See all →",

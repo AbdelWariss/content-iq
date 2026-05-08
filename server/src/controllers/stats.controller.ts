@@ -13,7 +13,7 @@ export async function getDashboardStats(req: Request, res: Response): Promise<vo
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const last365Days = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
 
   const [
     totalContents,
@@ -50,7 +50,7 @@ export async function getDashboardStats(req: Request, res: Response): Promise<vo
         $match: {
           ...userFilter,
           status: { $ne: "archived" },
-          createdAt: { $gte: last30Days },
+          createdAt: { $gte: last365Days },
         },
       },
       {

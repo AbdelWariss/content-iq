@@ -2,11 +2,21 @@ import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import { type RecentItem, statsService } from "@/services/stats.service";
 import { useAppSelector } from "@/store/index";
 import { useQuery } from "@tanstack/react-query";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { enUS, fr } from "date-fns/locale";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import {
+  Bar,
+  BarChart,
+  Cell,
+  RadialBar,
+  RadialBarChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+} from "recharts";
 
 const TYPE_ICON: Record<string, React.ReactNode> = {
   blog: CiqIcon.blog,
@@ -64,8 +74,6 @@ export default function DashboardPage() {
 
   const remaining = user?.credits?.remaining ?? 0;
   const total = user?.credits?.total ?? 500;
-  const ringR = 38;
-  const ringCirc = 2 * Math.PI * ringR;
   const ringPct = total > 0 ? remaining / total : 0;
 
   const resetDate = user?.credits?.resetDate ? new Date(user.credits.resetDate) : null;
@@ -185,18 +193,26 @@ export default function DashboardPage() {
               className="card"
               style={{ padding: 22, display: "flex", gap: 22, alignItems: "center" }}
             >
-              <svg className="ring-svg" width="92" height="92" viewBox="0 0 92 92">
-                <circle className="track" cx="46" cy="46" r={ringR} />
-                <circle
-                  className="fill"
-                  cx="46"
-                  cy="46"
-                  r={ringR}
-                  stroke="var(--accent)"
-                  strokeDasharray={`${ringCirc}`}
-                  strokeDashoffset={`${ringCirc * (1 - ringPct)}`}
-                />
-              </svg>
+              <div style={{ width: 92, height: 92, flexShrink: 0 }}>
+                <RadialBarChart
+                  width={92}
+                  height={92}
+                  cx={46}
+                  cy={46}
+                  innerRadius={30}
+                  outerRadius={44}
+                  startAngle={90}
+                  endAngle={-270}
+                  data={[{ value: Math.round(ringPct * 100), fill: "var(--accent)" }]}
+                  barSize={8}
+                >
+                  <RadialBar
+                    background={{ fill: "var(--bg-sunk)" }}
+                    dataKey="value"
+                    cornerRadius={4}
+                  />
+                </RadialBarChart>
+              </div>
               <div className="col" style={{ flex: 1 }}>
                 <span className="t-eyebrow">{t("dashboard.creditsRemaining")}</span>
                 <div className="row" style={{ alignItems: "baseline", gap: 6, marginTop: 4 }}>
@@ -290,66 +306,58 @@ export default function DashboardPage() {
                   .toISOString()
                   .slice(0, 10);
                 const filtered = stats.dailyActivity.filter((d) => d.date >= cutoff);
-                return filtered.length > 0 ? (
-                  <>
+                if (filtered.length === 0) {
+                  return (
                     <div
                       style={{
+                        height: 180,
                         display: "flex",
-                        alignItems: "flex-end",
-                        gap: 3,
-                        height: 160,
-                        marginTop: 22,
-                      }}
-                    >
-                      {filtered.map((d, i, arr) => {
-                        const maxVal = Math.max(...arr.map((x) => x.count), 1);
-                        const h = Math.max((d.count / maxVal) * 96, d.count > 0 ? 6 : 2);
-                        const isLast = i === arr.length - 1;
-                        return (
-                          <div
-                            key={d.date}
-                            title={`${d.date}: ${d.count}`}
-                            style={{
-                              flex: 1,
-                              height: `${h}%`,
-                              background: isLast ? "var(--accent)" : "var(--ink)",
-                              opacity: isLast ? 1 : 0.18,
-                              borderRadius: 2,
-                            }}
-                          />
-                        );
-                      })}
-                    </div>
-                    <div
-                      className="row between"
-                      style={{
-                        marginTop: 10,
-                        fontSize: 11,
+                        alignItems: "center",
+                        justifyContent: "center",
                         color: "var(--ink-mute)",
-                        fontFamily: "var(--font-mono)",
+                        fontSize: 13,
                       }}
                     >
-                      {filtered[0] && (
-                        <span>
-                          {format(new Date(filtered[0].date), "d MMM", { locale: dateLocale })}
-                        </span>
-                      )}
-                      <span>{t("dashboard.today")}</span>
+                      {t("dashboard.noData")}
                     </div>
-                  </>
-                ) : (
-                  <div
-                    style={{
-                      height: 160,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "var(--ink-mute)",
-                      fontSize: 13,
-                    }}
-                  >
-                    {t("dashboard.noData")}
-                  </div>
+                  );
+                }
+                return (
+                  <ResponsiveContainer width="100%" height={180} style={{ marginTop: 16 }}>
+                    <BarChart data={filtered} barCategoryGap="30%">
+                      <XAxis
+                        dataKey="date"
+                        tickFormatter={(v: string) => v.slice(5)}
+                        tick={{
+                          fontSize: 10,
+                          fill: "var(--ink-mute)",
+                          fontFamily: "var(--font-mono)",
+                        }}
+                        axisLine={false}
+                        tickLine={false}
+                        interval="preserveStartEnd"
+                      />
+                      <Tooltip
+                        cursor={{ fill: "var(--bg-sunk)" }}
+                        contentStyle={{
+                          background: "var(--bg-elev)",
+                          border: "1px solid var(--line)",
+                          borderRadius: 8,
+                          fontSize: 12,
+                        }}
+                        formatter={(v: number) => [v, t("dashboard.contentsThisMonth")]}
+                      />
+                      <Bar dataKey="count" radius={[3, 3, 0, 0]}>
+                        {filtered.map((d, i) => (
+                          <Cell
+                            key={d.date}
+                            fill={i === filtered.length - 1 ? "var(--accent)" : "var(--ink)"}
+                            opacity={i === filtered.length - 1 ? 1 : 0.22}
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
                 );
               })()}
             </div>
@@ -357,28 +365,49 @@ export default function DashboardPage() {
             {/* Type breakdown */}
             <div className="card" style={{ padding: 22 }}>
               <span className="t-eyebrow">{t("dashboard.topTypes")}</span>
-              <div className="col" style={{ gap: 12, marginTop: 18 }}>
-                {stats.typeBreakdown.slice(0, 5).map(({ type, count }, i) => {
-                  const maxCount = Math.max(...stats.typeBreakdown.map((x) => x.count), 1);
-                  const pct = Math.round((count / maxCount) * 100);
-                  return (
-                    <div key={type} className="col" style={{ gap: 4 }}>
-                      <div className="row between" style={{ fontSize: 12.5 }}>
-                        <span>{TYPE_LABELS[type] ?? type}</span>
-                        <span className="t-mono">{pct}%</span>
-                      </div>
-                      <div className="gauge">
-                        <i
-                          style={{
-                            width: `${pct}%`,
-                            background: BAR_COLORS[i % BAR_COLORS.length],
-                          }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              {stats.typeBreakdown.length === 0 ? (
+                <div
+                  style={{
+                    height: 180,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--ink-mute)",
+                    fontSize: 13,
+                  }}
+                >
+                  {t("dashboard.noData")}
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={180} style={{ marginTop: 16 }}>
+                  <BarChart
+                    layout="vertical"
+                    data={stats.typeBreakdown.slice(0, 5).map((item, i) => ({
+                      name: TYPE_LABELS[item.type] ?? item.type,
+                      count: item.count,
+                      fill: BAR_COLORS[i % BAR_COLORS.length],
+                    }))}
+                    barCategoryGap="25%"
+                  >
+                    <XAxis type="number" hide />
+                    <Tooltip
+                      cursor={{ fill: "var(--bg-sunk)" }}
+                      contentStyle={{
+                        background: "var(--bg-elev)",
+                        border: "1px solid var(--line)",
+                        borderRadius: 8,
+                        fontSize: 12,
+                      }}
+                      formatter={(v: number) => [v, ""]}
+                    />
+                    <Bar dataKey="count" radius={[0, 3, 3, 0]}>
+                      {stats.typeBreakdown.slice(0, 5).map((item, i) => (
+                        <Cell key={item.type} fill={BAR_COLORS[i % BAR_COLORS.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
 

@@ -1,8 +1,6 @@
-import { Mic, MicOff, Volume2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/store/index";
 import { useVoice } from "@/hooks/useVoice";
-import { Button } from "@/components/ui/button";
+import { CiqIcon, Ico, MicWave } from "@/lib/ciq-icons";
 
 interface VoiceButtonProps {
   onTranscript: (text: string) => void;
@@ -28,26 +26,24 @@ export function VoiceButton({ onTranscript, lang = "fr-FR", size = "sm", classNa
   };
 
   return (
-    <Button
+    <button
       type="button"
-      variant="ghost"
-      size={size}
       onClick={handleClick}
-      className={cn(
-        "transition-colors",
-        isListening && "text-destructive bg-destructive/10 animate-pulse",
-        isTtsSpeaking && "text-primary bg-primary/10",
-        className,
-      )}
+      className={`btn btn-ghost${size === "sm" ? " btn-sm" : ""}${className ? ` ${className}` : ""}`}
+      style={{
+        color: isListening ? "var(--accent)" : isTtsSpeaking ? "var(--voice)" : "var(--ink-mute)",
+        padding: 8,
+        position: "relative",
+      }}
       title={isListening ? "Arrêter l'écoute" : "Dicter"}
     >
       {isTtsSpeaking ? (
-        <Volume2 className="h-4 w-4" />
+        <Ico icon={CiqIcon.speaker} size={16} />
       ) : isListening ? (
-        <MicOff className="h-4 w-4" />
+        <MicWave size="sm" color="var(--accent)" />
       ) : (
-        <Mic className="h-4 w-4" />
+        <Ico icon={CiqIcon.mic} size={16} />
       )}
-    </Button>
+    </button>
   );
 }

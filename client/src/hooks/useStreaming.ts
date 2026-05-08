@@ -5,7 +5,7 @@ import { toast } from "@/hooks/use-toast";
 
 interface StreamOptions {
   onToken?: (token: string) => void;
-  onDone?: (tokensUsed: number) => void;
+  onDone?: (tokensUsed: number, contentId?: string) => void;
   onError?: (message: string) => void;
 }
 
@@ -64,6 +64,7 @@ export function useStreaming() {
                 token?: string;
                 done?: boolean;
                 tokensUsed?: number;
+                contentId?: string;
                 error?: string;
               };
 
@@ -77,8 +78,8 @@ export function useStreaming() {
               }
 
               if (parsed.done) {
-                dispatch(stopGeneration());
-                options.onDone?.(parsed.tokensUsed ?? 0);
+                dispatch(stopGeneration(parsed.contentId));
+                options.onDone?.(parsed.tokensUsed ?? 0, parsed.contentId);
               }
             } catch (parseError) {
               if (parseError instanceof Error && parseError.message !== "Unexpected end of JSON input") {

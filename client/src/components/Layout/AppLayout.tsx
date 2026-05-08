@@ -1,11 +1,11 @@
-import { Outlet } from "react-router-dom";
-import { Sparkles } from "lucide-react";
-import { Sidebar } from "./Sidebar";
-import { Navbar } from "./Navbar";
 import { AssistantPanel } from "@/components/Assistant/AssistantPanel";
-import { useAppDispatch, useAppSelector } from "@/store/index";
-import { toggleOpen } from "@/store/assistantSlice";
+import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import { cn } from "@/lib/utils";
+import { toggleOpen } from "@/store/assistantSlice";
+import { useAppDispatch, useAppSelector } from "@/store/index";
+import { Outlet, useLocation } from "react-router-dom";
+import { Navbar } from "./Navbar";
+import { Sidebar } from "./Sidebar";
 
 function AssistantToggle() {
   const dispatch = useAppDispatch();
@@ -13,28 +13,35 @@ function AssistantToggle() {
 
   return (
     <button
+      type="button"
       onClick={() => dispatch(toggleOpen())}
       className={cn(
         "fixed bottom-4 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all hover:scale-110",
         isOpen
-          ? "bg-primary/20 text-primary border border-primary/30"
-          : "bg-primary text-primary-foreground",
+          ? "border border-primary/30 bg-primary/15 text-primary"
+          : "bg-foreground text-background shadow-[0_4px_16px_rgba(58,47,37,0.25)]",
       )}
       title="IQ Assistant"
     >
-      <Sparkles className="h-5 w-5" />
+      <Ico icon={CiqIcon.sparkle} size={20} />
     </button>
   );
 }
 
 export function AppLayout() {
+  const location = useLocation();
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="app flex h-screen overflow-hidden">
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Navbar />
-        <main className="flex-1 overflow-y-auto scrollbar-thin p-6">
-          <Outlet />
+        <main
+          className="flex-1 overflow-y-auto scrollbar-thin"
+          style={{ background: "transparent" }}
+        >
+          <div key={location.pathname} style={{ animation: "fadeSlideIn 0.22s ease", minHeight: "100%" }}>
+            <Outlet />
+          </div>
         </main>
       </div>
       <AssistantPanel />

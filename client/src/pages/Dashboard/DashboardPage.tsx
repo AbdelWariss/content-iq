@@ -1,83 +1,42 @@
-import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import {
-  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
-} from "recharts";
-import {
-  FileText, Wand2, Heart, Zap, TrendingUp, CreditCard,
-  ArrowRight, Users, AlertCircle,
-} from "lucide-react";
+import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import { statsService } from "@/services/stats.service";
 import { useAppSelector } from "@/store/index";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
+import { fr } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
 
-const TYPE_LABELS: Record<string, string> = {
-  blog: "Blog", linkedin: "LinkedIn", instagram: "Instagram", twitter: "Twitter/X",
-  email: "Email", newsletter: "Newsletter", product: "Produit", pitch: "Pitch",
-  youtube: "YouTube", bio: "Bio", press: "Presse", slogan: "Slogan",
+const TYPE_ICON: Record<string, React.ReactNode> = {
+  blog: CiqIcon.blog,
+  linkedin: CiqIcon.linkedin,
+  instagram: CiqIcon.insta,
+  twitter: CiqIcon.twitter,
+  email: CiqIcon.email,
+  newsletter: CiqIcon.email,
+  product: CiqIcon.product,
+  pitch: CiqIcon.pitch,
+  youtube: CiqIcon.yt,
+  bio: CiqIcon.bio,
+  press: CiqIcon.press,
+  slogan: CiqIcon.bolt,
 };
 
-const TYPE_COLORS = [
-  "#6366f1", "#8b5cf6", "#ec4899", "#14b8a6",
-  "#f59e0b", "#10b981", "#3b82f6", "#ef4444",
-];
+const TYPE_LABELS: Record<string, string> = {
+  blog: "Article blog",
+  linkedin: "LinkedIn",
+  instagram: "Instagram",
+  twitter: "Twitter/X",
+  email: "Email",
+  newsletter: "Newsletter",
+  product: "Produit",
+  pitch: "Pitch",
+  youtube: "YouTube",
+  bio: "Bio",
+  press: "Communiqué",
+  slogan: "Slogan",
+};
 
-function StatCard({
-  icon: Icon, label, value, sub, colorClass = "text-primary bg-primary/10",
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string | number;
-  sub?: string;
-  colorClass?: string;
-}) {
-  const [textColor, bgColor] = colorClass.split(" ");
-  return (
-    <div className="rounded-xl border bg-card p-5 flex items-start gap-4">
-      <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg", bgColor)}>
-        <Icon className={cn("h-5 w-5", textColor)} />
-      </div>
-      <div className="min-w-0">
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <p className="text-2xl font-bold mt-0.5">{value}</p>
-        {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
-      </div>
-    </div>
-  );
-}
-
-function CreditsWidget({ remaining, total }: { remaining: number; total: number }) {
-  const pct = total > 0 ? Math.round((remaining / total) * 100) : 0;
-  const barColor = pct <= 20 ? "bg-destructive" : pct <= 40 ? "bg-yellow-500" : "bg-primary";
-
-  return (
-    <div className="rounded-xl border bg-card p-5">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <CreditCard className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Crédits restants</span>
-        </div>
-        <span className="text-sm font-bold">{pct}%</span>
-      </div>
-      <div className="flex items-end gap-1 mb-2">
-        <span className="text-2xl font-bold">{remaining.toLocaleString()}</span>
-        <span className="text-sm text-muted-foreground mb-1"> / {total.toLocaleString()}</span>
-      </div>
-      <div className="h-2 rounded-full bg-muted overflow-hidden">
-        <div className={cn("h-full rounded-full transition-all", barColor)} style={{ width: `${pct}%` }} />
-      </div>
-      {pct <= 20 && (
-        <div className="flex items-center gap-1.5 mt-2 text-destructive text-xs">
-          <AlertCircle className="h-3.5 w-3.5" />
-          Crédits faibles — passez au plan Pro
-        </div>
-      )}
-    </div>
-  );
-}
+const BAR_COLORS = ["var(--accent)", "var(--ink)", "var(--voice)", "var(--ink-soft)", "var(--ink-mute)"];
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -89,19 +48,23 @@ export default function DashboardPage() {
     staleTime: 2 * 60 * 1000,
   });
 
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir";
+  const firstName = user?.name?.split(" ")[0] ?? "vous";
+
+  const remaining = user?.credits?.remaining ?? 0;
+  const total = user?.credits?.total ?? 500;
+  const ringR = 38;
+  const ringCirc = 2 * Math.PI * ringR;
+  const ringPct = total > 0 ? remaining / total : 0;
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-64" />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <Skeleton className="h-72 rounded-xl lg:col-span-2" />
-          <Skeleton className="h-72 rounded-xl" />
+      <div style={{ padding: "32px 40px" }}>
+        <div className="t-eyebrow" style={{ marginBottom: 8 }}>Tableau de bord</div>
+        <div style={{ height: 48, width: 280, background: "var(--bg-sunk)", borderRadius: 12, marginBottom: 32 }} />
+        <div style={{ display: "grid", gridTemplateColumns: "1.4fr repeat(3, 1fr)", gap: 14, marginBottom: 18 }}>
+          {[1, 2, 3, 4].map((k) => (
+            <div key={k} className="card" style={{ padding: 22, height: 120, background: "var(--bg-sunk)" }} />
+          ))}
         </div>
       </div>
     );
@@ -110,177 +73,216 @@ export default function DashboardPage() {
   const isEmpty = !stats || stats.totals.contents === 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div style={{ padding: "32px 40px", overflow: "auto" }}>
+      {/* Header */}
+      <div className="row between" style={{ marginBottom: 28 }}>
         <div>
-          <h1 className="text-2xl font-bold">
-            {greeting}, {user?.name?.split(" ")[0]} 👋
+          <span className="t-eyebrow">Tableau de bord</span>
+          <h1 className="t-display" style={{ fontSize: 40, margin: "6px 0 0" }}>
+            Bonjour {firstName}.{" "}
+            <em style={{ color: "var(--ink-mute)" }}>On crée quoi ?</em>
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Voici l'état de votre production de contenu
-          </p>
         </div>
-        <Button onClick={() => navigate("/generate")}>
-          <Wand2 className="h-4 w-4" />
-          Générer
-        </Button>
+        <div className="row" style={{ gap: 8 }}>
+          <button className="btn btn-outline btn-sm" onClick={() => navigate("/history")}>
+            <Ico icon={CiqIcon.history} />
+            Historique
+          </button>
+          <button className="btn btn-primary" onClick={() => navigate("/generate")}>
+            <Ico icon={CiqIcon.sparkle} />
+            Nouveau contenu
+          </button>
+        </div>
       </div>
 
       {isEmpty ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
-          <div className="rounded-full bg-primary/10 p-5">
-            <Wand2 className="h-8 w-8 text-primary" />
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingTop: 80, gap: 20, textAlign: "center" }}>
+          <div style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--ink)", color: "var(--bg)", display: "grid", placeItems: "center" }}>
+            <Ico icon={CiqIcon.sparkle} size={28} />
           </div>
           <div>
-            <p className="text-lg font-semibold">Bienvenue sur CONTENT.IQ !</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Générez votre premier contenu pour voir vos statistiques ici.
-            </p>
+            <p style={{ fontSize: 18, fontWeight: 600 }}>Bienvenue sur CONTENT.IQ !</p>
+            <p style={{ fontSize: 14, color: "var(--ink-mute)", marginTop: 6 }}>Générez votre premier contenu pour voir vos statistiques.</p>
           </div>
-          <Button onClick={() => navigate("/generate")}>
-            <Wand2 className="h-4 w-4" />
+          <button className="btn btn-accent btn-lg" onClick={() => navigate("/generate")}>
+            <Ico icon={CiqIcon.sparkle} />
             Générer mon premier contenu
-            <ArrowRight className="h-4 w-4" />
-          </Button>
+          </button>
         </div>
       ) : (
         <>
-          {/* KPI Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard
-              icon={FileText}
-              label="Contenus créés"
-              value={stats.totals.contents}
-              sub={`+${stats.totals.contentsThisMonth} ce mois`}
-              colorClass="text-primary bg-primary/10"
-            />
-            <StatCard
-              icon={Zap}
-              label="Tokens générés"
-              value={stats.totals.tokensUsed.toLocaleString()}
-              sub="total"
-              colorClass="text-yellow-500 bg-yellow-500/10"
-            />
-            <StatCard
-              icon={Heart}
-              label="Favoris"
-              value={stats.totals.favorites}
-              colorClass="text-pink-500 bg-pink-500/10"
-            />
-            <StatCard
-              icon={TrendingUp}
-              label="Crédits ce mois"
-              value={stats.totals.creditsConsumedThisMonth}
-              sub="consommés"
-              colorClass="text-green-500 bg-green-500/10"
-            />
-            {user?.role === "admin" && stats.totals.activeUsers !== undefined && (
-              <StatCard
-                icon={Users}
-                label="Utilisateurs actifs"
-                value={stats.totals.activeUsers}
-                sub="7 derniers jours"
-                colorClass="text-blue-500 bg-blue-500/10"
-              />
-            )}
-          </div>
-
-          {/* Credits */}
-          {stats.credits && (
-            <CreditsWidget remaining={stats.credits.remaining} total={stats.credits.total} />
-          )}
-
-          {/* Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="rounded-xl border bg-card p-5 lg:col-span-2">
-              <h2 className="text-sm font-semibold mb-4">Activité — 30 derniers jours</h2>
-              {stats.dailyActivity.length > 0 ? (
-                <ResponsiveContainer width="100%" height={220}>
-                  <AreaChart data={stats.dailyActivity} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="gradContent" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <XAxis
-                      dataKey="date"
-                      tick={{ fontSize: 10 }}
-                      tickFormatter={(v: string) => {
-                        const d = new Date(v);
-                        return `${d.getDate()}/${d.getMonth() + 1}`;
-                      }}
-                    />
-                    <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
-                    <Tooltip
-                      formatter={(v: number) => [v, "Contenus"]}
-                      labelFormatter={(l: string) =>
-                        new Date(l).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })
-                      }
-                    />
-                    <Area type="monotone" dataKey="count" stroke="#6366f1" strokeWidth={2} fill="url(#gradContent)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-[220px] text-sm text-muted-foreground">
-                  Pas encore de données
+          {/* KPI strip */}
+          <div style={{ display: "grid", gridTemplateColumns: "1.4fr repeat(3, 1fr)", gap: 14, marginBottom: 18 }}>
+            {/* Credits ring card */}
+            <div className="card" style={{ padding: 22, display: "flex", gap: 22, alignItems: "center" }}>
+              <svg className="ring-svg" width="92" height="92" viewBox="0 0 92 92">
+                <circle className="track" cx="46" cy="46" r={ringR} />
+                <circle
+                  className="fill"
+                  cx="46" cy="46" r={ringR}
+                  stroke="var(--accent)"
+                  strokeDasharray={`${ringCirc}`}
+                  strokeDashoffset={`${ringCirc * (1 - ringPct)}`}
+                />
+              </svg>
+              <div className="col" style={{ flex: 1 }}>
+                <span className="t-eyebrow">Crédits restants</span>
+                <div className="row" style={{ alignItems: "baseline", gap: 6, marginTop: 4 }}>
+                  <span className="t-mono" style={{ fontSize: 36, fontWeight: 600 }}>{remaining}</span>
+                  <span style={{ color: "var(--ink-mute)", fontSize: 13 }}>/ {total}</span>
                 </div>
-              )}
-            </div>
-
-            <div className="rounded-xl border bg-card p-5">
-              <h2 className="text-sm font-semibold mb-4">Types de contenu</h2>
-              {stats.typeBreakdown.length > 0 ? (
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie data={stats.typeBreakdown} dataKey="count" nameKey="type" cx="50%" cy="50%" outerRadius={75} innerRadius={40}>
-                      {stats.typeBreakdown.map((_, i) => (
-                        <Cell key={i} fill={TYPE_COLORS[i % TYPE_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(v: number, n: string) => [v, TYPE_LABELS[n] ?? n]} />
-                    <Legend formatter={(v: string) => TYPE_LABELS[v] ?? v} iconSize={8} wrapperStyle={{ fontSize: "11px" }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-[220px] text-sm text-muted-foreground">
-                  Pas encore de données
+                <div style={{ fontSize: 12, color: "var(--ink-mute)", marginTop: 2 }}>
+                  Renouvelle dans 39 jours
                 </div>
-              )}
+                <button className="btn btn-outline btn-sm" style={{ alignSelf: "flex-start", marginTop: 10 }} onClick={() => navigate("/pricing")}>
+                  Recharger
+                </button>
+              </div>
             </div>
-          </div>
 
-          {stats.typeBreakdown.length > 0 && (
-            <div className="rounded-xl border bg-card p-5">
-              <h2 className="text-sm font-semibold mb-4">Contenus par type</h2>
-              <ResponsiveContainer width="100%" height={160}>
-                <BarChart data={stats.typeBreakdown} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                  <XAxis dataKey="type" tick={{ fontSize: 10 }} tickFormatter={(v: string) => TYPE_LABELS[v] ?? v} />
-                  <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
-                  <Tooltip formatter={(v: number) => [v, "Contenus"]} labelFormatter={(l: string) => TYPE_LABELS[l] ?? l} />
-                  <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                    {stats.typeBreakdown.map((_, i) => <Cell key={i} fill={TYPE_COLORS[i % TYPE_COLORS.length]} />)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-
-          {/* Quick actions */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {/* KPI cards */}
             {[
-              { label: "Générer", icon: Wand2, to: "/generate" },
-              { label: "Historique", icon: FileText, to: "/history" },
-              { label: "Templates", icon: TrendingUp, to: "/templates" },
-              { label: "Tarifs", icon: CreditCard, to: "/pricing" },
-            ].map(({ label, icon: Icon, to }) => (
-              <button key={to} onClick={() => navigate(to)}
-                className="flex items-center gap-2 rounded-lg border bg-card p-3 text-sm font-medium hover:border-primary/50 hover:bg-accent transition-all">
-                <Icon className="h-4 w-4 text-muted-foreground" />
-                {label}
-                <ArrowRight className="h-3.5 w-3.5 ml-auto text-muted-foreground" />
-              </button>
+              { label: "Contenus ce mois", value: stats.totals.contentsThisMonth, delta: `+${stats.totals.contentsThisMonth} ce mois` },
+              { label: "Tokens consommés", value: stats.totals.tokensUsed > 1000 ? `${(stats.totals.tokensUsed / 1000).toFixed(1)}K` : String(stats.totals.tokensUsed), delta: "total cumulé" },
+              { label: "Favoris", value: stats.totals.favorites, delta: "contenus sauvegardés" },
+            ].map((k) => (
+              <div key={k.label} className="card" style={{ padding: 20 }}>
+                <span className="t-eyebrow">{k.label}</span>
+                <div className="t-mono" style={{ fontSize: 30, fontWeight: 600, margin: "10px 0 4px" }}>{k.value}</div>
+                <div style={{ fontSize: 12, color: "var(--ink-mute)" }}>{k.delta}</div>
+              </div>
             ))}
+          </div>
+
+          {/* Charts row */}
+          <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 14, marginBottom: 18 }}>
+            {/* Activity bar chart */}
+            <div className="card" style={{ padding: 22 }}>
+              <div className="row between">
+                <span className="t-eyebrow">Activité — 30 jours</span>
+                <div className="seg"><button className="on">30j</button><button>7j</button><button>an</button></div>
+              </div>
+              {stats.dailyActivity.length > 0 ? (
+                <>
+                  <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 160, marginTop: 22 }}>
+                    {stats.dailyActivity.slice(-30).map((d, i, arr) => {
+                      const maxVal = Math.max(...arr.map((x) => x.count), 1);
+                      const h = Math.max((d.count / maxVal) * 96, d.count > 0 ? 6 : 2);
+                      const isLast = i === arr.length - 1;
+                      return (
+                        <div
+                          key={d.date}
+                          title={`${d.date}: ${d.count}`}
+                          style={{
+                            flex: 1,
+                            height: `${h}%`,
+                            background: isLast ? "var(--accent)" : "var(--ink)",
+                            opacity: isLast ? 1 : 0.18,
+                            borderRadius: 2,
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                  <div className="row between" style={{ marginTop: 10, fontSize: 11, color: "var(--ink-mute)", fontFamily: "var(--font-mono)" }}>
+                    <span>J-30</span><span>J-20</span><span>J-10</span><span>Auj.</span>
+                  </div>
+                </>
+              ) : (
+                <div style={{ height: 160, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ink-mute)", fontSize: 13 }}>
+                  Pas encore de données
+                </div>
+              )}
+            </div>
+
+            {/* Type breakdown */}
+            <div className="card" style={{ padding: 22 }}>
+              <span className="t-eyebrow">Types les plus utilisés</span>
+              <div className="col" style={{ gap: 12, marginTop: 18 }}>
+                {stats.typeBreakdown.slice(0, 5).map(({ type, count }, i) => {
+                  const maxCount = Math.max(...stats.typeBreakdown.map((x) => x.count), 1);
+                  const pct = Math.round((count / maxCount) * 100);
+                  return (
+                    <div key={type} className="col" style={{ gap: 4 }}>
+                      <div className="row between" style={{ fontSize: 12.5 }}>
+                        <span>{TYPE_LABELS[type] ?? type}</span>
+                        <span className="t-mono">{pct}%</span>
+                      </div>
+                      <div className="gauge">
+                        <i style={{ width: `${pct}%`, background: BAR_COLORS[i % BAR_COLORS.length] }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Recent content + voice log */}
+          <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 14 }}>
+            {/* Recent content */}
+            <div className="card" style={{ padding: 22 }}>
+              <div className="row between" style={{ marginBottom: 14 }}>
+                <span className="t-eyebrow">Derniers contenus</span>
+                <button className="btn btn-ghost btn-sm" onClick={() => navigate("/history")}>
+                  Tout voir →
+                </button>
+              </div>
+              <div className="col" style={{ gap: 4 }}>
+                {(stats as any).recentItems
+                  ? (stats as any).recentItems.slice(0, 5).map((item: any, i: number, arr: any[]) => (
+                    <div
+                      key={item._id}
+                      className="row"
+                      style={{ gap: 12, padding: "10px 8px", borderRadius: 8, borderBottom: i < arr.length - 1 ? "1px solid var(--line-soft)" : "none" }}
+                    >
+                      <Ico icon={TYPE_ICON[item.type] ?? CiqIcon.blog} style={{ color: "var(--ink-mute)", width: 18, height: 18 }} />
+                      <div className="col" style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ fontSize: 13.5, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {item.title ?? item.prompt?.subject ?? `Contenu ${item.type}`}
+                        </span>
+                        <span style={{ fontSize: 11.5, color: "var(--ink-mute)" }}>
+                          {TYPE_LABELS[item.type] ?? item.type} ·{" "}
+                          {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true, locale: fr })}
+                        </span>
+                      </div>
+                      {item.isFavorite && <Ico icon={CiqIcon.star} style={{ color: "var(--accent)" }} />}
+                      <Ico icon={CiqIcon.chevR} style={{ color: "var(--ink-mute)" }} />
+                    </div>
+                  ))
+                  : (
+                    <div style={{ padding: "20px 0", textAlign: "center", color: "var(--ink-mute)", fontSize: 13 }}>
+                      Générez du contenu pour voir l'historique
+                    </div>
+                  )
+                }
+              </div>
+            </div>
+
+            {/* Type breakdown summary */}
+            <div className="card" style={{ padding: 22 }}>
+              <div className="row between" style={{ marginBottom: 14 }}>
+                <span className="t-eyebrow">Vue d'ensemble</span>
+              </div>
+              <div className="col" style={{ gap: 16 }}>
+                <div className="card" style={{ padding: 14, background: "var(--bg-sunk)" }}>
+                  <div className="t-mono" style={{ fontSize: 28, fontWeight: 600, color: "var(--accent)" }}>
+                    {stats.totals.contents}
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--ink-mute)", marginTop: 2 }}>contenus créés au total</div>
+                </div>
+                <div className="card" style={{ padding: 14, background: "var(--bg-sunk)" }}>
+                  <div className="t-mono" style={{ fontSize: 28, fontWeight: 600 }}>
+                    {stats.totals.creditsConsumedThisMonth}
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--ink-mute)", marginTop: 2 }}>crédits consommés ce mois</div>
+                </div>
+                <button className="btn btn-accent btn-lg" style={{ width: "100%", justifyContent: "center" }} onClick={() => navigate("/generate")}>
+                  <Ico icon={CiqIcon.sparkle} />
+                  Générer
+                </button>
+              </div>
+            </div>
           </div>
         </>
       )}

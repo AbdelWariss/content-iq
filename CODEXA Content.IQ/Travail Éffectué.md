@@ -552,3 +552,716 @@ TypeScript 5.7 strict partout · pnpm workspaces · Biome v1.9 (remplace ESLint+
 
 #### Fix appliqués
 - `client/src/pages/Pricing/PricingPage.tsx` — Guard `if (loading !== null) return` + `finally` pour reset loading (corrige les appels Stripe en rafale)
+
+---
+
+### [2026-05-06] — Redesign UI v2 : Design System + Tous les écrans — COMPLÉTÉ ✅
+- **Session :** 4 & 5
+- **Statut :** Complété
+- **Objectif :** Implémenter intégralement le design system custom (tokens CSS, icônes SVG inline, typographie, animations) et refondre tous les écrans de l'application en se basant sur les références `Interface Content.IQ/`.
+
+---
+
+#### 1. Système de design — `client/src/index.css`
+
+**Tokens CSS ajoutés / restructurés :**
+```
+--bg           → #f8f7f5 (fond global chaud)
+--bg-elev      → #fdfcfb (cartes élevées)
+--bg-sunk      → #f1ede8 (zones enfoncées)
+--line         → rgba(58,47,37,.12) (bordures)
+--line-soft    → rgba(58,47,37,.07)
+--ink          → #3a2f25 (texte principal)
+--ink-soft     → #7a6a5a (texte secondaire)
+--ink-mute     → #b0a090 (texte atténué)
+--accent       → #E5704C (coral — CTA, accentuation)
+--accent-soft  → rgba(229,112,76,.12)
+--accent-ink   → #c95a33
+--voice        → #2d7a80 (teal — éléments voix)
+--voice-soft   → rgba(45,122,128,.10)
+--font-sans    → 'Inter', system-ui
+--font-serif   → 'Instrument Serif', Georgia
+--font-mono    → 'JetBrains Mono', monospace
+--radius       → 14px
+--shadow-card  → 0 1px 3px rgba(...)
+--shadow-pop   → 0 8px 30px rgba(...)
+```
+
+**Classes utilitaires ajoutées :**
+- `.row` / `.col` — flex helpers
+- `.card` — bg-elev + border + radius + shadow
+- `.btn` / `.btn-primary` / `.btn-outline` / `.btn-ghost` / `.btn-accent` / `.btn-sm` / `.btn-lg`
+- `.pill` / `.pill.accent` / `.pill.voice`
+- `.chip` — tags inline
+- `.input` / `.select` / `.textarea` / `.label`
+- `.seg` / `.seg button` / `.seg button.active` — segmented control
+- `.sidenav` / `.sidenav a` / `.sidenav a.active`
+- `.t-display` / `.t-eyebrow` / `.t-mono` — échelle typographique
+- `.ciq-mark` / `.dot` / `.name` — logo mark
+- `.imgph` — image placeholder avec initiales
+- `.gauge` / `.gauge-fill` — barre de progression crédits
+- `.wave` / `.wave span` — animation ondes voix (4 barres)
+- `.hr` — séparateur horizontal
+- `.caret` — curseur clignotant texte
+- `.lnk` — lien inline avec underline
+- `.scrollbar-thin` — scrollbar discrète WebKit
+
+**Keyframes ajoutés :**
+- `@keyframes caretBlink` (L≈ fin fichier) : `0%,100% opacity:1; 50% opacity:0` — curseur texte
+- `@keyframes orbpulse` : `0%,100% scale(1) opacity(1); 50% scale(1.08) opacity(.85)` — orbe voix pulsant
+- `@keyframes fadeSlideIn` : `from opacity:0 translateY(10px); to opacity:1 translateY(0)` — transition formulaires auth
+
+---
+
+#### 2. Système d'icônes — `client/src/lib/ciq-icons.tsx` (NOUVEAU — 180 lignes)
+
+**`CiqIcon` — objet de constantes SVG (ReactNode) :**
+- `sparkle`, `brain`, `mic`, `micOff`, `send`, `stop`, `refresh`, `copy`, `check`, `arrow`, `play`
+- `linkedin`, `blog`, `email`, `twitter`, `insta`, `product`, `yt`, `bio`
+- `speaker`, `chevron`, `close`, `trash`, `heart`, `star`, `settings`
+- `google` — SVG multicolore (`#4285F4`, `#34A853`, `#FBBC05`, `#EA4335`) avec fills non-stroke
+
+**Composant `Ico`** (L≈80–100) :
+```tsx
+function Ico({ icon, size = 15, style, className }: IcoProps) {
+  // Clone SVG avec width/height/style injectés
+  return <span className={`ico ${className}`} style={style}>{cloneElement(icon, { width: size, height: size })}</span>
+}
+```
+
+**Composant `MicWave`** (L≈100–130) :
+- Props : `size: "sm" | "md" | "lg"`, `color`
+- Rendu : 4 barres `<span>` avec `animation: wave Xs ease-in-out infinite` décalées (0.1s, 0.2s, 0.3s, 0.4s)
+- Tailles sm=10px, md=14px, lg=20px (hauteur des barres)
+
+---
+
+#### 3. AssistantPanel — `client/src/components/Assistant/AssistantPanel.tsx` (REFONTE — 175 lignes)
+
+**Suppression :** tous imports `lucide-react`.
+
+**Widget flottant 380×560px :**
+- Header (L≈30–55) : `background: var(--bg-sunk)`, cercle `C` (`background: var(--ink)`, white, serif 18px), titre "IQ Assistant", compteur messages monoespace, boutons Effacer + Fermer
+- Messages scrollables (L≈60–110) : messages assistant sur fond `var(--bg-sunk)`, messages user sur `var(--ink)` avec texte blanc, `borderRadius` asymétrique (8px/16px)
+- État vide (L≈112–125) : suggestions rapides 3 boutons `.btn.btn-ghost` cliquables
+- Footer (L≈130–170) : textarea auto-resize + bouton mic accent ghost + bouton envoyer primary, footer mono "X msg · session"
+
+---
+
+#### 4. AuthLayout — `client/src/components/Layout/AuthLayout.tsx` (SIMPLIFIÉ)
+
+Réduit à un wrapper plein-écran :
+```tsx
+export function AuthLayout() {
+  const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  return (
+    <div style={{ width: "100vw", height: "100vh", background: "var(--bg)", overflow: "hidden" }}>
+      <Outlet />
+    </div>
+  );
+}
+```
+
+---
+
+#### 5. Page Auth unifiée — `client/src/pages/Auth/AuthPage.tsx` (NOUVEAU — 563 lignes)
+
+**Remplacement de LoginPage + RegisterPage + ForgotPasswordPage par un seul composant.**
+
+**Hook `useTypewriter(text, speed=28, startDelay=200)`** (L52–68) :
+- `setInterval` révèle le texte caractère par caractère
+- Reset complet + délai de départ à chaque changement de `text`
+
+**Hook `useCounter(target, duration=1600, decimals=0, active=true)`** (L70–88) :
+- `requestAnimationFrame` avec cubic ease-out : `eased = 1 - Math.pow(1 - progress, 3)`
+- `setValue(0)` + restart animation à chaque changement de `active`
+
+**Composant `StatCounter`** (L92–102) :
+- Affiche valeur animée depuis 0 jusqu'à `target`
+- `fontSize: 34`, `fontWeight: 700`, `letterSpacing: -0.03em`
+- Format FR pour entiers : `.toLocaleString("fr-FR")`
+
+**Composant `DynamicPanel`** (L104–212) — Panneau droit :
+- 3 témoignages dans `TESTIMONIALS[]`, rotation toutes les 8s via `setInterval`
+- Navigation dots cliquables (dot actif = largeur 24px, inactif = 7px, transition 0.35s)
+- Citation typewriter à `fontSize: 52`, `minHeight: 220`, serif
+- Texte accent (dernière phrase) en `color: var(--accent)` + curseur `.caret` pendant la frappe
+- Auteur fade-in à 65% de la citation tapée (`opacity: displayedQuote.length >= t.quote.length * 0.65 ? 1 : 0`)
+- Stats card fade-in à 45% (`opacity: displayedQuote.length >= t.quote.length * 0.45 ? 1 : 0`)
+- `statsActive` reset (false → true avec 100ms délai) à chaque rotation → relance les compteurs
+- Stats : `{ target: 12480, label: "contenus générés" }`, `{ target: 94, suffix: "%", ... }`, `{ target: 1.7, decimals: 1, suffix: "s", ... }`
+
+**LoginForm** (L216–297) :
+- h1 "Bon retour." serif, bouton Google OAuth redirect, séparateur OU, email + password avec toggle visibilité, lien "Oublié ?" → switch mode, submit btn-primary btn-lg pleine largeur
+
+**RegisterForm** (L299–398) :
+- h1 "Créez votre compte", Google OAuth, email + nom + password avec jauge force (4 segments couleur), select "Vous êtes…", checkbox CGU, submit
+
+**ForgotForm** (L400–501) :
+- Deux états : `sent=false` (formulaire email) et `sent=true` (confirmation avec timer 60s compte à rebours + resend)
+- Masquage email partiel : `email.replace(/^(.).*@/, (_, c) => c + "***@")`
+
+**Main `AuthPage`** (L511–562) :
+- Grille 2 colonnes `gridTemplateColumns: "1fr 1.1fr"`
+- Panneau gauche : CSS Grid `gridTemplateRows: "auto 1fr auto"` (logo | form centré | copyright)
+- `pathToMode(pathname)` : dérive le mode depuis l'URL
+- `switchMode()` : change mode + `navigate(paths[m], { replace: true })`
+- `useEffect` sur `location.pathname` : sync mode si navigation externe (bouton retour)
+- Animation `fadeSlideIn 0.3s` sur le bloc formulaire avec `key={mode}`
+
+---
+
+#### 6. Landing Page — `client/src/pages/Landing/LandingPage.tsx` (NOUVEAU — 211 lignes)
+
+**Navbar sticky** (L34–53) : logo CiqMark, liens Produit/Voix/Templates/Tarifs, boutons Connexion + "Essai gratuit →"
+
+**Hero** (L55–147) : grille 2 colonnes, h1 84px `t-display`, pill voix MicWave, sous-titre, CTA + démo ; mockup app (`/generate · post linkedin`) avec streaming en cours + caret animé + floating mic pill
+
+**Trust bar** (L149–157) : audience types en `fontFamily: var(--font-serif), fontStyle: italic`
+
+**Three pillars** (L159–179) : grille 3 colonnes avec cards (GENERATE / ASSIST / VOICE), tag `t-eyebrow`, `Ico` accent, titre serif 24px, meta `t-mono`
+
+**CTA band** (L181–194) : `background: var(--ink)`, h2 48px, accent italic, button accent plein
+
+**Footer** (L196–208) : copyright CODEXA, liens Privacy/Terms/API/Connexion
+
+---
+
+#### 7. App.tsx — `client/src/App.tsx` (MIS À JOUR — 83 lignes)
+
+- **`RootRoute`** (L33–38) : affiche `<LandingPage />` si non connecté, `<Navigate to="/dashboard">` si connecté
+- **Routes `/login` + `/register` + `/forgot-password`** : toutes mappées sur `<AuthPage />` (même composant)
+- Import `LandingPage` en lazy
+
+---
+
+#### 8. GeneratePage — `client/src/pages/Generate/GeneratePage.tsx` (MIS À JOUR — 450 lignes)
+
+**Ajouts par rapport à la version Phase 2 :**
+- Import `VoiceOrb`, `useVoice`, `MicWave`
+- State : `showVoiceOrb`, `voiceTranscript`, `voiceElapsed`, `voiceTimer (useRef)`
+- `handleFloatingMic()` : toggle VoiceOrb + démarrage timer elapsed + `startListening` callback → `setVoiceTranscript`
+- `handleVoiceEnd()` : ferme orb + `setValue("subject", voiceTranscript)` + toast "Brief dicté !"
+- **FloatingMic** (L336–387) : bouton `position: absolute; left: 406; bottom: 28; zIndex: 10` — cercle 36px ink/accent + label mono + MicWave si listening
+- **VoiceOrb overlay** : rendu conditionnel `{showVoiceOrb && <VoiceOrb ... />}`
+- Icônes migrées de `lucide-react` vers `CiqIcon` / `Ico`
+
+---
+
+#### 9. VoiceOrb — `client/src/components/Voice/VoiceOrb.tsx` (NOUVEAU — 95 lignes)
+
+**Overlay plein écran :**
+- Backdrop `position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdropFilter: blur(6px)`
+- 3 cercles concentriques animés (`orbpulse`) : 200px/160px/120px, opacité décroissante
+- `MicWave lg` dans cercle central blanc
+- Transcript live en `t-display; fontSize: 42`
+- Hints bar bottom : chips commandes ("Génère…", "Stop", "Copie", "Recommence")
+- Props : `transcript`, `elapsed`, `onClose`, `onEnd`, `onPause`, `onRestart`
+
+---
+
+#### 10. VoiceCommandPalette — `client/src/components/Voice/VoiceCommandPalette.tsx` (NOUVEAU — 85 lignes)
+
+**Overlay cmd-K :**
+- Backdrop `backdropFilter: blur(8px)`
+- Card 620px : header `MicWave md` + transcript + confidence %
+- Liste commandes matchées avec icône + nom + raccourci clavier
+- `useEffect` : Escape → `onClose()`, Enter → `onExecute(matched[0])`
+- Footer : hint "↵ Exécuter · Esc Fermer"
+
+---
+
+#### 11. PricingPage — `client/src/pages/Pricing/PricingPage.tsx` (REFONTE — 200 lignes)
+
+- h2 `t-display; fontSize: 64` centré
+- Toggle facturation `.seg` (Mensuel / Annuel -20%) avec state `annual`
+- 3 plans : Free / Pro (featured, `borderColor: var(--ink)`, `boxShadow: var(--shadow-pop)`) / Business
+- Features avec `CiqIcon.check` (inclus) et `color: var(--ink-mute)` (exclus avec texte barré)
+- Prix dynamiques : `price.monthly` vs `price.annual`
+- Boutons Stripe : `stripeService.createCheckout(plan)` pour upgrades
+
+---
+
+#### 12. ProfilePage — `client/src/pages/Profile/ProfilePage.tsx` (REFONTE — 250 lignes)
+
+**4 sections :**
+1. **Compte** (grille 2 colonnes) : `imgph` avatar 80px avec initiales, form nom/email/langue, bouton save
+2. **Voix ElevenLabs** : grille 5 colonnes de voice cards — sélectionnée = `border: 1.5px solid var(--ink)` + badge
+3. **Micro & reconnaissance** : slider sensibilité + `.seg` moteur (Web Speech / Whisper)
+4. **Abonnement** : pill plan couleur + date renouvellement + `stripeService.openPortal()` + bouton rouge déconnexion
+
+---
+
+#### 13. DashboardPage, HistoryPage, TemplatesPage — mises à jour design
+
+- Remplacement des classes Tailwind/Shadcn par le nouveau design system (`.card`, `.btn`, `.pill`, `.t-display`, `.t-eyebrow`, `.chip`, etc.)
+- Couleurs : `var(--ink)`, `var(--accent)`, `var(--bg-sunk)`, `var(--line)`
+- Icônes : migration vers `CiqIcon` + `Ico`
+
+---
+
+#### 14. Sidebar & Navbar — mises à jour design
+
+**`client/src/components/Layout/Sidebar.tsx`** :
+- Logo `.ciq-mark` avec `.dot` + `.name`
+- Navigation `.sidenav` avec `Ico` pour chaque lien
+- Jauge crédits `.gauge` + `.gauge-fill` en bas
+- Couleur active : `background: var(--bg-elev); color: var(--ink)`
+
+**`client/src/components/Layout/Navbar.tsx`** :
+- Background `var(--bg)`, bordure `var(--line-soft)`
+- Bouton IQ Assistant avec `MicWave sm`
+
+---
+
+#### Corrections TypeScript May 6
+
+- `pnpm exec tsc --noEmit` → **0 erreur** après tous les changements
+- `vite build` → succès en 3.77s
+
+---
+
+### [2026-05-07] — Corrections UI AuthPage : centrage + agrandissement — COMPLÉTÉ ✅
+- **Session :** 6
+- **Statut :** Complété
+- **Objectif :** Corriger les problèmes visuels de la page auth signalés via captures d'écran.
+
+---
+
+#### Problème 1 — Centrage vertical du formulaire (screenshot signalé)
+
+**Cause :** layout flexbox avec `justifyContent: "space-between"` créait un espace vide au-dessus du titre.
+
+**Fix — `client/src/pages/Auth/AuthPage.tsx` (L531–556) :**
+
+Avant :
+```tsx
+<div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "44px 64px" }}>
+```
+Après — CSS Grid 3 lignes :
+```tsx
+<div style={{ display: "grid", gridTemplateRows: "auto 1fr auto", padding: "44px 64px", overflowY: "auto" }}>
+  {/* Logo — row 1 : hauteur naturelle */}
+  <Link to="/">...</Link>
+  {/* Form — row 2 : 1fr → prend tout l'espace restant, centré avec alignItems: center */}
+  <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div className="auth-form" style={{ width: "100%", maxWidth: 500, animation: "fadeSlideIn 0.3s ease" }} key={mode}>
+      ...
+    </div>
+  </div>
+  {/* Copyright — row 3 : hauteur naturelle */}
+  <div style={{ fontSize: 14, color: "var(--ink-mute)" }}>© 2026 CODEXA</div>
+</div>
+```
+
+---
+
+#### Problème 2 — Éléments trop petits (screenshot signalé)
+
+**Fix — `client/src/pages/Auth/AuthPage.tsx` (L92–101 StatCounter) :**
+- `fontSize: 22` → `fontSize: 34`, ajout `fontWeight: 700, letterSpacing: "-0.03em"`
+
+**Fix — `client/src/pages/Auth/AuthPage.tsx` (L158–160 quote) :**
+- `fontSize: 38` → `fontSize: 52`
+- `minHeight` → `220px`
+- `margin` → `"0 0 36px"`
+- Padding `DynamicPanel` → `"64px 72px"`
+- Avatar auteur → 52px, nom → 16px
+- Stats card padding → `"24px 28px"`, gap → 24
+
+---
+
+#### Problème 3 — Formulaire aligné à gauche au lieu d'être centré (screenshot signalé)
+
+**Fix — `client/src/pages/Auth/AuthPage.tsx` (L546) :**
+```tsx
+// Avant
+justifyContent: "flex-start"
+// Après
+justifyContent: "center"
+```
+- `maxWidth` : `420` → `500`
+
+---
+
+#### Problème 4 — Tous les éléments du panneau gauche trop petits (screenshot signalé)
+
+**Fix 1 — `client/src/index.css` (fin fichier, ~L510) :**
+```css
+/* Auth left panel — enlarged form elements */
+.auth-form .label { font-size: 14px; margin-bottom: 8px; }
+.auth-form .input, .auth-form .select { font-size: 16px; padding: 14px 16px; }
+.auth-form .btn-lg { padding: 17px 28px; font-size: 17px; border-radius: 14px; }
+```
+
+**Fix 2 — `client/src/pages/Auth/AuthPage.tsx` — LoginForm (L237–297) :**
+
+| Élément | Avant | Après |
+|---------|-------|-------|
+| h1 "Bon retour." | `fontSize: 44` | `fontSize: 58` |
+| Sous-titre p | `fontSize: 14` | `fontSize: 17` |
+| Icône Google | `size={18}` | `size={22}` |
+| Séparateur "OU" | `fontSize: 11` | `fontSize: 13` |
+| Col gap formulaire | `gap: 12` | `gap: 16` |
+| Lien "Oublié ?" | `fontSize: 11.5` | `fontSize: 13.5` |
+| Messages d'erreur | `fontSize: 11` | `fontSize: 13` |
+| Icône flèche submit | `size={16}` | `size={18}` |
+| Texte bas "Pas de compte" | `fontSize: 13` | `fontSize: 15` |
+
+**Fix 3 — `client/src/pages/Auth/AuthPage.tsx` — RegisterForm (L323–398) :**
+
+| Élément | Avant | Après |
+|---------|-------|-------|
+| h1 "Créez votre compte" | `fontSize: 40` | `fontSize: 54` |
+| Sous-titre | `fontSize: 14` | `fontSize: 17` |
+| Icône Google | `size={18}` | `size={22}` |
+| Séparateur "OU PAR EMAIL" | `fontSize: 11` | `fontSize: 13` |
+| Col gap | `gap: 12` | `gap: 16` |
+| Barres force mot de passe | `height: 4` | `height: 5` |
+| Label force | `fontSize: 11` | `fontSize: 13` |
+| Erreurs | `fontSize: 11` | `fontSize: 13` |
+| Checkbox CGU | `fontSize: 12` | `fontSize: 14` |
+| Texte bas | `fontSize: 13` | `fontSize: 15` |
+
+**Fix 4 — `client/src/pages/Auth/AuthPage.tsx` — ForgotForm (L475–501) :**
+
+| Élément | Avant | Après |
+|---------|-------|-------|
+| h1 "Mot de passe oublié" | `fontSize: 40` | `fontSize: 54` |
+| h1 état envoyé | `fontSize: 36` | `fontSize: 50` |
+| Sous-titre | `fontSize: 14` | `fontSize: 17` |
+| Col gap | `gap: 14` | `gap: 18` |
+| Icône send | `size={15}` | `size={17}` |
+| Erreur | `fontSize: 11` | `fontSize: 13` |
+| Lien retour | `fontSize: 13` | `fontSize: 15` |
+
+**Fix 5 — Copyright panneau gauche :**
+- `fontSize: 12` → `fontSize: 14`
+
+---
+
+#### Vérification TypeScript May 7
+
+```
+pnpm exec tsc --noEmit → 0 erreur (sortie vide)
+```
+
+---
+
+## Résumé global d'avancement (mis à jour 2026-05-07)
+
+| Phase | Contenu | Statut |
+|-------|---------|--------|
+| 0 | Setup & Infrastructure (monorepo, TypeScript, Biome, CI) | ✅ |
+| 1 | Auth JWT + OAuth Google + pages auth | ✅ |
+| Infra | MongoDB Atlas + Redis Upstash + ports | ✅ |
+| 2 | Génération IA + Streaming SSE + TipTap + Historique | ✅ |
+| 3 | IQ Assistant + Templates + Voix | ✅ |
+| 4 | Stripe + Exports + Dashboard Analytics + Admin | ✅ |
+| 5 | Tests (66) + Déploiement (Vercel + Railway) | ✅ |
+| UI v2 | Design system complet + tous les écrans redesignés | ✅ |
+| UI v2 fix | Corrections AuthPage (centrage, tailles) | ✅ |
+
+**Total à ce jour : ~172 fichiers · ~9 800 lignes de code**
+
+---
+
+### [2026-05-07] — Phase 6 (suite) : ElevenLabs Preview + Export PDF/DOCX bout-en-bout — COMPLÉTÉ ✅
+- **Session :** 7
+- **Statut :** Complété
+
+---
+
+#### Tâche 1 — ElevenLabs TTS preview depuis ProfilePage
+
+**Problème :** Les cards de voix ElevenLabs (Aïssata, Camille, Théo, Olivia, Marcus) affichaient une icône lecture sans aucune action.
+
+**Fichier modifié : `client/src/pages/Profile/ProfilePage.tsx`**
+
+Changements :
+- **VOICES** : ajout champs `voiceId` (ID ElevenLabs réel) et `lang` à chaque voix
+  - Aïssata FR·F → `21m00Tcm4TlvDq8ikWAM` (Rachel multilingue)
+  - Camille FR·F → `EXAVITQu4vr4xnSDxMaL` (Bella multilingue)
+  - Théo FR·M → `ErXwobaYiN019PkySvjV` (Antoni multilingue)
+  - Olivia EN·F → `MF3mGyEYCl7XYWbV9V6O` (Elli)
+  - Marcus EN·M → `TxGEqnHWrfWFTfGW9XjX` (Josh)
+- Ajout `previewing: string | null` state + `currentAudioRef` pour stopper l'audio précédent
+- Fonction `previewVoice(name, voiceId, lang)` :
+  - POST `/voice/synthesize` avec `responseType: "arraybuffer"`
+  - Si `Content-Type: audio/mpeg` → Blob → URL.createObjectURL → `new Audio(url).play()`
+  - Si JSON `{useNativeTts: true}` → `SpeechSynthesisUtterance` navigateur
+  - Clic sur carte déjà en cours → stop/cancel
+- Voice card : bouton play/stop séparé (stopPropagation pour ne pas changer la sélection) + `MicWave listening={isPlaying}` animé + bordure `var(--voice)` quand en lecture
+
+---
+
+#### Tâche 2 — Export PDF/DOCX bout-en-bout
+
+**Problème :** Le `contentId` n'était jamais retourné au client après génération. Le client ne pouvait donc pas appeler `GET /export/:id/pdf`.
+
+**Architecture de la correction (3 couches) :**
+
+**`server/src/services/claude.service.ts` — `streamContentGeneration()` modifié**
+- Ajout paramètre optionnel `onComplete?: (content, tokensUsed) => Promise<{contentId?: string}>`
+- Quand présent : appelle le callback AVANT d'envoyer l'événement SSE `{done: true}`, ce qui permet de sauvegarder en DB et inclure `contentId` dans le done : `{done: true, tokensUsed, contentId}`
+
+**`server/src/controllers/content.controller.ts` — `generate()` restructuré**
+- Suppression du bloc post-stream save
+- La sauvegarde (Content.create + deductCredits) se fait dans le callback `onComplete` passé à `streamContentGeneration`
+- Retourne `{contentId: String(saved._id)}` pour inclusion dans le SSE done event
+
+**`client/src/store/contentSlice.ts` — ajouts**
+- Nouveau champ `savedContentId: string | null` dans l'état
+- `stopGeneration` accepte maintenant un payload optionnel `string` (le contentId) → `state.savedContentId = action.payload`
+- `resetEditor` remet `savedContentId` à null
+
+**`client/src/hooks/useStreaming.ts` — captures `contentId`**
+- SSE parsed type étendu : `contentId?: string`
+- `dispatch(stopGeneration(parsed.contentId))` — passe l'ID au slice
+- `options.onDone?.(parsed.tokensUsed ?? 0, parsed.contentId)` — remonte l'ID aux callbacks
+
+**`client/src/pages/Generate/GeneratePage.tsx` — Export dropdown ajouté**
+- Import `exportService` ajouté
+- États `isExporting` + `showExportMenu`
+- `handleExport(format)` : `exportService.download(savedContentId, format, subject)` + toast
+- Bouton "Exporter" visible dans la toolbar dès que `savedContentId !== null`
+- Dropdown inline avec options : PDF / Word (.docx) / Markdown / Texte (.txt)
+
+**HistoryPage déjà câblé :** Le composant `ExportMenu` avec les 4 formats était déjà présent et utilisé à la ligne 352.
+
+---
+
+#### Vérification TypeScript — Build May 7 (session 7)
+
+```
+pnpm tsc --noEmit → 0 erreur
+pnpm build       → ✓ built in 3.37s (client + server)
+```
+
+**Total à ce jour : ~175 fichiers · ~10 050 lignes de code**
+
+---
+
+### [2026-05-08] — Phase 6 (suite) : Démo Landing + Effet Liquid Glass — COMPLÉTÉ ✅
+- **Session :** 8
+- **Statut :** Complété
+
+---
+
+#### Tâche 1 — Bouton "Voir la démo" → narration audio + modal
+
+**Problème :** Le bouton "Voir la démo" n'avait aucune action (pas de `onClick`), et aucun système de démo n'existait.
+
+**Fichier modifié : `client/src/pages/Landing/LandingPage.tsx`**
+
+**Ajouts globaux :**
+- Imports : `useCallback`, `useEffect`, `useRef`, `useState`
+- `DEMO_SCENES` (L29–51) : 3 scènes (Brief / Generate / Export) avec tag, title, voice quote, result, icon
+- `DEMO_NARRATION` (L53–67) : 12 phrases courtes séparées par `.` pour rythme TTS naturel, joinées en une string (`DEMO_DURATION_MS = 42000`)
+- `findSentenceStart(text, fromChar)` (L71–79) : remonte à la phrase précédente pour reprendre proprement après pause
+- `pickBestFrenchVoice()` (L81–94) : sélection de la voix française la plus naturelle dans l'ordre : Google français > Google (other) > Microsoft Hortense/Julie/Sylvie/Henri > Apple Amélie/Léa/Thomas/Marie > première FR disponible
+- `state showDemo` dans `LandingPage` + `onClick={() => setShowDemo(true)}` sur le bouton hero
+- `{showDemo && <DemoModal onClose={() => setShowDemo(false)} />}` en haut du render
+
+**Composant `DemoModal`** (L97–373) :
+- Layout : overlay fixe 100vw/100vh `background: rgba(0,0,0,0.68) backdropFilter: blur(12px)` + card 780px
+- Header : bouton pause/play + pill "En lecture / En pause" + barre de progression + `0:XX / 0:42` + bouton fermer
+- Corps : scène animée avec tag eyebrow + h3 + bubble commande vocale + result line + dots navigation
+- Footer : label "Narration · Web Speech API · fr-FR" + bouton Fermer + CTA "Essayer gratuitement →"
+
+---
+
+#### Tâche 2 — Amélioration qualité voix TTS
+
+**Problème :** La voix navigateur par défaut était robotique (Microsoft Anna en anglais sur Windows).
+
+**Fix :** Fonction `pickBestFrenchVoice()` ci-dessus + paramètres SpeechSynthesisUtterance :
+- `utt.rate = 0.88` (légèrement ralentie pour clarté)
+- `utt.pitch = 1.05` (légèrement plus chaleureux)
+- `utt.lang = "fr-FR"`
+
+---
+
+#### Tâche 3 — Bouton pause/resume dans la démo modal
+
+**Ajouts :**
+- État `isPaused` (React state) + `isPausedRef` (ref pour closures)
+- Bouton circulaire 32px avec icône SVG play (triangle) ou pause (deux barres) selon état
+- Pill "En lecture" (classe `voice`) vs "En pause" (classe normale)
+- Barre de progression grise quand en pause, teal quand en lecture
+
+---
+
+#### Tâche 4 — Correction : reprise depuis la pause (Chrome speechSynthesis bug)
+
+**Problème :** `speechSynthesis.pause()` + `resume()` cassé dans Chrome — `resume()` ne fait rien silencieusement.
+
+**Fix (pattern cancel+recreate) :**
+- À la **pause** : `isPausedRef.current = true` (avant `cancel()` pour bloquer `onend`) → `speechSynthesis.cancel()` → `clearInterval` + `clearTimeout` scènes
+- À la **reprise** : `speakFrom(speechPlayedMsRef.current)` recréé une nouvelle `SpeechSynthesisUtterance` à la position estimée → `scheduleScenes(playedMs)` repart avec les délais ajustés → `startProgressInterval()` relance le tick
+
+---
+
+#### Tâche 5 — Correction : synchronisation progress bar + estimation position
+
+**Problème :** La barre de progression était désynchronisée après pause+reprise : `onboundary` ne fire pas pour les voix Google (les plus naturelles), et `Date.now() - startMs` dériait après `speakFrom()`.
+
+**Fix (tracking par segment, sans `onboundary`) :**
+- `segOffsetMsRef` : ms audio joué au début de l'utterance courante
+- `segStartRef` : `Date.now()` au moment du début de l'utterance
+- `speechPlayedMsRef` : total ms joué = `segOffsetMsRef + (Date.now() - segStartRef)`, mis à jour toutes les 100ms par l'intervalle
+- `speakFrom()` recalibre `segOffsetMsRef` au char snappé (`findSentenceStart`), reset `segStartRef = Date.now()`
+- Progress = `speechPlayedMsRef.current / DEMO_DURATION_MS` — toujours exact quel que soit le nombre de pauses/reprises
+
+---
+
+#### Tâche 6 — Effet Liquid Glass / Glassmorphism sur le widget hero
+
+**Problème (signalé via screenshot) :** L'utilisateur a demandé un effet "liquid glass" sur le widget app mockup dans le hero, sans toucher au header.
+
+**Fichier modifié : `client/src/pages/Landing/LandingPage.tsx` — section hero mockup**
+
+**Architecture du glass effect :**
+
+1. **3 blobs gradient flous** (z-index 0, `position: absolute, inset: -24, overflow: hidden`) — donnent au `backdropFilter` de la matière visuelle à réfracter :
+   - Blob 1 : `var(--accent-soft)`, 55%×55%, `blur(48px)`, opacity 0.9 (en haut à gauche)
+   - Blob 2 : `var(--voice-soft)`, 45%×45%, `blur(44px)`, opacity 0.85 (en bas à droite)
+   - Blob 3 : `rgba(255,220,160,0.22)`, 35%×35%, `blur(36px)` (centre, touche chaleureuse)
+
+2. **Glass card** (z-index 1) :
+   ```
+   background: rgba(255,255,255,0.42)
+   backdropFilter: blur(28px) saturate(180%) brightness(1.04)
+   border: 1px solid rgba(255,255,255,0.58)
+   boxShadow: 0 8px 40px rgba(58,47,37,0.10), inset 0 1.5px 0 rgba(255,255,255,0.90), inset 0 -1px 0 rgba(0,0,0,0.04)
+   ```
+   - Highlight inset en haut (presque blanc) + ombre inset subtile en bas = effet "épaisseur" du verre
+   - Header interne `background: var(--bg-sunk)` conservé intact (bande sombre en haut de la carte)
+   - Contenu `background: transparent` pour laisser voir les blobs à travers
+
+3. **Floating mic pill** (z-index 2) : même traitement glass avec `blur(20px) saturate(180%) rgba(255,255,255,0.52)`
+
+**Contrainte respectée :** Le navbar `<div className="row between" ... background: "var(--bg)">` n'a pas été modifié.
+
+---
+
+#### Vérification TypeScript — Session 8
+
+```
+pnpm exec tsc --noEmit → 0 erreur
+```
+
+**Total à ce jour : ~175 fichiers · ~10 300 lignes de code**
+
+---
+
+### [2026-05-08] — Enhanced Visual Effects v2 : Grid · Liquid Glass · Colored Shadows — COMPLÉTÉ ✅
+- **Session :** 8 (suite)
+- **Statut :** Complété
+
+#### Fichier modifié : `client/src/index.css`
+
+**Technique cascade :** Règles ajoutées en fin de fichier — même spécificité que les règles d'origine → les nouvelles gagnent systématiquement. Aucun `!important` nécessaire.
+
+**1 — Motif quadrillé sur tous les arrières-plans**
+- `body` et `.app` : grille 40×40px, `rgba(58,47,37,0.042)` en mode clair, `rgba(255,255,255,0.026)` en mode sombre
+- `.card` : grille plus fine 28×28px, `rgba(58,47,37,0.030)` — texture micro sur toutes les surfaces de carte
+- Dark mode : override `[data-theme="dark"]` pour les deux classes
+- Technique : `background-image: linear-gradient(...)` × 2 (H + V) + `background-size` — le `background-color` hérité des règles précédentes reste intact grâce à la cascade par propriété
+
+**2 — Liquid glass sur TOUS les boutons**
+- `position: relative; overflow: hidden` déplacé de `.btn-primary/.btn-accent` vers `.btn` base
+- `backdrop-filter: blur(14px) saturate(160%) brightness(1.02)` sur `.btn` base → s'applique à tous les variants
+- **Shine sweep** déplacé vers `.btn::after` / `.btn:hover::after` → sweep visible sur tous les boutons
+- `.btn::after` (spécificité 0,1,1) écrase l'ancien `.btn-primary::after` et `.btn-accent::after` (même spécificité, vient après)
+- **Primary glass :** `rgba(58,47,37,0.88)` + `border: 1px solid rgba(255,255,255,0.13)` + inset top highlight `rgba(255,255,255,0.16)`
+- **Accent glass :** `rgba(229,112,76,0.88)` + `border: 1px solid rgba(255,255,255,0.26)` + inset top highlight `rgba(255,255,255,0.32)`
+- **Outline glass :** `rgba(255,255,255,0.46)` + `border: rgba(255,255,255,0.66)` + fort inset highlight
+- **Ghost glass :** `rgba(248,247,245,0.44)` + `border: rgba(255,255,255,0.40)` + subtle inset
+- Dark mode overrides pour `.btn-outline` et `.btn-ghost` (fond sombre translucide)
+
+**3 — Drop shadows colorées renforcées (×2 vs session précédente)**
+- `.card` base : ombre ambiante coral+teal sur toutes les cartes : `0 4px 18px rgba(229,112,76,0.08), 0 8px 32px rgba(107,184,189,0.05)` + `inset 0 1px 0 rgba(255,255,255,0.68)`
+- `.btn-primary:hover` : ombre ink renforcée `0 6px 28px rgba(58,47,37,0.48)` (était 0.30)
+- `.btn-accent:hover` : ombre coral `0 6px 30px rgba(229,112,76,0.72)` (était 0.50)
+- `.card-landing:hover` : ombre coral `0 14px 44px rgba(229,112,76,0.24)` (était 0.12) + lift -4px
+- `.card-voice-hover:hover` : ombre teal `0 12px 40px rgba(107,184,189,0.30)` (était 0.18) + lift -3px
+
+**4 — Fichier modifié : `client/src/pages/Landing/LandingPage.tsx`** (session précédente, rappel)
+- Blob décoratifs avec `z-index: -1` à l'intérieur d'un stacking context `position: relative; zIndex: 0`
+- Glass card hero : ombre corail ambiante `rgba(229,112,76,0.12)`
+- Pill mic : ombre teal `rgba(107,184,189,0.22)`
+- CTA button : classe `btn-accent` ajoutée (bénéfice automatique du glass + shine)
+
+#### Vérification
+```
+pnpm --filter client exec tsc --noEmit → 0 erreur
+```
+
+**Total à ce jour : ~175 fichiers · ~10 500 lignes de code**
+
+---
+
+### [2026-05-08] — Visual Polish v3 : Aurora Backgrounds · Frosted Headers · Landing Nav — COMPLÉTÉ ✅
+- **Session :** 9
+- **Statut :** Complété
+
+#### 1 — Aurora gradients sur les arrières-plans principaux (`client/src/index.css`)
+
+**Technique multi-couches :** `background-image` accepte des couches séparées par des virgules. Chaque couche a son propre `background-size` et `background-repeat`. Les layers d'aurora sont `no-repeat / 100% 100%` pour couvrir toute la hauteur.
+
+- **`body`** : 3 couches — grille H+V (40×40px) + `linear-gradient(180deg, rgba(229,112,76,0.22) 0%, transparent 42%, rgba(107,184,189,0.18) 100%)` — dégradé coral en haut → cream → teal en bas
+- **`.app`** : 4 couches — grille H+V + deux `radial-gradient` aux coins : teal haut-droit `(94% 3%)` + coral bas-gauche `(6% 97%)` — effet aurora de coin
+- **`.card`** : 3 couches — grille H+V + `linear-gradient(148deg, rgba(229,112,76,0.07) 0%, transparent 52%)` — texture warm subtile sur chaque carte
+- Drop shadows des cartes modérées : `0 4px 22px rgba(229,112,76,0.11), 0 8px 36px rgba(107,184,189,0.08)`
+
+#### 2 — Headers frosted glass
+
+**`client/src/pages/Landing/LandingPage.tsx` — navbar sticky (L402)**
+- `background: "rgba(248,247,245,0.70)"` — semi-transparent sur l'aurora du body
+- `backdropFilter: "blur(22px) saturate(180%) brightness(1.02)"` + `-webkit-` prefix
+- `borderBottom: "1px solid rgba(255,255,255,0.25)"` — remplace `var(--line)` dur
+
+**`client/src/components/Layout/Navbar.tsx` — navbar app (L24–29)**
+- `background: "rgba(253,252,249,0.68)"` — légèrement plus opaque que landing
+- Même `backdropFilter: blur(22px) saturate(180%) brightness(1.02)`
+- `borderBottom: "1px solid rgba(255,255,255,0.25)"`
+
+**`client/src/components/Layout/AppLayout.tsx` — main content area (L40)**
+- `background: "transparent"` — le fond aurora du `.app` (radial coins) traverse maintenant toute la zone de contenu
+
+#### 3 — Section Voice : gradient teal (Image #6 style)
+
+**`client/src/pages/Landing/LandingPage.tsx` — `#voice` div (L584)**
+- `background: "linear-gradient(165deg, rgba(107,184,189,0.28) 0%, rgba(107,184,189,0.08) 50%, var(--bg-sunk) 100%)"` — ambiance turquoise vive en haut gauche, dégradé vers cream
+
+#### 4 — Navbar Landing : lien "Cas d'usage" + hover animé
+
+**`client/src/pages/Landing/LandingPage.tsx` — navbar links (L407–412)**
+- Classe `landing-nav-link` appliquée à tous les 5 liens (remplace style inline)
+- Nouveau lien : `<a href="#usecases">Cas d'usage</a>` — pointe vers `id="usecases"` sur le div des commandes vocales (L620)
+- Anchor `id="usecases"` ajouté sur le div "Right — command demos" à l'intérieur de la section `#voice`
+
+**`client/src/index.css` (fin de fichier)**
+- `.landing-nav-link` : `color: var(--ink-soft)`, `transition: color 0.18s`
+- `.landing-nav-link::after` : underline coral animée — `width: 0 → 100%` sur hover via `cubic-bezier(0.4, 0, 0.2, 1)` 0.22s
+- `.landing-nav-link:hover` : `color: var(--ink)` — assombrit le lien au survol
+
+#### Liens de navigation (tous fonctionnels)
+| Lien | Destination | Type |
+|------|-------------|------|
+| Produit | `#product` (Three pillars section, L562) | Anchor scroll |
+| Voix | `#voice` (Voice section, L584) | Anchor scroll |
+| Templates | `/templates` | React Router Link |
+| Tarifs | `/pricing` | React Router Link |
+| Cas d'usage | `#usecases` (Command demos, L620) | Anchor scroll |
+| Connexion | `/login` | React Router Link |
+| Essai gratuit → | `/register` via `navigate()` | Programmatic nav |
+
+#### Vérification
+```
+npx tsc --noEmit → 0 erreur
+```
+
+**Total à ce jour : ~175 fichiers · ~10 600 lignes de code**

@@ -20,6 +20,7 @@ interface ContentState {
   currentParams: Partial<GenerationParams>;
   editorContent: string;
   autoSaveStatus: "idle" | "saving" | "saved" | "error";
+  savedContentId: string | null;
 }
 
 const initialState: ContentState = {
@@ -37,6 +38,7 @@ const initialState: ContentState = {
   },
   editorContent: "",
   autoSaveStatus: "idle",
+  savedContentId: null,
 };
 
 const contentSlice = createSlice({
@@ -52,9 +54,10 @@ const contentSlice = createSlice({
       state.streamedContent += action.payload;
       state.tokensGenerated += 1;
     },
-    stopGeneration(state) {
+    stopGeneration(state, action: PayloadAction<string | undefined>) {
       state.isGenerating = false;
       state.editorContent = state.streamedContent;
+      if (action.payload) state.savedContentId = action.payload;
     },
     setParams(state, action: PayloadAction<Partial<GenerationParams>>) {
       state.currentParams = { ...state.currentParams, ...action.payload };
@@ -70,6 +73,7 @@ const contentSlice = createSlice({
       state.editorContent = "";
       state.tokensGenerated = 0;
       state.isGenerating = false;
+      state.savedContentId = null;
     },
   },
 });

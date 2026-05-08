@@ -1,39 +1,32 @@
-import { useState, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
-import {
-  Plus, Search, Wand2, Trash2, BookOpen, Megaphone, Briefcase, Lightbulb,
-  Lock, Globe, TrendingUp, X,
-} from "lucide-react";
-import { templateService, type Template } from "@/services/template.service";
-import { useAppSelector, useAppDispatch } from "@/store/index";
-import { setParams } from "@/store/contentSlice";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import { CiqIcon, Ico } from "@/lib/ciq-icons";
+import { type Template, templateService } from "@/services/template.service";
+import { setParams } from "@/store/contentSlice";
+import { useAppDispatch, useAppSelector } from "@/store/index";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const CATEGORIES = [
-  { value: "all", label: "Tous", icon: BookOpen },
-  { value: "marketing", label: "Marketing", icon: Megaphone },
-  { value: "social", label: "Réseaux sociaux", icon: TrendingUp },
-  { value: "business", label: "Business", icon: Briefcase },
-  { value: "creative", label: "Créatif", icon: Lightbulb },
-] as const;
+  { value: "all", label: "Tous" },
+  { value: "marketing", label: "Marketing" },
+  { value: "social", label: "Social" },
+  { value: "business", label: "Business" },
+  { value: "creative", label: "Créatif" },
+];
 
-const CATEGORY_COLORS: Record<string, string> = {
-  marketing: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
-  social: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  business: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-  creative: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+const TYPE_ICON: Record<string, React.ReactNode> = {
+  blog: CiqIcon.blog, linkedin: CiqIcon.linkedin, instagram: CiqIcon.insta,
+  twitter: CiqIcon.twitter, email: CiqIcon.email, newsletter: CiqIcon.email,
+  product: CiqIcon.product, pitch: CiqIcon.pitch, youtube: CiqIcon.yt,
+  bio: CiqIcon.bio, press: CiqIcon.press, slogan: CiqIcon.bolt,
 };
 
-const TYPE_EMOJIS: Record<string, string> = {
-  blog: "📝", linkedin: "💼", instagram: "📸", twitter: "𝕏",
-  email: "📧", newsletter: "📰", product: "🛒", pitch: "🚀",
-  youtube: "🎬", bio: "👤", press: "📢", slogan: "✨",
+const TYPE_LABELS: Record<string, string> = {
+  blog: "Blog", linkedin: "LinkedIn", instagram: "Instagram", twitter: "Thread X",
+  email: "Email", newsletter: "Newsletter", product: "Produit", pitch: "Pitch",
+  youtube: "YouTube", bio: "Bio", press: "Communiqué", slogan: "Slogan",
 };
 
 function TemplateCard({
@@ -47,79 +40,73 @@ function TemplateCard({
   onDelete: (id: string) => void;
   canDelete: boolean;
 }) {
+  const isMine = !template.isPublic || canDelete;
+
   return (
-    <div className="group flex flex-col rounded-xl border bg-card p-4 transition-all hover:shadow-md hover:border-primary/30">
-      <div className="flex items-start justify-between gap-2 mb-3">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-xl">{TYPE_EMOJIS[template.type] ?? "📄"}</span>
-          <div className="min-w-0">
-            <p className="font-semibold text-sm truncate">{template.name}</p>
-            <p className="text-xs text-muted-foreground truncate">
-              {template.description ?? "Aucune description"}
-            </p>
-          </div>
+    <div className="card" style={{ padding: 20, position: "relative" }}>
+      <div className="row between" style={{ marginBottom: 14 }}>
+        <div
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 10,
+            background: isMine ? "var(--accent-soft)" : "var(--bg-sunk)",
+            display: "grid",
+            placeItems: "center",
+            color: isMine ? "var(--accent-ink)" : "var(--ink)",
+          }}
+        >
+          <Ico icon={TYPE_ICON[template.type] ?? CiqIcon.templ} />
         </div>
-        <div className="flex flex-col items-end gap-1 shrink-0">
-          {template.isPro && (
-            <Badge variant="warning" className="text-[10px] px-1.5 py-0">PRO</Badge>
-          )}
-          {template.isPublic ? (
-            <Globe className="h-3 w-3 text-muted-foreground" />
-          ) : (
-            <Lock className="h-3 w-3 text-muted-foreground" />
-          )}
-        </div>
+        {isMine ? (
+          <span className="pill accent" style={{ padding: "1px 8px", fontSize: 10 }}>perso</span>
+        ) : (
+          <span className="pill" style={{ padding: "1px 8px", fontSize: 10 }}>{template.category}</span>
+        )}
       </div>
 
-      <div className="flex items-center gap-2 mb-3">
-        <span
-          className={cn(
-            "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium",
-            CATEGORY_COLORS[template.category],
-          )}
-        >
-          {template.category}
-        </span>
-        <span className="text-xs text-muted-foreground">
-          {template.usageCount} utilisation{template.usageCount !== 1 ? "s" : ""}
-        </span>
-      </div>
+      <h3 style={{ fontSize: 16, margin: "0 0 4px", fontWeight: 600 }}>{template.name}</h3>
+      <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: "0 0 14px", lineHeight: 1.5 }}>
+        {template.description ?? "Aucune description"}
+      </p>
 
       {template.variables.length > 0 && (
-        <div className="mb-3 flex flex-wrap gap-1">
+        <div className="row" style={{ gap: 4, flexWrap: "wrap", marginBottom: 10 }}>
           {template.variables.slice(0, 3).map((v) => (
-            <span
-              key={v.key}
-              className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground"
-            >
+            <span key={v.key} className="chip" style={{ fontFamily: "var(--font-mono)", fontSize: 10.5 }}>
               {`{{${v.key}}}`}
             </span>
           ))}
           {template.variables.length > 3 && (
-            <span className="text-[10px] text-muted-foreground">+{template.variables.length - 3}</span>
+            <span style={{ fontSize: 10.5, color: "var(--ink-mute)" }}>+{template.variables.length - 3}</span>
           )}
         </div>
       )}
 
-      <div className="mt-auto flex gap-2">
-        <Button
-          size="sm"
-          className="flex-1 h-8 text-xs"
-          onClick={() => onUse(template)}
-        >
-          <Wand2 className="h-3 w-3" />
-          Utiliser
-        </Button>
-        {canDelete && (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={() => onDelete(template._id)}
+      <div className="hr" style={{ margin: "12px 0" }} />
+
+      <div className="row between" style={{ fontSize: 11.5, color: "var(--ink-mute)" }}>
+        <span className="t-mono">↗ {template.usageCount?.toLocaleString() ?? 0} util.</span>
+        <div className="row" style={{ gap: 4 }}>
+          {canDelete && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              style={{ padding: "4px 6px", color: "var(--ink-mute)" }}
+              onClick={() => onDelete(template._id)}
+              title="Supprimer"
+            >
+              <Ico icon={CiqIcon.x} size={13} />
+            </button>
+          )}
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => onUse(template)}
           >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        )}
+            Utiliser →
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -136,65 +123,43 @@ function CreateTemplateModal({ onClose, onSuccess }: { onClose: () => void; onSu
   const mutation = useMutation({
     mutationFn: () =>
       templateService.create({
-        name,
-        description,
+        name, description,
         type: type as Parameters<typeof templateService.create>[0]["type"],
-        category,
-        promptSchema,
-        variables: [],
-        isPublic,
+        category, promptSchema, variables: [], isPublic,
       }),
-    onSuccess: () => {
-      toast({ title: "Template créé !", variant: "default" });
-      onSuccess();
-      onClose();
-    },
-    onError: () => {
-      toast({ title: "Erreur lors de la création", variant: "destructive" });
-    },
+    onSuccess: () => { toast({ title: "Template créé !" }); onSuccess(); onClose(); },
+    onError: () => toast({ title: "Erreur lors de la création", variant: "destructive" }),
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-2xl border bg-background p-6 shadow-xl mx-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold">Nouveau template</h2>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
+    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)" }}>
+      <div className="card" style={{ width: "100%", maxWidth: 520, padding: 28, margin: "0 16px" }}>
+        <div className="row between" style={{ marginBottom: 20 }}>
+          <h2 style={{ fontSize: 22, fontWeight: 600, margin: 0 }}>Nouveau template</h2>
+          <button type="button" className="btn btn-ghost btn-sm" style={{ padding: 6 }} onClick={onClose}>
+            <Ico icon={CiqIcon.x} />
+          </button>
         </div>
 
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Nom *</label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Post LinkedIn viral" />
+        <div className="col" style={{ gap: 14 }}>
+          <div>
+            <label className="label">Nom *</label>
+            <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Post LinkedIn viral" />
           </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Description</label>
-            <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description courte" />
+          <div>
+            <label className="label">Description</label>
+            <input className="input" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description courte" />
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Type</label>
-              <select
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                className="w-full rounded-md border bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {Object.entries(TYPE_EMOJIS).map(([v, emoji]) => (
-                  <option key={v} value={v}>{emoji} {v}</option>
-                ))}
+          <div className="row" style={{ gap: 12 }}>
+            <div style={{ flex: 1 }}>
+              <label className="label">Type</label>
+              <select className="select" value={type} onChange={(e) => setType(e.target.value)}>
+                {Object.entries(TYPE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
               </select>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Catégorie</label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value as typeof category)}
-                className="w-full rounded-md border bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              >
+            <div style={{ flex: 1 }}>
+              <label className="label">Catégorie</label>
+              <select className="select" value={category} onChange={(e) => setCategory(e.target.value as typeof category)}>
                 <option value="marketing">Marketing</option>
                 <option value="social">Réseaux sociaux</option>
                 <option value="business">Business</option>
@@ -202,45 +167,38 @@ function CreateTemplateModal({ onClose, onSuccess }: { onClose: () => void; onSu
               </select>
             </div>
           </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Prompt template *
-              <span className="ml-1 font-normal normal-case text-muted-foreground">(utilisez {`{{variable}}`} pour les variables)</span>
+          <div>
+            <label className="label">
+              Prompt template *{" "}
+              <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>
+                (utilisez {"{{variable}}"} pour les variables)
+              </span>
             </label>
             <textarea
+              className="textarea"
+              rows={4}
               value={promptSchema}
               onChange={(e) => setPromptSchema(e.target.value)}
-              placeholder="Génère un post LinkedIn sur {{sujet}} avec un ton {{ton}}. Inclure une accroche percutante et un CTA."
-              rows={4}
-              className="w-full rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+              placeholder="Génère un post LinkedIn sur {{sujet}} avec un ton {{ton}}."
             />
           </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="isPublic"
-              checked={isPublic}
-              onChange={(e) => setIsPublic(e.target.checked)}
-              className="rounded"
-            />
-            <label htmlFor="isPublic" className="text-sm text-muted-foreground">
-              Rendre ce template public (visible par tous)
-            </label>
-          </div>
+          <label className="row" style={{ gap: 8, cursor: "pointer" }}>
+            <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
+            <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>Rendre ce template public</span>
+          </label>
         </div>
 
-        <div className="mt-6 flex gap-3">
-          <Button variant="outline" className="flex-1" onClick={onClose}>Annuler</Button>
-          <Button
-            className="flex-1"
+        <div className="row" style={{ gap: 10, marginTop: 20 }}>
+          <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={onClose}>Annuler</button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            style={{ flex: 1 }}
             disabled={!name || !promptSchema || mutation.isPending}
-            loading={mutation.isPending}
             onClick={() => mutation.mutate()}
           >
-            Créer le template
-          </Button>
+            {mutation.isPending ? "Création…" : "Créer le template"}
+          </button>
         </div>
       </div>
     </div>
@@ -266,7 +224,7 @@ export default function TemplatesPage() {
     mutationFn: templateService.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["templates"] });
-      toast({ title: "Template supprimé", variant: "default" });
+      toast({ title: "Template supprimé" });
     },
   });
 
@@ -275,102 +233,154 @@ export default function TemplatesPage() {
       templateService.use(template._id).catch(() => {});
       dispatch(setParams({ type: template.type }));
       navigate("/generate");
-      toast({ title: `Template "${template.name}" chargé !`, variant: "default" });
+      toast({ title: `Template "${template.name}" chargé !` });
     },
     [dispatch, navigate],
   );
 
   const templates = data?.data ?? [];
   const filtered = search
-    ? templates.filter(
-        (t) =>
-          t.name.toLowerCase().includes(search.toLowerCase()) ||
-          t.description?.toLowerCase().includes(search.toLowerCase()),
+    ? templates.filter((t) =>
+        t.name.toLowerCase().includes(search.toLowerCase()) ||
+        t.description?.toLowerCase().includes(search.toLowerCase()),
       )
     : templates;
 
   const canCreateTemplates = user?.role && ["pro", "business", "admin"].includes(user.role);
 
   return (
-    <div className="space-y-6">
+    <div style={{ padding: "32px 40px", overflow: "auto" }}>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Templates</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Bibliothèque de prompts prédéfinis pour accélérer votre création
-          </p>
-        </div>
+      <div className="row between" style={{ marginBottom: 6 }}>
+        <h1 className="t-display" style={{ fontSize: 40, margin: 0 }}>Templates</h1>
         {canCreateTemplates && (
-          <Button onClick={() => setShowCreate(true)}>
-            <Plus className="h-4 w-4" />
-            Nouveau template
-          </Button>
+          <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
+            <Ico icon={CiqIcon.plus} />
+            Créer un template
+          </button>
         )}
       </div>
+      <p style={{ color: "var(--ink-soft)", marginBottom: 22 }}>
+        {templates.length} templates disponibles · partagez les vôtres avec votre équipe.
+      </p>
 
-      {/* Filtres */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-          <Input
+      {/* Search + category tabs */}
+      <div className="row" style={{ gap: 12, marginBottom: 22, flexWrap: "wrap" }}>
+        <div
+          className="row"
+          style={{
+            background: "var(--bg-elev)",
+            border: "1px solid var(--line)",
+            borderRadius: 10,
+            padding: "8px 12px",
+            flex: 1,
+            gap: 8,
+            maxWidth: 400,
+          }}
+        >
+          <Ico icon={CiqIcon.search} style={{ color: "var(--ink-mute)" }} />
+          <input
+            className="input"
+            style={{ border: "none", padding: 0, background: "transparent" }}
+            placeholder="Rechercher un template…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher un template..."
-            className="pl-9"
           />
         </div>
-        <div className="flex gap-2 flex-wrap">
-          {CATEGORIES.map(({ value, label, icon: Icon }) => (
+        <div className="seg">
+          {CATEGORIES.map((c) => (
             <button
-              key={value}
-              onClick={() => setSelectedCategory(value)}
-              className={cn(
-                "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-all",
-                selectedCategory === value
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border hover:border-primary/50 text-muted-foreground hover:text-foreground",
-              )}
+              key={c.value}
+              className={selectedCategory === c.value ? "on" : ""}
+              onClick={() => setSelectedCategory(c.value)}
             >
-              <Icon className="h-3.5 w-3.5" />
-              {label}
+              {c.label}
             </button>
           ))}
+          <button onClick={() => setSelectedCategory("mine")}>Mes templates</button>
         </div>
       </div>
 
       {/* Plan upgrade notice */}
       {!canCreateTemplates && (
-        <div className="rounded-xl border border-dashed bg-muted/30 p-4 text-center">
-          <p className="text-sm text-muted-foreground">
-            <Lock className="inline h-3.5 w-3.5 mr-1" />
+        <div
+          className="card"
+          style={{ padding: 14, textAlign: "center", marginBottom: 18, borderStyle: "dashed", background: "transparent" }}
+        >
+          <p style={{ fontSize: 13, color: "var(--ink-mute)" }}>
             La création de templates personnalisés est disponible à partir du plan{" "}
-            <a href="/pricing" className="text-primary hover:underline font-medium">Pro</a>.
+            <a href="/pricing" style={{ color: "var(--accent-ink)", fontWeight: 600 }}>Pro</a>.
           </p>
         </div>
       )}
 
-      {/* Grid templates */}
+      {/* Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-52 rounded-xl" />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
+          {[1, 2, 3, 4, 5, 6].map((k) => (
+            <div key={k} className="card" style={{ padding: 20 }}>
+              <div className="row between" style={{ marginBottom: 14 }}>
+                <Skeleton style={{ width: 36, height: 36, borderRadius: 10 }} />
+                <Skeleton style={{ width: 52, height: 20, borderRadius: 20 }} />
+              </div>
+              <Skeleton style={{ width: "70%", height: 18, borderRadius: 4, marginBottom: 10 }} />
+              <Skeleton style={{ width: "100%", height: 13, borderRadius: 4, marginBottom: 6 }} />
+              <Skeleton style={{ width: "75%", height: 13, borderRadius: 4, marginBottom: 14 }} />
+              <div className="row" style={{ gap: 4, marginBottom: 14 }}>
+                <Skeleton style={{ width: 58, height: 22, borderRadius: 6 }} />
+                <Skeleton style={{ width: 48, height: 22, borderRadius: 6 }} />
+              </div>
+              <div style={{ height: 1, background: "var(--line)", margin: "10px 0 12px" }} />
+              <div className="row between">
+                <Skeleton style={{ width: 52, height: 13, borderRadius: 4 }} />
+                <Skeleton style={{ width: 72, height: 28, borderRadius: 8 }} />
+              </div>
+            </div>
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <div className="rounded-full bg-muted p-4">
-            <BookOpen className="h-8 w-8 text-muted-foreground" />
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingTop: 80, paddingBottom: 80, gap: 18, textAlign: "center" }}>
+          <div style={{
+            width: 80,
+            height: 80,
+            borderRadius: "50%",
+            background: "var(--bg-sunk)",
+            border: "1px solid var(--line)",
+            display: "grid",
+            placeItems: "center",
+          }}>
+            <Ico icon={CiqIcon.templ} size={32} style={{ color: "var(--ink-mute)" }} />
           </div>
-          <p className="text-sm font-medium">
-            {search ? "Aucun template trouvé" : "Aucun template disponible"}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {search ? "Essayez un autre terme de recherche" : "Créez votre premier template ci-dessus"}
-          </p>
+          <div>
+            <p style={{ fontSize: 18, fontWeight: 600, margin: "0 0 8px", fontFamily: "var(--font-serif)" }}>
+              {search ? "Aucun template trouvé" : "Aucun template disponible"}
+            </p>
+            <p style={{ fontSize: 13.5, color: "var(--ink-mute)", maxWidth: 340, lineHeight: 1.55 }}>
+              {search
+                ? `Aucun template correspond à "${search}". Essayez un autre terme.`
+                : selectedCategory !== "all"
+                ? `Aucun template dans la catégorie "${selectedCategory === "mine" ? "Mes templates" : (CATEGORIES.find((c) => c.value === selectedCategory)?.label ?? selectedCategory)}".`
+                : "Les templates seront disponibles après initialisation de la base de données."}
+            </p>
+          </div>
+          {(search || selectedCategory !== "all") && (
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => { setSearch(""); setSelectedCategory("all"); }}
+            >
+              Voir tous les templates
+            </button>
+          )}
+          {canCreateTemplates && !search && selectedCategory === "all" && (
+            <button type="button" className="btn btn-primary" onClick={() => setShowCreate(true)}>
+              <Ico icon={CiqIcon.plus} />
+              Créer mon premier template
+            </button>
+          )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
           {filtered.map((template) => (
             <TemplateCard
               key={template._id}

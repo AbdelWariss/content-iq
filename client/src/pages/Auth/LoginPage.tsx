@@ -2,12 +2,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, LogIn } from "lucide-react";
 import { LoginSchema, type LoginInput } from "@contentiq/shared";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 
@@ -40,104 +36,134 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-1">
-        <h2 className="text-2xl font-bold">Connexion</h2>
-        <p className="text-sm text-muted-foreground">
-          Pas encore de compte ?{" "}
-          <Link to="/register" className="text-primary hover:underline font-medium">
-            S'inscrire gratuitement
-          </Link>
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="vous@exemple.com"
-            autoComplete="email"
-            error={errors.email?.message}
-            {...register("email")}
-          />
-          {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1.1fr", height: "100%" }}>
+      {/* Left — form */}
+      <div style={{ padding: 56, display: "flex", flexDirection: "column", justifyContent: "space-between", overflowY: "auto" }}>
+        {/* Logo */}
+        <div className="ciq-mark">
+          <span className="dot">C</span>
+          <span className="name"><b>CONTENT</b><span>.IQ</span></span>
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password">Mot de passe</Label>
-            <Link
-              to="/forgot-password"
-              className="text-xs text-muted-foreground hover:text-primary"
-            >
-              Mot de passe oublié ?
-            </Link>
+        {/* Form block */}
+        <div style={{ maxWidth: 380, width: "100%" }}>
+          <h1 className="t-display" style={{ fontSize: 44, margin: "0 0 8px" }}>Bon retour.</h1>
+          <p style={{ color: "var(--ink-soft)", marginBottom: 26, fontSize: 14 }}>
+            Connectez-vous pour reprendre vos brouillons.
+          </p>
+
+          {/* Google */}
+          <button
+            type="button"
+            className="btn btn-outline btn-lg"
+            style={{ width: "100%", justifyContent: "center", marginBottom: 12 }}
+            onClick={() => { window.location.href = `${import.meta.env.VITE_API_URL ?? "/api"}/auth/google`; }}
+          >
+            <Ico icon={CiqIcon.google} size={18} />
+            Continuer avec Google
+          </button>
+
+          {/* Divider */}
+          <div className="row" style={{ gap: 10, margin: "18px 0" }}>
+            <div className="hr" style={{ flex: 1 }} />
+            <span className="t-eyebrow" style={{ fontSize: 11, color: "var(--ink-mute)" }}>OU</span>
+            <div className="hr" style={{ flex: 1 }} />
           </div>
-          <div className="relative">
-            <Input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
-              autoComplete="current-password"
-              error={errors.password?.message}
-              {...register("password")}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((p) => !p)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label={showPassword ? "Masquer" : "Afficher"}
-            >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="col" style={{ gap: 12 }}>
+              <div>
+                <label className="label">Email</label>
+                <input
+                  className="input"
+                  type="email"
+                  placeholder="vous@exemple.com"
+                  autoComplete="email"
+                  {...register("email")}
+                />
+                {errors.email && <p style={{ fontSize: 11, color: "var(--accent)", marginTop: 4 }}>{errors.email.message}</p>}
+              </div>
+
+              <div>
+                <div className="row between">
+                  <label className="label">Mot de passe</label>
+                  <Link to="/forgot-password" className="lnk" style={{ fontSize: 11.5 }}>Oublié ?</Link>
+                </div>
+                <div style={{ position: "relative" }}>
+                  <input
+                    className="input"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                    {...register("password")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((p) => !p)}
+                    style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--ink-mute)", padding: 0 }}
+                  >
+                    {showPassword ? "●" : "○"}
+                  </button>
+                </div>
+                {errors.password && <p style={{ fontSize: 11, color: "var(--accent)", marginTop: 4 }}>{errors.password.message}</p>}
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="btn btn-primary btn-lg"
+                style={{ width: "100%", justifyContent: "center", marginTop: 6 }}
+              >
+                {isLoading ? "Connexion…" : "Se connecter"}
+                {!isLoading && <Ico icon={CiqIcon.arrow} size={16} />}
+              </button>
+            </div>
+          </form>
+
+          <div style={{ marginTop: 22, fontSize: 13, color: "var(--ink-soft)" }}>
+            Pas encore de compte ?{" "}
+            <Link to="/register" className="lnk">Créer un compte</Link>
           </div>
-          {errors.password && (
-            <p className="text-xs text-destructive">{errors.password.message}</p>
-          )}
         </div>
 
-        <Button type="submit" className="w-full" loading={isLoading}>
-          <LogIn className="h-4 w-4" />
-          Se connecter
-        </Button>
-      </form>
-
-      <div className="relative">
-        <Separator />
-        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-          ou
-        </span>
+        <div style={{ fontSize: 12, color: "var(--ink-mute)" }}>© 2026 CODEXA · Document confidentiel</div>
       </div>
 
-      <Button
-        variant="outline"
-        className="w-full"
-        onClick={() => {
-          window.location.href = `${import.meta.env.VITE_API_URL ?? "/api"}/auth/google`;
-        }}
-      >
-        <svg className="h-4 w-4" viewBox="0 0 24 24">
-          <path
-            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-            fill="#4285F4"
-          />
-          <path
-            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-            fill="#34A853"
-          />
-          <path
-            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-            fill="#FBBC05"
-          />
-          <path
-            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-            fill="#EA4335"
-          />
-        </svg>
-        Continuer avec Google
-      </Button>
+      {/* Right — editorial */}
+      <div style={{ background: "var(--bg-sunk)", padding: 56, display: "flex", flexDirection: "column", justifyContent: "center", borderLeft: "1px solid var(--line)", overflowY: "auto" }}>
+        <span className="t-eyebrow" style={{ marginBottom: 18 }}>★ Témoignage</span>
+        <div className="t-display" style={{ fontSize: 42, lineHeight: 1.1, margin: "0 0 28px" }}>
+          « Je dicte un brief, l'article sort.{" "}
+          <em style={{ color: "var(--accent)" }}>On a gagné 3 jours par semaine.</em> »
+        </div>
+        <div className="row" style={{ gap: 12 }}>
+          <div className="imgph" style={{ width: 44, height: 44, borderRadius: "50%", fontSize: 14 }}>AM</div>
+          <div className="col">
+            <strong style={{ fontSize: 14 }}>Aïssata Mbaye</strong>
+            <span style={{ fontSize: 12, color: "var(--ink-mute)" }}>Directrice — Studio Baobab, Dakar</span>
+          </div>
+        </div>
+
+        <div className="card" style={{ marginTop: 48, padding: 18 }}>
+          <div className="row between">
+            <span className="t-eyebrow">Aujourd'hui sur CONTENT.IQ</span>
+            <span className="t-mono" style={{ fontSize: 11, color: "var(--ink-mute)" }}>06.05.26</span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18, marginTop: 16 }}>
+            {[
+              ["12 480", "contenus générés"],
+              ["94%", "commandes vocales OK"],
+              ["1.7s", "temps de 1ᵉʳ token"],
+            ].map(([n, l]) => (
+              <div key={l} className="col">
+                <span className="t-mono" style={{ fontSize: 22, fontWeight: 600 }}>{n}</span>
+                <span style={{ fontSize: 11, color: "var(--ink-mute)" }}>{l}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

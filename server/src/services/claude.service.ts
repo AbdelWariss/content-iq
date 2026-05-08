@@ -98,6 +98,7 @@ export interface StreamResult {
 export async function streamContentGeneration(
   params: GenerateContentInput,
   res: Response,
+  onComplete?: (content: string, tokensUsed: number) => Promise<{ contentId?: string }>,
 ): Promise<StreamResult> {
   const startTime = Date.now();
 
@@ -135,7 +136,12 @@ export async function streamContentGeneration(
     const finalMsg = await stream.finalMessage();
     tokensUsed = finalMsg.usage.output_tokens;
 
-    res.write(`data: ${JSON.stringify({ done: true, tokensUsed })}\n\n`);
+    if (onComplete) {
+      const { contentId } = await onComplete(fullContent, tokensUsed);
+      res.write(`data: ${JSON.stringify({ done: true, tokensUsed, contentId })}\n\n`);
+    } else {
+      res.write(`data: ${JSON.stringify({ done: true, tokensUsed })}\n\n`);
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erreur génération";
     res.write(`data: ${JSON.stringify({ error: message })}\n\n`);

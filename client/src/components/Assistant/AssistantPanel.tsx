@@ -1,42 +1,31 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useLocation } from "react-router-dom";
-import {
-  X, Trash2, Sparkles, Send, Loader2, Mic, MicOff, Bot,
-} from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/index";
 import { toggleOpen, setMsgsToday } from "@/store/assistantSlice";
 import { useAssistant } from "@/hooks/useAssistant";
 import { useVoice } from "@/hooks/useVoice";
 import { assistantService } from "@/services/assistant.service";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { CiqIcon, Ico, MicWave } from "@/lib/ciq-icons";
 
 const PAGE_LABELS: Record<string, string> = {
   "/dashboard": "Dashboard",
-  "/generate": "Génération de contenu",
+  "/generate": "Generate",
   "/history": "Historique",
   "/templates": "Templates",
   "/profile": "Profil",
 };
 
 function MessageBubble({ role, content }: { role: "user" | "assistant"; content: string }) {
-  return (
-    <div className={cn("flex gap-2", role === "user" ? "flex-row-reverse" : "flex-row")}>
-      {role === "assistant" && (
-        <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 mt-1">
-          <Bot className="h-3.5 w-3.5 text-primary" />
-        </div>
-      )}
-      <div
-        className={cn(
-          "max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed",
-          role === "user"
-            ? "bg-primary text-primary-foreground rounded-tr-sm"
-            : "bg-muted text-foreground rounded-tl-sm",
-        )}
-      >
-        {content || <span className="opacity-50">...</span>}
+  if (role === "user") {
+    return (
+      <div style={{ alignSelf: "flex-end", maxWidth: "85%", background: "var(--ink)", color: "var(--bg)", padding: "10px 14px", borderRadius: 12, fontSize: 13.5, lineHeight: 1.5 }}>
+        {content || <span style={{ opacity: 0.5 }}>…</span>}
       </div>
+    );
+  }
+  return (
+    <div style={{ background: "var(--bg-sunk)", padding: 12, borderRadius: 10, fontSize: 13, lineHeight: 1.55, color: "var(--ink-soft)" }}>
+      {content || <span style={{ opacity: 0.5 }}>…</span>}
     </div>
   );
 }
@@ -49,7 +38,7 @@ export function AssistantPanel() {
   const { startListening, stopListening, status: voiceStatus } = useVoice();
   const location = useLocation();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [input, setInput] = useState("");
 
   const pageContext = PAGE_LABELS[location.pathname] ?? location.pathname;
@@ -83,10 +72,7 @@ export function AssistantPanel() {
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        handleSend();
-      }
+      if (e.key === "Enter") { e.preventDefault(); handleSend(); }
     },
     [handleSend],
   );
@@ -105,129 +91,99 @@ export function AssistantPanel() {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-20 right-4 z-50 flex h-[540px] w-[360px] flex-col rounded-2xl border bg-background shadow-2xl animate-in slide-in-from-bottom-4 fade-in-0 duration-200">
-      {/* Header */}
-      <div className="flex items-center justify-between rounded-t-2xl border-b bg-card px-4 py-3">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-            <Sparkles className="h-4 w-4 text-primary" />
+    <div style={{ position: "fixed", bottom: 72, right: 16, zIndex: 50, width: 380, height: 560, filter: "drop-shadow(0 12px 32px rgba(0,0,0,0.18))" }}>
+      <div className="card" style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "var(--shadow-pop)" }}>
+        {/* Header */}
+        <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)", background: "var(--bg-sunk)" }}>
+          <div className="row between">
+            <div className="row" style={{ gap: 10 }}>
+              <div style={{ width: 30, height: 30, borderRadius: 9, background: "var(--ink)", color: "var(--bg)", display: "grid", placeItems: "center", fontFamily: "var(--font-serif)", fontSize: 14, flexShrink: 0 }}>C</div>
+              <div className="col">
+                <strong style={{ fontSize: 13.5 }}>IQ Assistant</strong>
+                <span style={{ fontSize: 11, color: "var(--ink-mute)" }}>● en ligne · contextuel</span>
+              </div>
+            </div>
+            <div className="row" style={{ gap: 4 }}>
+              <button type="button" className="btn btn-ghost btn-sm" style={{ padding: 6 }} onClick={clear} title="Effacer">
+                <Ico icon={CiqIcon.history} size={14} />
+              </button>
+              <button type="button" className="btn btn-ghost btn-sm" style={{ padding: 6 }} onClick={() => dispatch(toggleOpen())}>
+                <Ico icon={CiqIcon.x} size={14} />
+              </button>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-semibold">IQ Assistant</p>
-            <p className="text-xs text-muted-foreground">
-              {pageContext && `Contexte : ${pageContext}`}
-            </p>
+          <div className="row" style={{ gap: 6, marginTop: 10 }}>
+            <span className="pill" style={{ padding: "1px 8px", fontSize: 10.5 }}>page : {pageContext}</span>
+            {isStreaming && <span className="pill voice" style={{ padding: "1px 8px", fontSize: 10.5 }}><MicWave size="sm" />génération…</span>}
           </div>
         </div>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0"
-            onClick={clear}
-            title="Effacer la conversation"
-          >
-            <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0"
-            onClick={() => dispatch(toggleOpen())}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+
+        {/* Messages */}
+        <div style={{ flex: 1, overflowY: "auto", padding: 14, display: "flex", flexDirection: "column", gap: 12 }} className="scrollbar-thin">
+          {messages.length === 0 && (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 16, textAlign: "center" }}>
+              <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--ink)", color: "var(--bg)", display: "grid", placeItems: "center", fontFamily: "var(--font-serif)", fontSize: 18 }}>C</div>
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 600 }}>Bonjour ! Je suis IQ Assistant</p>
+                <p style={{ fontSize: 12, color: "var(--ink-mute)", marginTop: 4 }}>Comment puis-je vous aider ?</p>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%", marginTop: 8 }}>
+                {["Améliore mon introduction", "Donne-moi des idées de contenu", "Comment écrire un bon hook ?"].map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setInput(s)}
+                    style={{ background: "var(--bg-sunk)", border: "1px solid var(--line)", borderRadius: 10, padding: "8px 12px", textAlign: "left", fontSize: 12.5, color: "var(--ink-soft)", cursor: "pointer" }}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {messages.map((msg) => (
+            <MessageBubble key={msg.id} role={msg.role} content={msg.content} />
+          ))}
+          <div ref={messagesEndRef} />
         </div>
-      </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin px-4 py-3 space-y-3">
-        {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
-            <div className="rounded-full bg-primary/10 p-4">
-              <Sparkles className="h-6 w-6 text-primary" />
+        {/* Input */}
+        <div style={{ padding: 12, borderTop: "1px solid var(--line)" }}>
+          <div className="row" style={{ gap: 6, alignItems: "center" }}>
+            <div style={{ flex: 1, background: "var(--bg-sunk)", border: "1px solid var(--line)", borderRadius: 12, padding: "8px 10px" }}>
+              <input
+                ref={inputRef}
+                style={{ width: "100%", border: "none", background: "transparent", outline: "none", fontSize: 13, color: "var(--ink)" }}
+                placeholder="Posez une question…"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={isStreaming}
+              />
             </div>
-            <div>
-              <p className="text-sm font-medium">Bonjour ! Je suis IQ Assistant</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Comment puis-je vous aider avec votre contenu ?
-              </p>
-            </div>
-            <div className="flex flex-col gap-1.5 w-full mt-2">
-              {[
-                "Améliore mon introduction",
-                "Donne-moi des idées de contenu",
-                "Comment écrire un bon hook ?",
-              ].map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setInput(s)}
-                  className="rounded-lg border bg-muted/50 px-3 py-2 text-left text-xs hover:bg-accent transition-colors"
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        {messages.map((msg) => (
-          <MessageBubble key={msg.id} role={msg.role} content={msg.content} />
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input */}
-      <div className="border-t px-3 py-2">
-        <div className="flex items-end gap-2">
-          <div className="relative flex-1">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Votre message..."
-              rows={1}
-              disabled={isStreaming}
-              className="w-full resize-none rounded-xl border bg-background px-3 py-2 pr-9 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 max-h-24 scrollbar-thin"
-              style={{ minHeight: "36px" }}
-            />
             <button
               type="button"
+              className="btn btn-ghost btn-sm"
+              style={{ padding: 8, color: voiceStatus === "listening" ? "var(--accent)" : "var(--ink-mute)" }}
               onClick={handleVoice}
-              className={cn(
-                "absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 transition-colors",
-                voiceStatus === "listening"
-                  ? "text-destructive bg-destructive/10 animate-pulse"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-              title={voiceStatus === "listening" ? "Arrêter l'écoute" : "Dicter"}
+              title={voiceStatus === "listening" ? "Arrêter" : "Dicter"}
             >
-              {voiceStatus === "listening" ? (
-                <MicOff className="h-3.5 w-3.5" />
-              ) : (
-                <Mic className="h-3.5 w-3.5" />
-              )}
+              <Ico icon={voiceStatus === "listening" ? CiqIcon.micOff : CiqIcon.mic} size={16} />
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              style={{ padding: 8 }}
+              onClick={isStreaming ? stop : handleSend}
+              disabled={!isStreaming && !input.trim()}
+            >
+              <Ico icon={isStreaming ? CiqIcon.stop : CiqIcon.send} size={14} />
             </button>
           </div>
-          <Button
-            size="sm"
-            className="h-9 w-9 shrink-0 p-0"
-            onClick={isStreaming ? stop : handleSend}
-            disabled={!isStreaming && !input.trim()}
-            variant={isStreaming ? "destructive" : "default"}
-          >
-            {isStreaming ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-3.5 w-3.5" />
-            )}
-          </Button>
+          <div style={{ fontSize: 10.5, color: "var(--ink-mute)", marginTop: 6, fontFamily: "var(--font-mono)" }}>
+            {msgsToday > 0 ? `${msgsToday} message${msgsToday > 1 ? "s" : ""} aujourd'hui` : "messages : illimité (Pro) · contexte : 20 tours"}
+          </div>
         </div>
-        {msgsToday > 0 && (
-          <p className="mt-1 text-center text-[10px] text-muted-foreground">
-            {msgsToday} message{msgsToday > 1 ? "s" : ""} aujourd'hui
-          </p>
-        )}
       </div>
     </div>
   );

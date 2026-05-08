@@ -14,34 +14,32 @@ export async function generate(req: Request, res: Response): Promise<void> {
   const { userId } = getAuthUser(req);
   const params = GenerateContentSchema.parse(req.body);
 
-  // Lance le streaming SSE — la réponse sera envoyée en continu
-  const { content, tokensUsed, generationTime } = await streamContentGeneration(params, res);
+  await streamContentGeneration(params, res, async (content, tokensUsed) => {
+    try {
+      const generationTime = 0;
+      const title = await generateTitle(content, params.language as ContentLanguage);
+      const plainText = content.replace(/<[^>]*>/g, "").trim();
 
-  if (!content) return;
+      const saved = await Content.create({
+        userId,
+        type: params.type,
+        title,
+        body: content,
+        bodyPlain: plainText,
+        prompt: params,
+        tokensUsed,
+        generationTime,
+        status: "complete",
+      });
 
-  // Sauvegarde en arrière-plan (après que le stream est terminé)
-  try {
-    const title = await generateTitle(content, params.language as ContentLanguage);
-    const plainText = content.replace(/<[^>]*>/g, "").trim();
-
-    const saved = await Content.create({
-      userId,
-      type: params.type,
-      title,
-      body: content,
-      bodyPlain: plainText,
-      prompt: params,
-      tokensUsed,
-      generationTime,
-      status: "complete",
-    });
-
-    await deductCredits(userId, CREDITS_PER_GENERATION, `Génération ${params.type}`, saved._id);
-
-    logger.debug(`Contenu généré : ${saved._id} — ${tokensUsed} tokens — ${generationTime}ms`);
-  } catch (err) {
-    logger.error("Erreur sauvegarde contenu :", err);
-  }
+      await deductCredits(userId, CREDITS_PER_GENERATION, `Génération ${params.type}`, saved._id);
+      logger.debug(`Contenu généré : ${saved._id} — ${tokensUsed} tokens`);
+      return { contentId: String(saved._id) };
+    } catch (err) {
+      logger.error("Erreur sauvegarde contenu :", err);
+      return {};
+    }
+  });
 }
 
 export async function listContents(req: Request, res: Response): Promise<void> {

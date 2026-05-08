@@ -1,76 +1,69 @@
 import { useState } from "react";
-import { Check, Zap, Building2, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import { useAppSelector } from "@/store/index";
 import { stripeService } from "@/services/stripe.service";
 import { toast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 
 const PLANS = [
   {
     id: "free",
     name: "Free",
-    price: { monthly: 0 },
-    description: "Pour découvrir CONTENT.IQ",
-    icon: Sparkles,
-    color: "border-border",
-    badgeVariant: "secondary" as const,
-    features: [
+    price: { monthly: "0", annual: "0" },
+    tag: "Pour découvrir",
+    bullets: [
       "50 crédits / mois",
       "6 types de contenu",
-      "Export PDF & TXT",
-      "5 messages / jour (IQ Assistant)",
-      "Templates publics",
+      "Export PDF",
+      "IQ Assistant — 5 msg/j",
     ],
-    limits: ["Pas de voix", "Pas de templates custom", "Pas d'accès API"],
+    striked: ["Voice commands"],
+    cta: "Commencer",
+    featured: false,
   },
   {
     id: "pro",
     name: "Pro",
-    price: { monthly: 19 },
-    description: "Pour les créateurs sérieux",
-    icon: Zap,
-    color: "border-primary ring-2 ring-primary/20",
-    badgeVariant: "default" as const,
-    popular: true,
-    features: [
+    price: { monthly: "9.99", annual: "7.99" },
+    tag: "Le plus populaire",
+    bullets: [
       "500 crédits / mois",
-      "Tous les types de contenu (12)",
-      "Export PDF, DOCX, Markdown, TXT",
+      "Tous les types",
+      "Voice commands · 25 cmd",
       "IQ Assistant illimité",
-      "Commandes vocales",
+      "Exports PDF · DOCX · MD",
       "Templates personnalisés",
     ],
-    limits: [],
+    striked: [],
+    cta: "Choisir Pro",
+    featured: true,
   },
   {
     id: "business",
     name: "Business",
-    price: { monthly: 49 },
-    description: "Pour les équipes et agences",
-    icon: Building2,
-    color: "border-border",
-    badgeVariant: "secondary" as const,
-    features: [
+    price: { monthly: "29.99", annual: "23.99" },
+    tag: "Agences & équipes",
+    bullets: [
       "2 000 crédits / mois",
-      "Tout le plan Pro inclus",
-      "Export ZIP bulk",
-      "Accès API",
-      "5 sièges d'équipe",
-      "Support prioritaire",
+      "5 sièges inclus",
+      "Export bulk ZIP",
+      "API · 100K req/mois",
+      "Templates partagés",
+      "Support 4h dédié",
     ],
-    limits: [],
+    striked: [],
+    cta: "Choisir Business",
+    featured: false,
   },
-] as const;
+];
 
 export default function PricingPage() {
   const user = useAppSelector((s) => s.auth.user);
+  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
   const [loading, setLoading] = useState<string | null>(null);
   const currentPlan = user?.role ?? "free";
 
   const handleUpgrade = async (planId: string) => {
-    if (loading !== null || planId === "free" || planId === currentPlan) return;
+    if (loading || planId === "free" || planId === currentPlan) return;
     setLoading(planId);
     try {
       await stripeService.createCheckout(planId as "pro" | "business");
@@ -82,7 +75,7 @@ export default function PricingPage() {
   };
 
   const handlePortal = async () => {
-    if (loading !== null) return;
+    if (loading) return;
     setLoading("portal");
     try {
       await stripeService.openPortal();
@@ -94,116 +87,117 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-10 py-8">
+    <div style={{ padding: "60px 56px", overflowY: "auto", maxWidth: 1280, margin: "0 auto" }}>
       {/* Header */}
-      <div className="text-center space-y-3">
-        <h1 className="text-3xl font-bold">Choisissez votre plan</h1>
-        <p className="text-muted-foreground">
-          Tous les plans incluent la génération IA temps réel avec Claude. Annulable à tout moment.
+      <div style={{ textAlign: "center", maxWidth: 720, margin: "0 auto 48px" }}>
+        <span className="t-eyebrow">Tarifs simples</span>
+        <h1 className="t-display" style={{ fontSize: 64, margin: "10px 0 14px" }}>
+          Choisissez votre voix.
+        </h1>
+        <p style={{ fontSize: 16.5, color: "var(--ink-soft)" }}>
+          Mensuel ou annuel — 2 mois offerts. Annulation en un clic depuis le portail Stripe.
         </p>
-        {currentPlan !== "free" && (
-          <div className="pt-2">
-            <Button variant="outline" size="sm" onClick={handlePortal} loading={loading === "portal"}>
-              Gérer mon abonnement
-            </Button>
+        <div className="row" style={{ justifyContent: "center", marginTop: 22, gap: 12 }}>
+          <div className="seg">
+            <button
+              className={billing === "monthly" ? "on" : ""}
+              onClick={() => setBilling("monthly")}
+            >Mensuel</button>
+            <button
+              className={billing === "annual" ? "on" : ""}
+              onClick={() => setBilling("annual")}
+            >Annuel · −20%</button>
           </div>
-        )}
+          {currentPlan !== "free" && (
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={handlePortal}
+              disabled={loading === "portal"}
+            >
+              {loading === "portal" ? "Chargement…" : "Gérer mon abonnement"}
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Plans */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Plan cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, maxWidth: 1100, margin: "0 auto" }}>
         {PLANS.map((plan) => {
-          const Icon = plan.icon;
           const isCurrent = currentPlan === plan.id;
-          const isUpgrade =
-            (currentPlan === "free" && (plan.id === "pro" || plan.id === "business")) ||
-            (currentPlan === "pro" && plan.id === "business");
-
+          const price = billing === "annual" ? plan.price.annual : plan.price.monthly;
           return (
             <div
               key={plan.id}
-              className={cn(
-                "relative rounded-2xl border bg-card p-6 flex flex-col",
-                plan.color,
-              )}
+              className="card"
+              style={{
+                padding: 28,
+                position: "relative",
+                borderColor: plan.featured ? "var(--ink)" : undefined,
+                boxShadow: plan.featured ? "var(--shadow-pop)" : "var(--shadow-card)",
+              }}
             >
-              {"popular" in plan && plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="px-3 py-0.5 text-xs">⭐ Le plus populaire</Badge>
-                </div>
+              {plan.featured && (
+                <span className="pill accent" style={{ position: "absolute", top: -12, left: 28 }}>
+                  ★ {plan.tag}
+                </span>
               )}
 
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                  <Icon className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="font-bold text-lg">{plan.name}</p>
-                  <p className="text-xs text-muted-foreground">{plan.description}</p>
-                </div>
+              <div className="t-eyebrow">{plan.featured ? "PLAN" : plan.tag}</div>
+              <div style={{ fontSize: 32, fontFamily: "var(--font-serif)", marginTop: 8 }}>{plan.name}</div>
+
+              <div className="row" style={{ alignItems: "baseline", gap: 4, margin: "16px 0 22px" }}>
+                <span style={{ fontSize: 12, color: "var(--ink-mute)" }}>$</span>
+                <span
+                  className="t-mono"
+                  style={{ fontSize: 56, fontWeight: 300, letterSpacing: "-0.04em", lineHeight: 1 }}
+                >
+                  {price}
+                </span>
+                <span style={{ fontSize: 13, color: "var(--ink-mute)" }}>
+                  /{billing === "annual" ? "mois (annuel)" : "mois"}
+                </span>
               </div>
 
-              <div className="mb-6">
-                <span className="text-4xl font-bold">{plan.price.monthly === 0 ? "Gratuit" : `${plan.price.monthly}€`}</span>
-                {plan.price.monthly > 0 && (
-                  <span className="text-muted-foreground text-sm"> / mois</span>
-                )}
-              </div>
+              {isCurrent ? (
+                <button className="btn btn-outline btn-lg" style={{ width: "100%", justifyContent: "center", marginBottom: 18 }} disabled>
+                  Plan actuel
+                </button>
+              ) : (
+                <button
+                  className={`btn ${plan.featured ? "btn-primary" : "btn-outline"} btn-lg`}
+                  style={{ width: "100%", justifyContent: "center", marginBottom: 18 }}
+                  onClick={() => handleUpgrade(plan.id)}
+                  disabled={!!loading}
+                >
+                  {loading === plan.id ? "Chargement…" : plan.cta}
+                </button>
+              )}
 
-              <ul className="space-y-2.5 mb-6 flex-1">
-                {plan.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2 text-sm">
-                    <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-                    {f}
+              <div className="hr" style={{ marginBottom: 14 }} />
+
+              <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
+                {plan.bullets.map((b) => (
+                  <li key={b} className="row" style={{ gap: 10, fontSize: 13.5, color: "var(--ink-soft)" }}>
+                    <Ico icon={CiqIcon.check} style={{ color: "var(--accent)", flexShrink: 0 }} />
+                    <span>{b}</span>
                   </li>
                 ))}
-                {plan.limits.map((l) => (
-                  <li key={l} className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <span className="h-4 w-4 mt-0.5 shrink-0 text-center text-xs">✕</span>
-                    {l}
+                {plan.striked.map((b) => (
+                  <li key={b} className="row" style={{ gap: 10, fontSize: 13.5, color: "var(--ink-mute)" }}>
+                    <Ico icon={CiqIcon.x} style={{ flexShrink: 0 }} />
+                    <s>{b}</s>
                   </li>
                 ))}
               </ul>
-
-              {isCurrent ? (
-                <Button variant="outline" disabled className="w-full">
-                  Plan actuel
-                </Button>
-              ) : isUpgrade ? (
-                <Button
-                  className="w-full"
-                  onClick={() => handleUpgrade(plan.id)}
-                  loading={loading === plan.id}
-                  variant={"popular" in plan && plan.popular ? "brand" : "default"}
-                >
-                  Passer au {plan.name}
-                </Button>
-              ) : plan.id === "free" ? (
-                <Button variant="ghost" disabled className="w-full text-muted-foreground">
-                  Plan de base
-                </Button>
-              ) : null}
             </div>
           );
         })}
       </div>
 
-      {/* FAQ */}
-      <div className="rounded-xl border bg-muted/30 p-6 space-y-4">
-        <h2 className="font-semibold">Questions fréquentes</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-          {[
-            ["Puis-je annuler ?", "Oui, à tout moment depuis votre portail de facturation. Vous gardez l'accès jusqu'à la fin de la période."],
-            ["Les crédits se cumulent-ils ?", "Non, les crédits se réinitialisent chaque mois. Les crédits non utilisés expirent."],
-            ["Puis-je changer de plan ?", "Oui, upgradez ou réduisez à tout moment. La facturation est au prorata."],
-            ["Paiement sécurisé ?", "Oui, via Stripe. Nous ne stockons aucune information de carte bancaire."],
-          ].map(([q, a]) => (
-            <div key={q} className="space-y-1">
-              <p className="font-medium">{q}</p>
-              <p className="text-muted-foreground">{a}</p>
-            </div>
-          ))}
-        </div>
+      <div style={{ textAlign: "center", marginTop: 56, color: "var(--ink-mute)", fontSize: 13 }}>
+        Crédits à la carte :{" "}
+        <strong style={{ color: "var(--ink)" }}>$10 / 100 cr.</strong>
+        {" "}· 1 crédit ≈ 350 mots générés.
       </div>
     </div>
   );

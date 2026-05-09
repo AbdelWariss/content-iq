@@ -119,7 +119,7 @@ const LANG_INSTRUCTIONS: Record<ContentLanguage, string> = {
 };
 
 function getSystemPrompt(language: ContentLanguage): string {
-  return `Tu es un expert en copywriting et création de contenu digital de classe mondiale. Tu produis du contenu percutant, authentique et optimisé pour chaque plateforme. ${LANG_INSTRUCTIONS[language]} Ne fournis que le contenu demandé, sans explications, sans préambule, sans commentaires.`;
+  return `Tu es un expert en copywriting et création de contenu digital de classe mondiale. Tu produis du contenu percutant, authentique et optimisé pour chaque plateforme. ${LANG_INSTRUCTIONS[language]} Formate ta réponse en HTML valide : utilise <h1>, <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>, <br>. N'utilise JAMAIS le markdown (pas de #, ##, **, *, __, etc.). Ne fournis que le contenu demandé, sans explications, sans préambule, sans commentaires.`;
 }
 
 function buildUserPrompt(params: GenerateContentInput): string {
@@ -303,7 +303,7 @@ export async function improveContent(
   return { content: fullContent, tokensUsed, generationTime: Date.now() - startTime };
 }
 
-export async function generateTitle(content: string, language: ContentLanguage): Promise<string> {
+export async function generateTitle(content: string, _language: ContentLanguage): Promise<string> {
   const msg = await client.messages.create({
     model: env.CLAUDE_MODEL,
     max_tokens: 20,
@@ -315,4 +315,23 @@ export async function generateTitle(content: string, language: ContentLanguage):
     ],
   });
   return (msg.content[0] as { text: string }).text.trim().slice(0, 100);
+}
+
+export async function suggestKeywords(subject: string, type: string): Promise<string[]> {
+  const msg = await client.messages.create({
+    model: env.CLAUDE_MODEL,
+    max_tokens: 80,
+    messages: [
+      {
+        role: "user",
+        content: `Generate 5-6 relevant SEO keywords for a ${type} about "${subject}". Reply ONLY with comma-separated keywords, no explanation.`,
+      },
+    ],
+  });
+  const raw = (msg.content[0] as { text: string }).text.trim();
+  return raw
+    .split(",")
+    .map((kw) => kw.trim())
+    .filter(Boolean)
+    .slice(0, 6);
 }

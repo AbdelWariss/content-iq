@@ -3,13 +3,12 @@ import { toast } from "@/hooks/use-toast";
 import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import { type ContentItem, contentService } from "@/services/content.service";
 import { exportService } from "@/services/export.service";
-import { useAppSelector } from "@/store/index";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { enUS, fr } from "date-fns/locale";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const TYPE_LABELS: Record<string, string> = {
   blog: "Article",
@@ -76,7 +75,10 @@ function ExportMenu({ item }: { item: ContentItem }) {
         type="button"
         className="btn btn-ghost btn-sm"
         style={{ padding: "4px 8px" }}
-        onClick={() => setOpen((o) => !o)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((o) => !o);
+        }}
         title="Exporter"
       >
         <Ico icon={CiqIcon.download} size={14} />
@@ -114,9 +116,59 @@ function ExportMenu({ item }: { item: ContentItem }) {
   );
 }
 
+/** Confirmation dialog for delete */
+function DeleteConfirmDialog({
+  onConfirm,
+  onCancel,
+}: { onConfirm: () => void; onCancel: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 60,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(20,16,12,0.45)",
+        backdropFilter: "blur(4px)",
+      }}
+      onClick={onCancel}
+    >
+      <div
+        className="card"
+        style={{ padding: 28, maxWidth: 380, width: "90%", margin: "0 16px" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 style={{ fontSize: 18, fontWeight: 600, margin: "0 0 10px" }}>
+          Supprimer ce contenu ?
+        </h3>
+        <p style={{ fontSize: 14, color: "var(--ink-soft)", margin: "0 0 22px", lineHeight: 1.6 }}>
+          Le contenu sera archivé et retiré de votre bibliothèque. Les statistiques restent
+          inchangées.
+        </p>
+        <div className="row" style={{ gap: 8, justifyContent: "flex-end" }}>
+          <button type="button" className="btn btn-outline" onClick={onCancel}>
+            {t("common.cancel")}
+          </button>
+          <button
+            type="button"
+            className="btn btn-accent"
+            onClick={onConfirm}
+            style={{ background: "var(--accent)" }}
+          >
+            {t("common.delete")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function HistoryPage() {
   const queryClient = useQueryClient();
-  const user = useAppSelector((s) => s.auth.user);
+  const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const dateLocale = i18n.language === "en" ? enUS : fr;
   const [search, setSearch] = useState("");
@@ -124,6 +176,8 @@ export default function HistoryPage() {
   const [filterFavorite, setFilterFavorite] = useState(false);
   const [page, setPage] = useState(1);
   const [copied, setCopied] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["contents", { page, type: filterType, favorite: filterFavorite }],
@@ -152,6 +206,7 @@ export default function HistoryPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contents"] });
       toast({ title: t("history.deleteSuccess") });
+      setDeleteConfirmId(null);
     },
   });
 
@@ -159,7 +214,8 @@ export default function HistoryPage() {
   const pagination = data?.data?.pagination;
   const loading = isLoading || isSearching;
 
-  const handleCopy = async (item: ContentItem) => {
+  const handleCopy = async (item: ContentItem, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     const text = (item.bodyPlain ?? item.title ?? "").replace(/<[^>]*>/g, "");
     await navigator.clipboard.writeText(text);
     setCopied(item._id);
@@ -167,19 +223,49 @@ export default function HistoryPage() {
     toast({ title: t("history.copied") });
   };
 
+  const handleRowClick = (item: ContentItem) => {
+    navigate(`/generate?view=${item._id}`);
+  };
+
   return (
     <div style={{ padding: "32px 40px", overflow: "auto" }}>
+      {/* Delete confirmation dialog */}
+      {deleteConfirmId && (
+        <DeleteConfirmDialog
+          onConfirm={() => deleteMutation.mutate(deleteConfirmId)}
+          onCancel={() => setDeleteConfirmId(null)}
+        />
+      )}
+
       {/* Header */}
-      <div className="row between" style={{ marginBottom: 18 }}>
+      <div className="row between" style={{ marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
         <h1 className="t-display" style={{ fontSize: 40, margin: 0 }}>
           {t("history.title")}
         </h1>
         <div className="row" style={{ gap: 6 }}>
-          <button className="btn btn-outline btn-sm">
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            onClick={() =>
+              toast({
+                title: "Feature en développement",
+                description: "Export bulk ZIP arrive bientôt.",
+              })
+            }
+          >
             <Ico icon={CiqIcon.download} />
             {t("history.exportBulk")}
           </button>
-          <button className="btn btn-outline btn-sm">
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            onClick={() =>
+              toast({
+                title: "Feature en développement",
+                description: "Le tag system arrive bientôt.",
+              })
+            }
+          >
             <Ico icon={CiqIcon.tag} />
             {t("history.tag")}
           </button>
@@ -197,7 +283,7 @@ export default function HistoryPage() {
             padding: "8px 12px",
             flex: 1,
             gap: 8,
-            minWidth: 280,
+            minWidth: 220,
           }}
         >
           <Ico icon={CiqIcon.search} style={{ color: "var(--ink-mute)" }} />
@@ -242,24 +328,28 @@ export default function HistoryPage() {
           {t("history.favorites")}
         </button>
 
+        {/* List / Grid toggle */}
         <div className="seg" style={{ marginLeft: "auto" }}>
-          <button className="on">{t("history.list")}</button>
-          <button>{t("history.grid")}</button>
+          <button
+            type="button"
+            className={viewMode === "list" ? "on" : ""}
+            onClick={() => setViewMode("list")}
+          >
+            {t("history.list")}
+          </button>
+          <button
+            type="button"
+            className={viewMode === "grid" ? "on" : ""}
+            onClick={() => setViewMode("grid")}
+          >
+            {t("history.grid")}
+          </button>
         </div>
       </div>
 
-      {/* Table */}
+      {/* Content */}
       {loading ? (
         <div className="card" style={{ overflow: "hidden" }}>
-          <div
-            style={{
-              padding: "10px 16px",
-              background: "var(--bg-sunk)",
-              borderBottom: "1px solid var(--line)",
-            }}
-          >
-            <Skeleton className="h-3 rounded" style={{ width: 180 }} />
-          </div>
           {[1, 2, 3, 4, 5].map((k) => (
             <div
               key={k}
@@ -270,14 +360,12 @@ export default function HistoryPage() {
               <Skeleton style={{ flex: 1, height: 14, borderRadius: 4 }} />
               <Skeleton style={{ width: 80, height: 14, borderRadius: 4, flexShrink: 0 }} />
               <Skeleton style={{ width: 64, height: 22, borderRadius: 20, flexShrink: 0 }} />
-              <Skeleton style={{ width: 28, height: 14, borderRadius: 4, flexShrink: 0 }} />
-              <Skeleton style={{ width: 52, height: 14, borderRadius: 4, flexShrink: 0 }} />
-              <Skeleton style={{ width: 72, height: 14, borderRadius: 4, flexShrink: 0 }} />
-              <Skeleton style={{ width: 60, height: 28, borderRadius: 8, flexShrink: 0 }} />
+              <Skeleton style={{ width: 80, height: 28, borderRadius: 8, flexShrink: 0 }} />
             </div>
           ))}
         </div>
       ) : items.length === 0 ? (
+        /* Empty state */
         <div
           style={{
             display: "flex",
@@ -351,7 +439,128 @@ export default function HistoryPage() {
             </button>
           )}
         </div>
+      ) : viewMode === "grid" ? (
+        /* Grid view */
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+            gap: 14,
+          }}
+        >
+          {items.map((item: ContentItem) => (
+            <div
+              key={item._id}
+              className="card"
+              style={{
+                padding: 18,
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+                cursor: "pointer",
+              }}
+              onClick={() => handleRowClick(item)}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLDivElement).style.boxShadow = "var(--shadow-pop)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLDivElement).style.boxShadow = "";
+              }}
+            >
+              <div className="row between" style={{ alignItems: "flex-start" }}>
+                <div className="row" style={{ gap: 8, alignItems: "center" }}>
+                  <Ico
+                    icon={TYPE_ICON[item.type] ?? CiqIcon.blog}
+                    size={16}
+                    style={{ color: "var(--ink-mute)", flexShrink: 0 }}
+                  />
+                  <span className="t-eyebrow" style={{ fontSize: 10, color: "var(--accent)" }}>
+                    {TYPE_LABELS[item.type] ?? item.type}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  style={{
+                    padding: "2px 4px",
+                    color: item.isFavorite ? "var(--accent)" : "var(--ink-mute)",
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavMutation.mutate(item._id);
+                  }}
+                >
+                  <Ico icon={CiqIcon.star} size={13} />
+                </button>
+              </div>
+              <span
+                style={{
+                  fontSize: 13.5,
+                  fontWeight: 600,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {item.title ?? item.prompt?.subject ?? `Contenu ${item.type}`}
+              </span>
+              <p
+                style={{
+                  fontSize: 12,
+                  color: "var(--ink-soft)",
+                  lineHeight: 1.5,
+                  margin: 0,
+                  overflow: "hidden",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                }}
+              >
+                {(item.bodyPlain ?? "").replace(/<[^>]*>/g, "").slice(0, 120) || "—"}
+              </p>
+              <div
+                className="row between"
+                style={{
+                  borderTop: "1px solid var(--line-soft)",
+                  paddingTop: 8,
+                  marginTop: "auto",
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span style={{ fontSize: 11, color: "var(--ink-mute)" }}>
+                  {formatDistanceToNow(new Date(item.createdAt), {
+                    addSuffix: false,
+                    locale: dateLocale,
+                  })}
+                </span>
+                <div className="row" style={{ gap: 2 }}>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    style={{ padding: "3px 5px" }}
+                    onClick={(e) => handleCopy(item, e)}
+                  >
+                    <Ico icon={copied === item._id ? CiqIcon.check : CiqIcon.copy} size={13} />
+                  </button>
+                  <ExportMenu item={item} />
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    style={{ padding: "3px 5px", color: "var(--ink-mute)" }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteConfirmId(item._id);
+                    }}
+                  >
+                    <Ico icon={CiqIcon.x} size={13} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
+        /* List view (default) */
         <div className="card" style={{ overflow: "hidden" }}>
           {/* Table header */}
           <div
@@ -368,14 +577,14 @@ export default function HistoryPage() {
               gap: 12,
             }}
           >
-            <span style={{ width: 18 }} />
+            <span style={{ width: 20, flexShrink: 0 }} />
             <span style={{ flex: 1 }}>{t("history.colContent")}</span>
-            <span style={{ width: 100 }}>{t("history.colType")}</span>
-            <span style={{ width: 90 }}>{t("history.colTone")}</span>
-            <span style={{ width: 50 }}>{t("history.colLang")}</span>
-            <span style={{ width: 80 }}>{t("history.colTokens")}</span>
-            <span style={{ width: 90 }}>{t("history.colWhen")}</span>
-            <span style={{ width: 70 }} />
+            <span style={{ width: 90, flexShrink: 0 }}>{t("history.colType")}</span>
+            <span style={{ width: 80, flexShrink: 0 }}>{t("history.colTone")}</span>
+            <span style={{ width: 40, flexShrink: 0 }}>{t("history.colLang")}</span>
+            <span style={{ width: 70, flexShrink: 0 }}>{t("history.colTokens")}</span>
+            <span style={{ width: 85, flexShrink: 0 }}>{t("history.colWhen")}</span>
+            <span style={{ width: 100, flexShrink: 0 }} />
           </div>
 
           {/* Table rows */}
@@ -384,15 +593,30 @@ export default function HistoryPage() {
               key={item._id}
               className="row"
               style={{
-                padding: "12px 16px",
+                padding: "11px 16px",
                 gap: 12,
                 borderBottom: i < items.length - 1 ? "1px solid var(--line-soft)" : "none",
+                cursor: "pointer",
+                transition: "background 0.1s",
+              }}
+              onClick={() => handleRowClick(item)}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLDivElement).style.background = "var(--bg-sunk)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLDivElement).style.background = "";
               }}
             >
-              <Ico
-                icon={TYPE_ICON[item.type] ?? CiqIcon.blog}
-                style={{ color: "var(--ink-mute)", width: 18, height: 18 }}
-              />
+              {/* Type icon */}
+              <div style={{ width: 20, flexShrink: 0, display: "flex", alignItems: "center" }}>
+                <Ico
+                  icon={TYPE_ICON[item.type] ?? CiqIcon.blog}
+                  size={16}
+                  style={{ color: "var(--ink-mute)" }}
+                />
+              </div>
+
+              {/* Title */}
               <span
                 style={{
                   flex: 1,
@@ -401,21 +625,29 @@ export default function HistoryPage() {
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
+                  minWidth: 0,
                 }}
               >
                 {item.title ?? item.prompt?.subject ?? `Contenu ${item.type}`}
               </span>
-              <span style={{ width: 100, fontSize: 12, color: "var(--ink-soft)" }}>
+
+              {/* Type label */}
+              <span style={{ width: 90, flexShrink: 0, fontSize: 12, color: "var(--ink-soft)" }}>
                 {TYPE_LABELS[item.type] ?? item.type}
               </span>
-              <span style={{ width: 90 }}>
-                <span className="chip">
+
+              {/* Tone */}
+              <span style={{ width: 80, flexShrink: 0 }}>
+                <span className="chip" style={{ fontSize: 11 }}>
                   {TON_LABELS[item.prompt?.tone ?? ""] ?? item.prompt?.tone ?? "—"}
                 </span>
               </span>
+
+              {/* Lang */}
               <span
                 style={{
-                  width: 50,
+                  width: 40,
+                  flexShrink: 0,
                   fontSize: 12,
                   fontFamily: "var(--font-mono)",
                   color: "var(--ink-soft)",
@@ -424,9 +656,12 @@ export default function HistoryPage() {
               >
                 {item.prompt?.language ?? "FR"}
               </span>
+
+              {/* Tokens */}
               <span
                 style={{
-                  width: 80,
+                  width: 70,
+                  flexShrink: 0,
                   fontSize: 12,
                   fontFamily: "var(--font-mono)",
                   color: "var(--ink-mute)",
@@ -434,21 +669,29 @@ export default function HistoryPage() {
               >
                 {item.tokensUsed ?? "—"}
               </span>
-              <span style={{ width: 90, fontSize: 12, color: "var(--ink-mute)" }}>
+
+              {/* Date */}
+              <span style={{ width: 85, flexShrink: 0, fontSize: 12, color: "var(--ink-mute)" }}>
                 {formatDistanceToNow(new Date(item.createdAt), {
                   addSuffix: false,
                   locale: dateLocale,
                 })}
               </span>
-              <div className="row" style={{ width: 70, gap: 2, justifyContent: "flex-end" }}>
+
+              {/* Actions */}
+              <div
+                className="row"
+                style={{ width: 100, flexShrink: 0, gap: 2, justifyContent: "flex-end" }}
+                onClick={(e) => e.stopPropagation()}
+              >
                 <button
                   type="button"
                   className="btn btn-ghost btn-sm"
                   style={{ padding: "4px 6px" }}
-                  onClick={() => handleCopy(item)}
+                  onClick={(e) => handleCopy(item, e)}
                   title="Copier"
                 >
-                  <Ico icon={copied === item._id ? CiqIcon.check : CiqIcon.copy} size={14} />
+                  <Ico icon={copied === item._id ? CiqIcon.check : CiqIcon.copy} size={13} />
                 </button>
                 <button
                   type="button"
@@ -460,17 +703,17 @@ export default function HistoryPage() {
                   onClick={() => toggleFavMutation.mutate(item._id)}
                   title="Favori"
                 >
-                  <Ico icon={CiqIcon.star} size={14} />
+                  <Ico icon={CiqIcon.star} size={13} />
                 </button>
                 <ExportMenu item={item} />
                 <button
                   type="button"
                   className="btn btn-ghost btn-sm"
                   style={{ padding: "4px 6px", color: "var(--ink-mute)" }}
-                  onClick={() => deleteMutation.mutate(item._id)}
+                  onClick={() => setDeleteConfirmId(item._id)}
                   title="Supprimer"
                 >
-                  <Ico icon={CiqIcon.x} size={14} />
+                  <Ico icon={CiqIcon.x} size={13} />
                 </button>
               </div>
             </div>

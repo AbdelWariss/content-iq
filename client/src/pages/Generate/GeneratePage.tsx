@@ -4,6 +4,8 @@ import { toast } from "@/hooks/use-toast";
 import { useStreaming } from "@/hooks/useStreaming";
 import { useVoice } from "@/hooks/useVoice";
 import { CiqIcon, Ico, MicWave } from "@/lib/ciq-icons";
+import { markdownToHTML } from "@/lib/markdownToHtml";
+import api from "@/services/axios";
 import { contentService } from "@/services/content.service";
 import { exportService } from "@/services/export.service";
 import { resetEditor, setEditorContent, setParams } from "@/store/contentSlice";
@@ -30,8 +32,14 @@ export default function GeneratePage() {
   const [searchParams] = useSearchParams();
   const viewContentId = searchParams.get("view");
 
-  const { isGenerating, streamedContent, tokensGenerated, currentParams, savedContentId } =
-    useAppSelector((s) => s.content);
+  const {
+    isGenerating,
+    streamedContent,
+    editorContent,
+    tokensGenerated,
+    currentParams,
+    savedContentId,
+  } = useAppSelector((s) => s.content);
   const userLang = useAppSelector((s) => s.auth.user?.language ?? "fr");
 
   // View mode: loaded from existing content via ?view=:id
@@ -74,6 +82,7 @@ export default function GeneratePage() {
   const [copied, setCopied] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [keywords, setKeywords] = useState<string[]>([]);
+  const [suggestedKeywords, setSuggestedKeywords] = useState<string[]>([]);
   const [showVoiceOrb, setShowVoiceOrb] = useState(false);
   const [voiceTranscript, setVoiceTranscript] = useState("");
   const [voiceElapsed, setVoiceElapsed] = useState(0);
@@ -101,10 +110,11 @@ export default function GeneratePage() {
   });
 
   const watchedType = watch("type");
-  const watchedTone = watch("tone");
-  const watchedLength = watch("length");
-  const watchedLang = watch("language");
-  const displayContent = streamedContent;
+  const _watchedTone = watch("tone");
+  const _watchedLength = watch("length");
+  const _watchedLang = watch("language");
+  const watchedSubject = watch("subject");
+  const displayContent = streamedContent || editorContent;
 
   // Load existing content when ?view=:id is present
   useEffect(() => {
@@ -119,12 +129,35 @@ export default function GeneratePage() {
         setValue("language", (c.prompt?.language ?? "fr") as GenerateContentInput["language"]);
         setValue("length", (c.prompt?.length ?? "medium") as GenerateContentInput["length"]);
         setValue("subject", c.prompt?.subject ?? "");
+        setValue("audience", c.prompt?.audience ?? "");
         if (c.prompt?.keywords) setKeywords(c.prompt.keywords);
-        dispatch(setEditorContent(c.body ?? ""));
+        dispatch(setEditorContent(markdownToHTML(c.body ?? "")));
       })
       .catch(() => toast({ title: "Contenu introuvable", variant: "destructive" }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewContentId]);
+
+  // Debounced keyword suggestions
+  useEffect(() => {
+    if (!watchedSubject?.trim() || watchedSubject.trim().length < 3) {
+      setSuggestedKeywords([]);
+      return;
+    }
+    const timer = setTimeout(() => {
+      api
+        .post<{ success: boolean; data: { keywords: string[] } }>("/content/suggest-keywords", {
+          subject: watchedSubject,
+          type: watchedType,
+        })
+        .then((res) => {
+          setSuggestedKeywords(res.data.data.keywords);
+        })
+        .catch(() => {
+          // silently ignore errors
+        });
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [watchedSubject, watchedType]);
 
   const onSubmit = useCallback(
     async (data: GenerateContentInput) => {
@@ -216,14 +249,7 @@ export default function GeneratePage() {
   }, [displayContent, dispatch]);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        height: "calc(100vh - 55px)",
-        overflow: "hidden",
-        position: "relative",
-      }}
-    >
+    <div className="generate-layout">
       {/* VoiceOrb overlay */}
       {showVoiceOrb && (
         <VoiceOrb
@@ -244,15 +270,13 @@ export default function GeneratePage() {
       )}
       {/* Left — form */}
       <div
+        className="generate-form-panel scrollbar-thin"
         style={{
-          width: 420,
-          flexShrink: 0,
           padding: "24px 24px 90px",
           overflowY: "auto",
           borderRight: "1px solid var(--line)",
           background: "var(--bg-sunk)",
         }}
-        className="scrollbar-thin"
       >
         {/* View mode banner */}
         {viewMode ? (
@@ -323,6 +347,7 @@ export default function GeneratePage() {
                     type="button"
                     className="btn btn-ghost btn-sm"
                     style={{ color: "var(--accent)" }}
+                    onClick={handleFloatingMic}
                   >
                     <Ico icon={CiqIcon.mic} />
                     {t("generate.dictate")}
@@ -455,7 +480,18 @@ export default function GeneratePage() {
                     }}
                     placeholder={t("generate.keywordPlaceholder")}
                     value={keyword}
-                    onChange={(e) => setKeyword(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val.endsWith(",")) {
+                        const kw = val.slice(0, -1).trim();
+                        if (kw && keywords.length < 10) {
+                          setKeywords((k) => [...k, kw]);
+                          setKeyword("");
+                        }
+                      } else {
+                        setKeyword(val);
+                      }
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
@@ -465,6 +501,31 @@ export default function GeneratePage() {
                   />
                 </div>
               </div>
+
+              {/* Keyword suggestions */}
+              {suggestedKeywords.length > 0 && (
+                <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
+                  {suggestedKeywords.map((kw) => (
+                    <span
+                      key={kw}
+                      style={{
+                        background: "var(--bg-sunk)",
+                        border: "1px solid var(--line)",
+                        borderRadius: 6,
+                        padding: "2px 8px",
+                        fontSize: 11.5,
+                        cursor: "pointer",
+                        color: "var(--ink-soft)",
+                      }}
+                      onClick={() =>
+                        setKeywords((prev) => (prev.includes(kw) ? prev : [...prev, kw]))
+                      }
+                    >
+                      + {kw}
+                    </span>
+                  ))}
+                </div>
+              )}
 
               {/* Audience */}
               <div>
@@ -521,14 +582,7 @@ export default function GeneratePage() {
       </div>
 
       {/* Floating mic button */}
-      <div
-        style={{
-          position: "absolute",
-          left: 406,
-          bottom: 28,
-          zIndex: 10,
-        }}
-      >
+      <div className="generate-mic-float">
         <button
           type="button"
           onClick={handleFloatingMic}
@@ -578,15 +632,7 @@ export default function GeneratePage() {
       </div>
 
       {/* Right — editor */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          flex: 1,
-          padding: "24px 32px",
-          overflow: "hidden",
-        }}
-      >
+      <div className="generate-editor-panel" style={{ padding: "24px 32px" }}>
         {/* Editor toolbar header */}
         <div
           className="row between"

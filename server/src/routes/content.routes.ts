@@ -6,6 +6,7 @@ import {
   improveContentHandler,
   listContents,
   searchContents,
+  suggestKeywordsHandler,
   toggleFavorite,
   updateContent,
 } from "../controllers/content.controller.js";
@@ -18,6 +19,7 @@ const router: import("express").Router = Router();
 router.use(authenticate);
 
 router.post("/generate", generateLimiter, checkCredits, generate);
+router.post("/suggest-keywords", suggestKeywordsHandler);
 router.get("/", listContents);
 router.get("/search", searchContents);
 router.get("/:id", getContent);

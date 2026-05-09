@@ -1,6 +1,12 @@
 import { toast } from "@/hooks/use-toast";
+import { markdownToHTML } from "@/lib/markdownToHtml";
 import { updateCredits } from "@/store/authSlice";
-import { appendToken, startGeneration, stopGeneration } from "@/store/contentSlice";
+import {
+  appendToken,
+  setStreamedContent,
+  startGeneration,
+  stopGeneration,
+} from "@/store/contentSlice";
 import { useAppDispatch, useAppSelector } from "@/store/index";
 import { useCallback, useRef } from "react";
 
@@ -21,6 +27,8 @@ export function useStreaming() {
       abortRef.current = controller;
 
       dispatch(startGeneration());
+
+      let localContent = ""; // local accumulator for markdown conversion
 
       try {
         const token = accessToken;
@@ -75,11 +83,17 @@ export function useStreaming() {
               }
 
               if (parsed.token) {
+                localContent += parsed.token;
                 dispatch(appendToken(parsed.token));
                 options.onToken?.(parsed.token);
               }
 
               if (parsed.done) {
+                // Convert markdown to HTML if needed, then update Redux before stopGeneration
+                const htmlContent = markdownToHTML(localContent);
+                if (htmlContent !== localContent) {
+                  dispatch(setStreamedContent(htmlContent));
+                }
                 dispatch(stopGeneration(parsed.contentId));
                 if (parsed.creditsRemaining !== undefined) {
                   dispatch(updateCredits({ remaining: parsed.creditsRemaining }));

@@ -10,6 +10,7 @@ import {
   generateTitle,
   improveContent,
   streamContentGeneration,
+  suggestKeywords,
 } from "../services/claude.service.js";
 import { deductCredits } from "../services/credits.service.js";
 import { logger } from "../utils/logger.js";
@@ -176,13 +177,21 @@ export async function improveContentHandler(req: Request, res: Response): Promis
     content.bodyPlain = improved;
     content.tokensUsed += tokensUsed;
     await content.save();
-    await deductCredits(userId, CREDITS_PER_GENERATION, `Amélioration contenu`, content._id);
+    await deductCredits(userId, CREDITS_PER_GENERATION, "Amélioration contenu", content._id);
   }
 }
 
-export async function getTemplates(req: Request, res: Response): Promise<void> {
+export async function getTemplates(_req: Request, res: Response): Promise<void> {
   const templates = await Template.find({
     $or: [{ userId: null }, { isPublic: true }],
   }).sort({ usageCount: -1 });
   res.json({ success: true, data: { templates } });
+}
+
+export async function suggestKeywordsHandler(req: Request, res: Response): Promise<void> {
+  const { subject, type } = req.body as { subject?: string; type?: string };
+  if (!subject?.trim()) throw new AppError("subject requis", 400);
+
+  const keywords = await suggestKeywords(subject.trim(), type ?? "content");
+  res.json({ success: true, data: { keywords } });
 }

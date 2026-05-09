@@ -12,6 +12,8 @@ export interface ContentItem {
     language: string;
     length: string;
     keywords?: string[];
+    audience?: string;
+    context?: string;
   };
   tokensUsed: number;
   tags: string[];

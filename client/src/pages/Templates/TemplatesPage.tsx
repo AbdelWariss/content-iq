@@ -9,20 +9,113 @@ import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
-const TYPE_ICON: Record<string, React.ReactNode> = {
-  blog: CiqIcon.blog,
-  linkedin: CiqIcon.linkedin,
-  instagram: CiqIcon.insta,
-  twitter: CiqIcon.twitter,
-  email: CiqIcon.email,
-  newsletter: CiqIcon.email,
-  product: CiqIcon.product,
-  pitch: CiqIcon.pitch,
-  youtube: CiqIcon.yt,
-  bio: CiqIcon.bio,
-  press: CiqIcon.press,
-  slogan: CiqIcon.bolt,
+const TYPE_BADGE_STYLE: Record<string, { background: string; content: React.ReactNode }> = {
+  linkedin: {
+    background: "#0077B5",
+    content: (
+      <span style={{ color: "white", fontWeight: 700, fontSize: 15, fontFamily: "serif" }}>in</span>
+    ),
+  },
+  instagram: {
+    background: "linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)",
+    content: <span style={{ color: "white", fontSize: 17 }}>&#128247;</span>,
+  },
+  twitter: {
+    background: "#000",
+    content: (
+      <span style={{ color: "white", fontWeight: 800, fontSize: 15, fontFamily: "sans-serif" }}>
+        X
+      </span>
+    ),
+  },
+  youtube: {
+    background: "#FF0000",
+    content: (
+      <span
+        style={{
+          color: "white",
+          fontSize: 13,
+          lineHeight: 1,
+          display: "inline-block",
+          borderLeft: "13px solid white",
+          borderTop: "8px solid transparent",
+          borderBottom: "8px solid transparent",
+        }}
+      />
+    ),
+  },
+  blog: {
+    background: "#f59e0b",
+    content: (
+      <span style={{ color: "white", fontWeight: 700, fontSize: 15, fontFamily: "serif" }}>A</span>
+    ),
+  },
+  press: {
+    background: "#f59e0b",
+    content: (
+      <span style={{ color: "white", fontWeight: 700, fontSize: 15, fontFamily: "serif" }}>A</span>
+    ),
+  },
+  email: {
+    background: "#3b82f6",
+    content: <span style={{ color: "white", fontSize: 17 }}>&#9993;</span>,
+  },
+  newsletter: {
+    background: "#3b82f6",
+    content: <span style={{ color: "white", fontSize: 17 }}>&#9993;</span>,
+  },
+  product: {
+    background: "#10b981",
+    content: <span style={{ color: "white", fontSize: 17 }}>&#128717;</span>,
+  },
+  bio: {
+    background: "#7c3aed",
+    content: <span style={{ color: "white", fontSize: 17 }}>&#128100;</span>,
+  },
+  pitch: {
+    background: "#f97316",
+    content: <span style={{ color: "white", fontSize: 17 }}>&#128227;</span>,
+  },
+  slogan: {
+    background: "#ec4899",
+    content: <span style={{ color: "white", fontSize: 17 }}>&#10024;</span>,
+  },
 };
+
+function TypeBadge({ type }: { type: string }) {
+  const badge = TYPE_BADGE_STYLE[type];
+  if (!badge) {
+    return (
+      <div
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 10,
+          background: "var(--bg-sunk)",
+          display: "grid",
+          placeItems: "center",
+        }}
+      >
+        <Ico icon={CiqIcon.templ} />
+      </div>
+    );
+  }
+  return (
+    <div
+      style={{
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        background: badge.background,
+        display: "grid",
+        placeItems: "center",
+        flexShrink: 0,
+      }}
+    >
+      {badge.content}
+    </div>
+  );
+}
 
 const TYPE_LABELS: Record<string, string> = {
   blog: "Blog",
@@ -56,19 +149,7 @@ function TemplateCard({
   return (
     <div className="card" style={{ padding: 20, position: "relative" }}>
       <div className="row between" style={{ marginBottom: 14 }}>
-        <div
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 10,
-            background: isMine ? "var(--accent-soft)" : "var(--bg-sunk)",
-            display: "grid",
-            placeItems: "center",
-            color: isMine ? "var(--accent-ink)" : "var(--ink)",
-          }}
-        >
-          <Ico icon={TYPE_ICON[template.type] ?? CiqIcon.templ} />
-        </div>
+        <TypeBadge type={template.type} />
         {isMine ? (
           <span className="pill accent" style={{ padding: "1px 8px", fontSize: 10 }}>
             perso
@@ -84,25 +165,6 @@ function TemplateCard({
       <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: "0 0 14px", lineHeight: 1.5 }}>
         {template.description ?? t("templates.noDescr")}
       </p>
-
-      {template.variables.length > 0 && (
-        <div className="row" style={{ gap: 4, flexWrap: "wrap", marginBottom: 10 }}>
-          {template.variables.slice(0, 3).map((v) => (
-            <span
-              key={v.key}
-              className="chip"
-              style={{ fontFamily: "var(--font-mono)", fontSize: 10.5 }}
-            >
-              {`{{${v.key}}}`}
-            </span>
-          ))}
-          {template.variables.length > 3 && (
-            <span style={{ fontSize: 10.5, color: "var(--ink-mute)" }}>
-              +{template.variables.length - 3}
-            </span>
-          )}
-        </div>
-      )}
 
       <div className="hr" style={{ margin: "12px 0" }} />
 
@@ -314,11 +376,29 @@ export default function TemplatesPage() {
   const handleUse = useCallback(
     (template: Template) => {
       templateService.use(template._id).catch(() => {});
-      dispatch(setParams({ type: template.type }));
+      const defaultTone = ["linkedin", "instagram"].includes(template.type)
+        ? "inspiring"
+        : ["blog", "press"].includes(template.type)
+          ? "professional"
+          : template.type === "twitter"
+            ? "casual"
+            : "professional";
+      const defaultLength = ["twitter", "slogan", "bio"].includes(template.type)
+        ? "short"
+        : ["blog", "press", "youtube"].includes(template.type)
+          ? "long"
+          : "medium";
+      dispatch(
+        setParams({
+          type: template.type,
+          tone: defaultTone as Parameters<typeof setParams>[0]["tone"],
+          length: defaultLength as Parameters<typeof setParams>[0]["length"],
+        }),
+      );
       navigate("/generate");
       toast({ title: t("templates.loaded", { name: template.name }) });
     },
-    [dispatch, navigate],
+    [dispatch, navigate, t],
   );
 
   const templates = data?.data ?? [];

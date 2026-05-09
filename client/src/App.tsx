@@ -11,6 +11,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 const AuthPage = lazy(() => import("@/pages/Auth/AuthPage"));
 const ResetPasswordPage = lazy(() => import("@/pages/Auth/ResetPasswordPage"));
 const VerifyEmailPage = lazy(() => import("@/pages/Auth/VerifyEmailPage"));
+const GoogleCallbackPage = lazy(() => import("@/pages/Auth/GoogleCallbackPage"));
 
 // Public
 const LandingPage = lazy(() => import("@/pages/Landing/LandingPage"));
@@ -24,6 +25,7 @@ const TemplatesPage = lazy(() => import("@/pages/Templates/TemplatesPage"));
 const PricingPage = lazy(() => import("@/pages/Pricing/PricingPage"));
 const ProfilePage = lazy(() => import("@/pages/Profile/ProfilePage"));
 const AdminPage = lazy(() => import("@/pages/Admin/AdminPage"));
+const FavoritesPage = lazy(() => import("@/pages/Favorites/FavoritesPage"));
 
 function AuthInitializer() {
   useAuth();
@@ -55,6 +57,8 @@ export function App() {
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/verify-email" element={<VerifyEmailPage />} />
           </Route>
+          {/* Google OAuth callback — outside AuthLayout so it can navigate freely */}
+          <Route path="/auth/callback" element={<GoogleCallbackPage />} />
 
           {/* Routes protégées */}
           <Route element={<ProtectedRoute />}>
@@ -65,6 +69,7 @@ export function App() {
               <Route path="/templates" element={<TemplatesPage />} />
               <Route path="/pricing" element={<PricingPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/favorites" element={<FavoritesPage />} />
             </Route>
           </Route>
 

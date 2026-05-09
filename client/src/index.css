@@ -1112,3 +1112,204 @@ body {
 .landing-nav-link:hover::after {
   width: 100%;
 }
+
+/* ════════════════════════════════════════════════════════
+   RESPONSIVE — Mobile ≤640px · Tablet 641–1023px · Desktop ≥1024px
+   ════════════════════════════════════════════════════════ */
+
+/* ── Sidebar: mobile drawer ── */
+.sidenav {
+  transition: transform 0.25s ease;
+}
+@media (max-width: 1023px) {
+  .sidenav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 50;
+    transform: translateX(-110%);
+    display: flex;
+  }
+  .sidenav.mobile-open {
+    transform: translateX(0);
+    box-shadow: 4px 0 40px rgba(0, 0, 0, 0.18);
+  }
+}
+@media (min-width: 1024px) {
+  .sidenav {
+    transform: none !important;
+    transition: none;
+    display: flex;
+  }
+}
+
+/* ── Sidebar overlay backdrop ── */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 16, 12, 0.42);
+  z-index: 49;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.sidebar-overlay.visible {
+  display: block;
+}
+
+/* ── Hamburger button (mobile/tablet only) ── */
+.mobile-menu-btn {
+  display: none;
+}
+@media (max-width: 1023px) {
+  .mobile-menu-btn {
+    display: flex;
+  }
+}
+
+/* ── Auth card — supprime le quadrillage hérité de .card ── */
+.auth-card {
+  background-image: none !important;
+}
+
+/* ── Auth page layout ── */
+.auth-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  height: 100%;
+  gap: 0;
+}
+.auth-panel-left {
+  background: transparent;
+}
+.auth-panel-right {
+  display: grid;
+  background: transparent;
+}
+@media (max-width: 1023px) {
+  .auth-layout {
+    grid-template-columns: 1fr;
+  }
+  .auth-panel-right {
+    display: none;
+  }
+  .auth-panel-left {
+    padding: 32px 32px !important;
+  }
+}
+@media (max-width: 480px) {
+  .auth-panel-left {
+    padding: 24px 20px !important;
+  }
+}
+
+/* ── Generate page layout ── */
+.generate-layout {
+  display: flex;
+  height: calc(100vh - 55px);
+  overflow: hidden;
+  position: relative;
+}
+.generate-form-panel {
+  width: 420px;
+  flex-shrink: 0;
+}
+.generate-mic-float {
+  position: absolute;
+  left: 406px;
+  bottom: 28px;
+  z-index: 10;
+}
+.generate-editor-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+@media (max-width: 900px) {
+  .generate-layout {
+    flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - 55px);
+    overflow-y: auto;
+  }
+  .generate-form-panel {
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--line);
+    max-height: 70vh;
+  }
+  .generate-mic-float {
+    position: fixed;
+    left: auto !important;
+    right: 16px;
+    bottom: 80px;
+  }
+  .generate-editor-panel {
+    min-height: 55vh;
+    overflow: visible;
+  }
+}
+
+/* ── Dashboard grids ── */
+.dashboard-kpi-grid {
+  display: grid;
+  grid-template-columns: 1.4fr repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.dashboard-charts-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.dashboard-bottom-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 1100px) {
+  .dashboard-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .dashboard-charts-grid {
+    grid-template-columns: 1fr;
+  }
+  .dashboard-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .dashboard-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Page padding responsive ── */
+.page-pad {
+  padding: 32px 40px;
+}
+@media (max-width: 768px) {
+  .page-pad {
+    padding: 20px 16px;
+  }
+}
+@media (max-width: 480px) {
+  .page-pad {
+    padding: 16px 12px;
+  }
+}
+
+/* ── Utilities ── */
+@media (max-width: 1023px) {
+  .hide-tablet {
+    display: none !important;
+  }
+}
+@media (max-width: 640px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}

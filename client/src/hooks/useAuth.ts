@@ -7,40 +7,42 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
+function buildUser(u: Awaited<ReturnType<typeof authService.refresh>>["data"]["user"]) {
+  return {
+    id: u._id,
+    name: u.name,
+    email: u.email,
+    role: u.role,
+    avatarUrl: u.avatarUrl,
+    credits: u.credits,
+    language: (u.language ?? "fr") as "fr" | "en",
+  };
+}
+
 export function useAuth() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const auth = useAppSelector((s) => s.auth);
 
+  // On page load: try to get a fresh access token from the httpOnly refresh-token cookie.
+  // This keeps the user logged in across page refreshes without storing tokens in localStorage.
   const initAuth = useCallback(async () => {
-    const token = auth.accessToken;
-    if (!token) {
-      dispatch(setLoading(false));
-      return;
-    }
     try {
-      const res = await authService.getMe();
+      const res = await authService.refresh();
       const userLang = res.data.user.language ?? "fr";
       dispatch(
         setCredentials({
-          accessToken: token,
-          user: {
-            id: res.data.user._id,
-            name: res.data.user.name,
-            email: res.data.user.email,
-            role: res.data.user.role,
-            avatarUrl: res.data.user.avatarUrl,
-            credits: res.data.user.credits,
-            language: userLang,
-          },
+          accessToken: res.data.accessToken,
+          user: buildUser(res.data.user),
         }),
       );
       i18n.changeLanguage(userLang);
     } catch {
+      // Refresh token invalid or absent — user is not logged in
       dispatch(setLoading(false));
     }
-  }, [auth.accessToken, dispatch]);
+  }, [dispatch]);
 
   useEffect(() => {
     if (auth.isLoading) {
@@ -55,15 +57,7 @@ export function useAuth() {
       dispatch(
         setCredentials({
           accessToken: res.data.accessToken,
-          user: {
-            id: res.data.user._id,
-            name: res.data.user.name,
-            email: res.data.user.email,
-            role: res.data.user.role,
-            avatarUrl: res.data.user.avatarUrl,
-            credits: res.data.user.credits,
-            language: userLang,
-          },
+          user: buildUser(res.data.user),
         }),
       );
       i18n.changeLanguage(userLang);
@@ -79,15 +73,7 @@ export function useAuth() {
       dispatch(
         setCredentials({
           accessToken: res.data.accessToken,
-          user: {
-            id: res.data.user._id,
-            name: res.data.user.name,
-            email: res.data.user.email,
-            role: res.data.user.role,
-            avatarUrl: res.data.user.avatarUrl,
-            credits: res.data.user.credits,
-            language: regLang,
-          },
+          user: buildUser(res.data.user),
         }),
       );
       i18n.changeLanguage(regLang);

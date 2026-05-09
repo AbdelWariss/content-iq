@@ -83,7 +83,7 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div style={{ padding: "32px 40px" }}>
+      <div className="page-pad">
         <div className="t-eyebrow" style={{ marginBottom: 8 }}>
           {t("dashboard.eyebrow")}
         </div>
@@ -96,14 +96,7 @@ export default function DashboardPage() {
             marginBottom: 32,
           }}
         />
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1.4fr repeat(3, 1fr)",
-            gap: 14,
-            marginBottom: 18,
-          }}
-        >
+        <div className="dashboard-kpi-grid">
           {[1, 2, 3, 4].map((k) => (
             <div
               key={k}
@@ -119,7 +112,7 @@ export default function DashboardPage() {
   const isEmpty = !stats || stats.totals.contents === 0;
 
   return (
-    <div style={{ padding: "32px 40px", overflow: "auto" }}>
+    <div className="page-pad" style={{ overflow: "auto" }}>
       {/* Header */}
       <div className="row between" style={{ marginBottom: 28 }}>
         <div>
@@ -180,14 +173,7 @@ export default function DashboardPage() {
       ) : (
         <>
           {/* ── KPI strip ── */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1.4fr repeat(3, 1fr)",
-              gap: 14,
-              marginBottom: 18,
-            }}
-          >
+          <div className="dashboard-kpi-grid">
             {/* Credits ring — glass card */}
             <div
               className="card"
@@ -213,7 +199,6 @@ export default function DashboardPage() {
                   pointerEvents: "none",
                 }}
               />
-              {/* Ring : fills as credits are CONSUMED (empty = full credits, full = no credits) */}
               <div style={{ width: 150, height: 150, flexShrink: 0, zIndex: 1 }}>
                 <RadialBarChart
                   width={150}
@@ -224,7 +209,7 @@ export default function DashboardPage() {
                   outerRadius={70}
                   startAngle={90}
                   endAngle={-270}
-                  data={[{ value: Math.round((1 - ringPct) * 100), fill: "var(--accent)" }]}
+                  data={[{ value: Math.round(ringPct * 100), fill: "var(--accent)" }]}
                   barSize={12}
                 >
                   <RadialBar
@@ -371,9 +356,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Charts row */}
-          <div
-            style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 14, marginBottom: 18 }}
-          >
+          <div className="dashboard-charts-grid">
             {/* Activity bar chart */}
             <div className="card" style={{ padding: 22 }}>
               <div className="row between">
@@ -522,7 +505,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Recent content + voice log */}
-          <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 14 }}>
+          <div className="dashboard-bottom-grid">
             {/* Recent content */}
             <div className="card" style={{ padding: 22 }}>
               <div className="row between" style={{ marginBottom: 14 }}>

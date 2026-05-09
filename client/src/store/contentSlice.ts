@@ -65,6 +65,9 @@ const contentSlice = createSlice({
     setEditorContent(state, action: PayloadAction<string>) {
       state.editorContent = action.payload;
     },
+    setStreamedContent(state, action: PayloadAction<string>) {
+      state.streamedContent = action.payload;
+    },
     setAutoSaveStatus(state, action: PayloadAction<ContentState["autoSaveStatus"]>) {
       state.autoSaveStatus = action.payload;
     },
@@ -84,6 +87,7 @@ export const {
   stopGeneration,
   setParams,
   setEditorContent,
+  setStreamedContent,
   setAutoSaveStatus,
   resetEditor,
 } = contentSlice.actions;

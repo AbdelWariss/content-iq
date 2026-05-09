@@ -1264,4 +1264,159 @@ pnpm --filter client exec tsc --noEmit → 0 erreur
 npx tsc --noEmit → 0 erreur
 ```
 
+---
+
+### [2026-05-08 → 2026-05-09] — Corrections & Améliorations majeures (Session 4) ✅
+
+- **Session :** 4
+- **Statut :** Complété
+- **Durée :** 2 sessions longues
+
+---
+
+#### 1 — Auth : persistence + Google OAuth + icône œil
+
+**`client/src/hooks/useAuth.ts`**
+- `initAuth()` : appelle `authService.refresh()` au lieu de vérifier `auth.accessToken` en mémoire → l'utilisateur reste connecté après refresh de page (cookie httpOnly)
+- Helper `buildUser()` factorisé pour éviter la duplication
+
+**`client/src/pages/Auth/GoogleCallbackPage.tsx`** — NOUVEAU
+- Page intermédiaire `/auth/callback` : appelle `refresh()` pour obtenir un access token depuis le cookie posé par Google OAuth
+- Dispatche `setCredentials` puis redirige `/dashboard`
+
+**`client/src/App.tsx`**
+- Import lazy `GoogleCallbackPage` + route `<Route path="/auth/callback" element={<GoogleCallbackPage />} />`
+
+**`client/src/pages/Auth/AuthPage.tsx`**
+- Composant `EyeIcon({ open })` : SVG œil ouvert (password visible) / œil barré (password masqué)
+- Appliqué dans `LoginForm` (L368) et `RegisterForm` (L540) — remplace les caractères ● / ○
+
+**`.env` (racine)**
+- `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` configurés
+- `GOOGLE_CALLBACK_URL` corrigée de port 5000 → 5001
+
+---
+
+#### 2 — Génération : formatage HTML + dictée + mots-clés
+
+**`server/src/services/claude.service.ts`**
+- `getSystemPrompt()` : instruction explicite HTML (`<h1>`, `<h2>`, `<p>`, `<ul>`, `<li>`, `<strong>`, `<em>`) — Claude ne génère plus de markdown
+
+**`client/src/lib/markdownToHtml.ts`** — NOUVEAU
+- Fonction `markdownToHTML(text)` : convertit markdown legacy → HTML (headings, bold/italic, listes, paragraphes)
+- Détecte si déjà HTML (early return)
+
+**`client/src/store/contentSlice.ts`**
+- Action `setStreamedContent(html)` ajoutée pour mettre à jour le contenu streamé avec HTML converti
+
+**`client/src/hooks/useStreaming.ts`**
+- Import `markdownToHTML` depuis lib partagée
+- Au `parsed.done` : `markdownToHTML(localContent)` → dispatche `setStreamedContent(html)` avant `stopGeneration`
+- Variable locale `localContent` pour tracker le contenu accumulé sans dépendre de Redux
+
+**`client/src/pages/Generate/GeneratePage.tsx`**
+- Import `markdownToHTML` → appliqué sur `c.body` en view mode (`dispatch(setEditorContent(markdownToHTML(c.body ?? "")))`)
+- Bouton "Dicter le brief" (form header) : `onClick={handleFloatingMic}` branché
+- Input mots-clés : virgule comme séparateur automatique (ajoute le chip sans Enter)
+- Auto-suggestion keywords : debounce 1500ms → `POST /content/suggest-keywords` → chips suggérés cliquables
+
+**`server/src/controllers/content.controller.ts`** + **`server/src/routes/content.routes.ts`**
+- `suggestKeywordsHandler` : reçoit `{subject, type}`, appelle `suggestKeywords()` Claude, retourne `string[]`
+- Route `POST /suggest-keywords` enregistrée avant les routes `/:id`
+
+---
+
+#### 3 — Page Historique — réécriture complète
+
+**`client/src/pages/History/HistoryPage.tsx`**
+- Import `useNavigate` + `handleRowClick(item)` → `navigate('/generate?view=${item._id}')`
+- `deleteConfirmId` state + `DeleteConfirmDialog` modal (overlay + Annuler/Supprimer)
+- `viewMode: "list" | "grid"` state + toggle fonctionnel dans la barre de filtres
+- Vue grille : `gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))"`, cartes cliquables
+- Colonne actions : largeur 100px, icônes 13px, `e.stopPropagation()` sur chaque action
+- Boutons "Export bulk ZIP" et "Tagger" : toast "Feature en développement"
+
+---
+
+#### 4 — Templates — icônes colorées + préchargement params
+
+**`client/src/pages/Templates/TemplatesPage.tsx`**
+- Bloc `template.variables.length > 0` retiré des cartes
+- `TypeBadge` composant : 36×36px avec couleurs de marque (LinkedIn #0077B5, YouTube #FF0000, Instagram gradient, Twitter/X noir, Email #3b82f6, Blog/Press amber, etc.)
+- `handleUse` : dispatche `tone` + `length` par défaut selon `template.type` (ex: LinkedIn → inspiring/medium, Blog → professional/long)
+
+---
+
+#### 5 — Page Favoris — NOUVELLE PAGE
+
+**`client/src/pages/Favorites/FavoritesPage.tsx`** — NOUVEAU
+- Vue grille par défaut + toggle liste/grille
+- Cartes cliquables → `/generate?view=id`
+- Actions : unfavorite (⭐ étoile colorée), copier, exporter (PDF/DOCX/MD/TXT)
+- Recherche + filtre par type, pagination, état vide avec lien vers historique
+- Query `favorite: true` toujours active, filtre côté client sur résultats de recherche
+
+**`client/src/App.tsx`** : import lazy + route `/favorites`
+
+**`client/src/components/Layout/Sidebar.tsx`** : lien Favoris → `/favorites` (était `/history?favorite=true`)
+
+---
+
+#### 6 — Dashboard — ring + responsive
+
+**`client/src/pages/Dashboard/DashboardPage.tsx`**
+- Ring crédits : `data=[{ value: Math.round(ringPct * 100) }]` — plein = crédits pleins
+- Classes CSS responsives : `.dashboard-kpi-grid`, `.dashboard-charts-grid`, `.dashboard-bottom-grid`
+- Skeleton loading : même classes responsives
+- `.page-pad` : padding 32/40px → 20/16px sur mobile
+
+---
+
+#### 7 — Responsive mobile — sidebar drawer + layouts
+
+**`client/src/components/Layout/AppLayout.tsx`**
+- State `sidebarOpen` + overlay `.sidebar-overlay`
+- Hamburger ☰ visible uniquement sur mobile/tablette (`.mobile-menu-btn`)
+
+**`client/src/components/Layout/Sidebar.tsx`**
+- Props `isOpen?: boolean`, `onClose?: () => void`
+- `className={cn("sidenav", isOpen && "mobile-open")}`
+- Bouton ✕ dans l'en-tête du sidebar (mobile seulement)
+- `onClick={onClose}` sur chaque NavLink
+
+**`client/src/index.css`**
+- `.sidenav` : `transition: transform 0.25s ease`, drawer fixe < 1024px, `.mobile-open` → `transform: translateX(0)`
+- `.sidebar-overlay` : backdrop blur fixe, visible via `.visible`
+- `.generate-layout`, `.generate-form-panel`, `.generate-mic-float`, `.generate-editor-panel` : responsive < 900px (layout vertical)
+- `.auth-layout`, `.auth-panel-left/right` : grid responsive, panneau droit masqué < 1024px
+- `.auth-card { background-image: none }` : retire le quadrillage de la card formulaire
+
+---
+
+#### 8 — Page Auth — redesign visuel
+
+**`client/src/components/Layout/AuthLayout.tsx`**
+- Fond `var(--bg)` + quadrillage 40px (`background-image: linear-gradient(...)`)
+- 5 blobs animés : coral (#e5704c, 0.16, haut-gauche), teal (#6bb8bd, 0.14, haut-droite), gold (#c9a24f, 0.11, centre), coral atténué (bas-gauche), teal doux (bas-droite)
+- Animations : `floatA/B/C` 18–26s avec delays décalés
+
+**`client/src/pages/Auth/AuthPage.tsx`**
+- Formulaire dans `.card.auth-card` (glass) avec drop shadow coloré : `0 4px 24px rgba(229,112,76,0.18), 0 12px 48px rgba(107,184,189,0.14)`
+- `maxWidth: 560px`, `padding: 28px 40px 24px`
+- Espacement réduit dans RegisterForm (gap 10px, margins réduits)
+- `DynamicPanel` :
+  - Fond transparent, `justifyContent: flex-start`, `padding: "80px 72px 64px"`
+  - Quote 58px, auteur juste sous le quote (même bloc `key={index}`)
+  - `statsEverShown` : `useState(false)` irréversible → carte visible en permanence
+  - Carte stats : `maxWidth: 420px`, `marginTop: auto`, `marginBottom: 108px`
+  - `gridTemplateColumns: "repeat(3, auto)"`, `justifyContent: "start"`
+- Logo : `transform: scale(1.28)` depuis `transformOrigin: "left center"`
+- Footer : "© 2026 CODEXA Solutions · Tous droits réservés"
+
+#### Vérification
+```
+pnpm exec tsc --noEmit → 0 erreur TypeScript
+pnpm exec biome check → warnings pre-existants uniquement (no errors)
+```
+
 **Total à ce jour : ~175 fichiers · ~10 600 lignes de code**

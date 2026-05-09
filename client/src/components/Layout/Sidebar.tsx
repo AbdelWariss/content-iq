@@ -1,11 +1,17 @@
 import { CiqIcon, Ico } from "@/lib/ciq-icons";
+import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/store/index";
 import { format } from "date-fns";
 import { enUS, fr } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const { t, i18n } = useTranslation();
   const user = useAppSelector((s) => s.auth.user);
   const dateLocale = i18n.language === "en" ? enUS : fr;
@@ -26,7 +32,7 @@ export function Sidebar() {
     { to: "/generate", icon: CiqIcon.sparkle, label: t("sidebar.generate") },
     { to: "/history", icon: CiqIcon.history, label: t("sidebar.history") },
     { to: "/templates", icon: CiqIcon.templ, label: t("sidebar.templates") },
-    { to: "/history?favorite=true", icon: CiqIcon.star, label: t("sidebar.favorites") },
+    { to: "/favorites", icon: CiqIcon.star, label: t("sidebar.favorites") },
   ];
 
   const accountItems = [
@@ -36,14 +42,45 @@ export function Sidebar() {
   ];
 
   return (
-    <aside className="sidenav hidden lg:flex">
-      {/* ─── Logo ─── */}
-      <div className="ciq-mark" style={{ padding: "0 4px 20px" }}>
-        <span className="dot">C</span>
-        <span className="name" style={{ fontSize: 15 }}>
-          <b>CONTENT</b>
-          <span>.IQ</span>
-        </span>
+    <aside className={cn("sidenav", isOpen && "mobile-open")}>
+      {/* ─── Logo + mobile close button ─── */}
+      <div
+        className="ciq-mark"
+        style={{
+          padding: "0 4px 20px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span className="dot">C</span>
+          <span className="name" style={{ fontSize: 15 }}>
+            <b>CONTENT</b>
+            <span>.IQ</span>
+          </span>
+        </div>
+        {/* Close button — only visible on mobile/tablet */}
+        <button
+          type="button"
+          className="mobile-menu-btn"
+          onClick={onClose}
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: 8,
+            border: "1px solid var(--line)",
+            background: "var(--bg-elev)",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            flexShrink: 0,
+            padding: 0,
+          }}
+          aria-label="Fermer le menu"
+        >
+          <Ico icon={CiqIcon.x} size={14} />
+        </button>
       </div>
 
       {/* ─── Main nav ─── */}
@@ -52,6 +89,7 @@ export function Sidebar() {
           key={it.to}
           to={it.to}
           className={({ isActive }) => `nav-item${isActive ? " on" : ""}`}
+          onClick={onClose}
         >
           <Ico icon={it.icon} size={18} />
           {it.label}
@@ -68,6 +106,7 @@ export function Sidebar() {
           key={it.to}
           to={it.to}
           className={({ isActive }) => `nav-item${isActive ? " on" : ""}`}
+          onClick={onClose}
         >
           <Ico icon={it.icon} size={18} />
           {it.label}
@@ -75,7 +114,11 @@ export function Sidebar() {
       ))}
 
       {isAdmin && (
-        <NavLink to="/admin" className={({ isActive }) => `nav-item${isActive ? " on" : ""}`}>
+        <NavLink
+          to="/admin"
+          className={({ isActive }) => `nav-item${isActive ? " on" : ""}`}
+          onClick={onClose}
+        >
           <Ico icon={CiqIcon.shield} size={18} />
           Admin
         </NavLink>

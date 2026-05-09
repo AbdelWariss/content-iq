@@ -3,6 +3,7 @@ import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import { cn } from "@/lib/utils";
 import { toggleOpen } from "@/store/assistantSlice";
 import { useAppDispatch, useAppSelector } from "@/store/index";
+import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { Navbar } from "./Navbar";
 import { Sidebar } from "./Sidebar";
@@ -30,10 +31,76 @@ function AssistantToggle() {
 
 export function AppLayout() {
   const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div className="app flex h-screen overflow-hidden">
-      <Sidebar />
+      {/* Overlay — closes sidebar on mobile when clicked */}
+      <div
+        className={cn("sidebar-overlay", sidebarOpen && "visible")}
+        onClick={() => setSidebarOpen(false)}
+      />
+
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
       <div className="flex flex-1 flex-col overflow-hidden">
+        {/* Hamburger button — only visible on mobile/tablet (< 1024px) */}
+        <button
+          type="button"
+          className="mobile-menu-btn"
+          style={{
+            position: "fixed",
+            top: 11,
+            left: 12,
+            zIndex: 48,
+            width: 36,
+            height: 36,
+            borderRadius: 9,
+            border: "1px solid var(--line)",
+            background: "var(--bg-elev)",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            gap: 0,
+            flexDirection: "column",
+            padding: "8px 7px",
+          }}
+          onClick={() => setSidebarOpen(true)}
+          title="Menu"
+          aria-label="Ouvrir le menu"
+        >
+          {/* Simple 3-bar hamburger */}
+          <span style={{ display: "flex", flexDirection: "column", gap: 4, width: "100%" }}>
+            <i
+              style={{
+                display: "block",
+                height: 1.5,
+                background: "var(--ink)",
+                borderRadius: 2,
+                width: "100%",
+              }}
+            />
+            <i
+              style={{
+                display: "block",
+                height: 1.5,
+                background: "var(--ink)",
+                borderRadius: 2,
+                width: "70%",
+              }}
+            />
+            <i
+              style={{
+                display: "block",
+                height: 1.5,
+                background: "var(--ink)",
+                borderRadius: 2,
+                width: "100%",
+              }}
+            />
+          </span>
+        </button>
+
         <Navbar />
         <main
           className="flex-1 overflow-y-auto scrollbar-thin"
@@ -47,6 +114,7 @@ export function AppLayout() {
           </div>
         </main>
       </div>
+
       <AssistantPanel />
       <AssistantToggle />
     </div>

@@ -17,6 +17,38 @@ import { z } from "zod";
 
 type AuthMode = "login" | "register" | "forgot";
 
+function EyeIcon({ open }: { open: boolean }) {
+  return open ? (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  ) : (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+      <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
+  );
+}
+
 const ForgotSchema = z.object({ email: z.string().email("Email invalide") });
 
 const TESTIMONIALS = [
@@ -113,18 +145,24 @@ function StatCounter({
 export function DynamicPanel() {
   const { t: trans } = useTranslation();
   const [index, setIndex] = useState(0);
-  const [statsActive, setStatsActive] = useState(true);
+  const [statsEverShown, setStatsEverShown] = useState(false);
   const t = TESTIMONIALS[index];
   const displayedQuote = useTypewriter(t.quote, 24, 100);
 
+  // Rotate testimonials every 8s — stats card never hides once shown
   useEffect(() => {
     const id = setInterval(() => {
       setIndex((i) => (i + 1) % TESTIMONIALS.length);
-      setStatsActive(false);
-      setTimeout(() => setStatsActive(true), 100);
     }, 8000);
     return () => clearInterval(id);
   }, []);
+
+  // Mark stats as permanently shown on first appearance
+  useEffect(() => {
+    if (!statsEverShown && displayedQuote.length >= t.quote.length * 0.45) {
+      setStatsEverShown(true);
+    }
+  }, [displayedQuote.length, t.quote.length, statsEverShown]);
 
   const beforeAccent = t.quote.split(t.accent)[0];
   const typed_before = displayedQuote.slice(0, beforeAccent.length);
@@ -133,16 +171,18 @@ export function DynamicPanel() {
   return (
     <div
       style={{
-        background: "var(--bg-sunk)",
-        borderLeft: "1px solid var(--line)",
+        background: "transparent",
+        borderLeft: "none",
         overflowY: "auto",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
-        padding: "64px 72px",
+        justifyContent: "flex-start",
+        padding: "180px 72px 64px",
+        gap: 0,
       }}
     >
-      <div className="row" style={{ gap: 6, marginBottom: 28 }}>
+      {/* Dots navigation */}
+      <div className="row" style={{ gap: 6, marginBottom: 24 }}>
         {TESTIMONIALS.map((_, i) => (
           <button
             key={i}
@@ -161,66 +201,82 @@ export function DynamicPanel() {
           />
         ))}
       </div>
-      <span className="t-eyebrow" style={{ marginBottom: 20, fontSize: 12 }}>
+
+      {/* Eyebrow */}
+      <span className="t-eyebrow" style={{ fontSize: 12, marginBottom: 18 }}>
         {trans("auth.testimonialLabel")}
       </span>
-      <div
-        className="t-display"
-        style={{ fontSize: 52, lineHeight: 1.1, margin: "0 0 36px", minHeight: 220 }}
-        key={index}
-      >
-        « <span>{typed_before}</span>
-        {typed_accent.length > 0 && <em style={{ color: "var(--accent)" }}>{typed_accent}</em>}
-        {displayedQuote.length < t.quote.length && (
-          <span
-            style={{
-              display: "inline-block",
-              width: 3,
-              height: "0.82em",
-              background: "var(--ink)",
-              marginLeft: 3,
-              verticalAlign: "text-bottom",
-              animation: "caretBlink 0.9s steps(1) infinite",
-            }}
-          />
-        )}
-        {displayedQuote.length >= t.quote.length && " »"}
-      </div>
-      <div
-        className="row"
-        style={{
-          gap: 14,
-          opacity: displayedQuote.length >= t.quote.length * 0.65 ? 1 : 0,
-          transition: "opacity 0.6s ease",
-          marginBottom: 52,
-        }}
-      >
+
+      {/* Quote block */}
+      <div key={index}>
+        {/* Quote text — grande taille */}
+        <div className="t-display" style={{ fontSize: 50, lineHeight: 1.08, margin: "0 0 25px" }}>
+          « <span>{typed_before}</span>
+          {typed_accent.length > 0 && <em style={{ color: "var(--accent)" }}>{typed_accent}</em>}
+          {displayedQuote.length < t.quote.length && (
+            <span
+              style={{
+                display: "inline-block",
+                width: 3,
+                height: "0.82em",
+                background: "var(--ink)",
+                marginLeft: 3,
+                verticalAlign: "text-bottom",
+                animation: "caretBlink 0.9s steps(1) infinite",
+              }}
+            />
+          )}
+          {displayedQuote.length >= t.quote.length && " »"}
+        </div>
+
+        {/* Author — directly below the quote */}
         <div
-          className="imgph"
-          style={{ width: 52, height: 52, borderRadius: "50%", fontSize: 16, flexShrink: 0 }}
+          className="row"
+          style={{
+            gap: 14,
+            opacity: displayedQuote.length >= t.quote.length * 0.65 ? 1 : 0,
+            transition: "opacity 0.6s ease",
+          }}
         >
-          {t.initials}
-        </div>
-        <div className="col">
-          <strong style={{ fontSize: 16 }}>{t.name}</strong>
-          <span style={{ fontSize: 13, color: "var(--ink-mute)", marginTop: 2 }}>{t.role}</span>
+          <div
+            className="imgph"
+            style={{ width: 52, height: 52, borderRadius: "50%", fontSize: 16, flexShrink: 0 }}
+          >
+            {t.initials}
+          </div>
+          <div className="col" style={{ gap: 2 }}>
+            <strong style={{ fontSize: 17 }}>{t.name}</strong>
+            <span style={{ fontSize: 13, color: "var(--ink-mute)" }}>{t.role}</span>
+          </div>
         </div>
       </div>
+
+      {/* Stats card — fixée en bas via marginTop: auto, largeur contrôlée */}
       <div
         className="card"
         style={{
-          padding: "24px 28px",
-          opacity: displayedQuote.length >= t.quote.length * 0.45 ? 1 : 0,
+          marginTop: "auto",
+          marginBottom: 200,
+          padding: "18px 28px",
+          maxWidth: 420,
+          opacity: statsEverShown ? 1 : 0,
           transition: "opacity 0.8s ease",
         }}
       >
-        <div className="row between" style={{ marginBottom: 22 }}>
+        <div className="row between" style={{ marginBottom: 14 }}>
           <span className="t-eyebrow">{trans("auth.todayLabel")}</span>
           <span className="t-mono" style={{ fontSize: 11, color: "var(--ink-mute)" }}>
             06.05.26
           </span>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, auto)",
+            gap: 24,
+            justifyContent: "start",
+          }}
+        >
           {STATS.map((s) => (
             <StatCounter
               key={s.label}
@@ -228,7 +284,7 @@ export function DynamicPanel() {
               decimals={s.decimals}
               suffix={s.suffix}
               label={s.label}
-              active={statsActive}
+              active={statsEverShown}
             />
           ))}
         </div>
@@ -269,10 +325,10 @@ function LoginForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
 
   return (
     <div>
-      <h1 className="t-display" style={{ fontSize: 58, margin: "0 0 10px" }}>
+      <h1 className="t-display" style={{ fontSize: 48, margin: "0 0 10px" }}>
         {t("auth.loginTitle")}
       </h1>
-      <p style={{ color: "var(--ink-soft)", marginBottom: 30, fontSize: 17 }}>
+      <p style={{ color: "var(--ink-soft)", marginBottom: 28, fontSize: 16 }}>
         {t("auth.loginSubtitle")}
       </p>
       <button
@@ -351,7 +407,7 @@ function LoginForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
                   fontSize: 14,
                 }}
               >
-                {showPwd ? "●" : "○"}
+                <EyeIcon open={showPwd} />
               </button>
             </div>
             {errors.password && (
@@ -396,6 +452,7 @@ function RegisterForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
   const { register: registerUser } = useAuth();
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
+  const [showPwd, setShowPwd] = useState(false);
   const {
     register,
     handleSubmit,
@@ -437,16 +494,16 @@ function RegisterForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
 
   return (
     <div>
-      <h1 className="t-display" style={{ fontSize: 54, margin: "0 0 8px" }}>
+      <h1 className="t-display" style={{ fontSize: 44, margin: "0 0 8px" }}>
         {t("auth.registerTitle")}
       </h1>
-      <p style={{ color: "var(--ink-soft)", marginBottom: 26, fontSize: 17 }}>
+      <p style={{ color: "var(--ink-soft)", marginBottom: 14, fontSize: 14 }}>
         {t("auth.registerSubtitle")}
       </p>
       <button
         type="button"
         className="btn btn-outline btn-lg"
-        style={{ width: "100%", justifyContent: "center", marginBottom: 20 }}
+        style={{ width: "100%", justifyContent: "center", marginBottom: 12 }}
         onClick={() => {
           window.location.href = `${import.meta.env.VITE_API_URL ?? "/api"}/auth/google`;
         }}
@@ -454,15 +511,15 @@ function RegisterForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
         <Ico icon={CiqIcon.google} size={22} />
         {t("auth.continueGoogle")}
       </button>
-      <div className="row" style={{ gap: 10, marginBottom: 20 }}>
+      <div className="row" style={{ gap: 10, marginBottom: 12 }}>
         <div className="hr" style={{ flex: 1 }} />
-        <span className="t-eyebrow" style={{ fontSize: 13, color: "var(--ink-mute)" }}>
+        <span className="t-eyebrow" style={{ fontSize: 12, color: "var(--ink-mute)" }}>
           {t("auth.orEmail")}
         </span>
         <div className="hr" style={{ flex: 1 }} />
       </div>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="col" style={{ gap: 16 }}>
+        <div className="col" style={{ gap: 10 }}>
           <div>
             <label className="label">{t("auth.labelFullName")}</label>
             <input
@@ -499,13 +556,32 @@ function RegisterForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
                 {t("auth.passwordHint")}
               </span>
             </label>
-            <input
-              className="input"
-              type="password"
-              placeholder="••••••••••••"
-              autoComplete="new-password"
-              {...register("password")}
-            />
+            <div style={{ position: "relative" }}>
+              <input
+                className="input"
+                type={showPwd ? "text" : "password"}
+                placeholder="••••••••••••"
+                autoComplete="new-password"
+                {...register("password")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPwd((p) => !p)}
+                style={{
+                  position: "absolute",
+                  right: 14,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--ink-mute)",
+                  fontSize: 14,
+                }}
+              >
+                <EyeIcon open={showPwd} />
+              </button>
+            </div>
             {pwd && (
               <div className="row" style={{ gap: 4, marginTop: 8 }}>
                 {[0, 1, 2, 3].map((i) => (
@@ -700,10 +776,10 @@ function ForgotForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
 
   return (
     <div>
-      <h1 className="t-display" style={{ fontSize: 54, margin: "0 0 10px" }}>
+      <h1 className="t-display" style={{ fontSize: 44, margin: "0 0 10px" }}>
         {t("auth.forgotTitle")}
       </h1>
-      <p style={{ color: "var(--ink-soft)", fontSize: 17, marginBottom: 30 }}>
+      <p style={{ color: "var(--ink-soft)", fontSize: 16, marginBottom: 28 }}>
         {t("auth.forgotSubtitle")}
       </p>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -784,8 +860,10 @@ export default function AuthPage() {
   }, [location.pathname]);
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1.1fr", height: "100%" }}>
+    <div className="auth-layout">
+      {/* ── Panneau gauche : logo + card formulaire + footer ── */}
       <div
+        className="auth-panel-left"
         style={{
           display: "grid",
           gridTemplateRows: "auto 1fr auto",
@@ -794,7 +872,10 @@ export default function AuthPage() {
         }}
       >
         <Link to="/" style={{ textDecoration: "none" }}>
-          <div className="ciq-mark">
+          <div
+            className="ciq-mark"
+            style={{ transform: "scale(1.28)", transformOrigin: "left center" }}
+          >
             <span className="dot">C</span>
             <span className="name">
               <b>CONTENT</b>
@@ -802,22 +883,38 @@ export default function AuthPage() {
             </span>
           </div>
         </Link>
+
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {/* Formulaire dans une card glass */}
           <div
-            className="auth-form"
-            style={{ width: "100%", maxWidth: 500, animation: "fadeSlideIn 0.3s ease" }}
+            className="card auth-card"
+            style={{
+              width: "100%",
+              maxWidth: 560,
+              padding: "28px 40px 24px",
+              animation: "fadeSlideIn 0.3s ease",
+              boxShadow:
+                "inset 0 1px 0 rgba(255,255,255,0.92), 0 4px 24px rgba(229,112,76,0.18), 0 12px 48px rgba(107,184,189,0.14), 0 2px 8px rgba(58,47,37,0.06)",
+            }}
             key={mode}
           >
-            {mode === "login" && <LoginForm onSwitch={switchMode} />}
-            {mode === "register" && <RegisterForm onSwitch={switchMode} />}
-            {mode === "forgot" && <ForgotForm onSwitch={switchMode} />}
+            <div className="auth-form">
+              {mode === "login" && <LoginForm onSwitch={switchMode} />}
+              {mode === "register" && <RegisterForm onSwitch={switchMode} />}
+              {mode === "forgot" && <ForgotForm onSwitch={switchMode} />}
+            </div>
           </div>
         </div>
-        <div style={{ fontSize: 14, color: "var(--ink-mute)" }}>
-          © 2026 CODEXA · Document confidentiel
+
+        <div style={{ fontSize: 13, color: "var(--ink-mute)" }}>
+          © 2026 CODEXA Solutions · Tous droits réservés
         </div>
       </div>
-      <DynamicPanel />
+
+      {/* ── Panneau droit : témoignages directement sur le fond ── */}
+      <div className="auth-panel-right">
+        <DynamicPanel />
+      </div>
     </div>
   );
 }

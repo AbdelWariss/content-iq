@@ -11,6 +11,7 @@ RUN pnpm install --frozen-lockfile --filter server --filter @contentiq/shared
 FROM base AS build
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc .pnpmfile.cjs ./
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/packages ./packages
 COPY packages/shared ./packages/shared
 COPY server ./server
 RUN pnpm --filter @contentiq/shared build

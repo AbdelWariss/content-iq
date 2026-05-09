@@ -1,10 +1,11 @@
 import { PageLoader } from "@/components/ui/PageLoader";
 import i18n from "@/lib/i18n";
-import { authService } from "@/services/auth.service";
 import { setCredentials, setLoading } from "@/store/authSlice";
 import { useAppDispatch } from "@/store/index";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+
+const API_URL = import.meta.env.VITE_API_URL ?? "/api";
 
 export default function GoogleCallbackPage() {
   const dispatch = useAppDispatch();
@@ -20,11 +21,18 @@ export default function GoogleCallbackPage() {
       return;
     }
 
-    // Use the access token from URL to fetch user profile
-    authService
-      .getMe(token)
+    // Use plain fetch to avoid axios interceptors interfering with the fresh token
+    fetch(`${API_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+      credentials: "include",
+    })
       .then((res) => {
-        const user = res.data.user;
+        if (!res.ok) throw new Error(`${res.status}`);
+        return res.json();
+      })
+      .then((body) => {
+        const user = body?.data?.user;
+        if (!user) throw new Error("no user");
         const userLang = user.language ?? "fr";
         dispatch(
           setCredentials({

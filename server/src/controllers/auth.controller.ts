@@ -14,6 +14,7 @@ import {
   sendVerificationEmail,
   sendWelcomeEmail,
 } from "../services/email.service.js";
+import { appLog } from "../utils/appLog.js";
 import { logger } from "../utils/logger.js";
 import { getAuthUser } from "../utils/requestHelpers.js";
 import {
@@ -76,6 +77,16 @@ export async function register(req: Request, res: Response): Promise<void> {
 
   res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, COOKIE_OPTIONS);
 
+  void appLog({
+    level: "info",
+    category: "auth",
+    action: "register_success",
+    message: `Nouveau compte créé : ${user.email}`,
+    userId: user._id as never,
+    userEmail: user.email,
+    ip: req.ip,
+  });
+
   res.status(201).json({
     success: true,
     data: {
@@ -107,6 +118,16 @@ export async function login(req: Request, res: Response): Promise<void> {
   await user.save();
 
   res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, COOKIE_OPTIONS);
+
+  void appLog({
+    level: "info",
+    category: "auth",
+    action: "login_success",
+    message: `Connexion réussie : ${user.email}`,
+    userId: user._id as never,
+    userEmail: user.email,
+    ip: req.ip,
+  });
 
   res.json({
     success: true,
@@ -184,6 +205,15 @@ export async function googleCallback(req: Request, res: Response): Promise<void>
   });
 
   res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, COOKIE_OPTIONS);
+
+  void appLog({
+    level: "info",
+    category: "auth",
+    action: "google_oauth_success",
+    message: `Connexion Google réussie : ${oauthUser.email}`,
+    userEmail: oauthUser.email,
+    ip: req.ip,
+  });
 
   const params = new URLSearchParams({ token: accessToken });
   res.redirect(`${process.env.CLIENT_URL}/auth/callback?${params.toString()}`);

@@ -4,12 +4,12 @@ export interface AdminUser {
   _id: string;
   name: string;
   email: string;
-  role: string;
-  emailVerified: boolean;
+  role: "free" | "pro" | "business" | "admin";
   credits: { remaining: number; total: number };
   subscription: { status: string };
   createdAt: string;
   lastLoginAt?: string;
+  emailVerified: boolean;
 }
 
 export interface AdminStats {
@@ -18,27 +18,43 @@ export interface AdminStats {
   creditsConsumed: number;
 }
 
-interface UsersResponse {
-  users: AdminUser[];
-  pagination: { page: number; limit: number; total: number; pages: number };
+export interface AppLogEntry {
+  _id: string;
+  level: "info" | "warn" | "error";
+  category: "auth" | "generation" | "credits" | "system" | "admin";
+  action: string;
+  message: string;
+  details?: Record<string, unknown>;
+  userId?: string;
+  userEmail?: string;
+  ip?: string;
+  createdAt: string;
+}
+
+export interface LogsParams {
+  page?: number;
+  limit?: number;
+  level?: string;
+  category?: string;
+  from?: string;
+  to?: string;
 }
 
 export const adminService = {
-  async getStats(): Promise<AdminStats> {
-    const { data } = await api.get<{ success: boolean; data: AdminStats }>("/admin/stats");
-    return data.data;
+  async getStats(): Promise<{ success: boolean; data: AdminStats }> {
+    const res = await api.get("/admin/stats");
+    return res.data;
   },
 
-  async listUsers(params: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    role?: string;
-  }): Promise<UsersResponse> {
-    const { data } = await api.get<{ success: boolean; data: UsersResponse }>("/admin/users", {
-      params,
-    });
-    return data.data;
+  async listUsers(params?: { page?: number; limit?: number; search?: string; role?: string }) {
+    const res = await api.get("/admin/users", { params });
+    return res.data as {
+      success: boolean;
+      data: {
+        users: AdminUser[];
+        pagination: { page: number; limit: number; total: number; pages: number };
+      };
+    };
   },
 
   async updateRole(userId: string, role: string): Promise<void> {
@@ -47,5 +63,21 @@ export const adminService = {
 
   async banUser(userId: string): Promise<void> {
     await api.post(`/admin/users/${userId}/ban`);
+  },
+
+  async getLogs(params?: LogsParams) {
+    const res = await api.get("/admin/logs", { params });
+    return res.data as {
+      success: boolean;
+      data: {
+        logs: AppLogEntry[];
+        pagination: { page: number; limit: number; total: number; pages: number };
+      };
+    };
+  },
+
+  async clearLogs(before?: string) {
+    const res = await api.delete("/admin/logs", { params: before ? { before } : undefined });
+    return res.data as { success: boolean; data: { deleted: number } };
   },
 };

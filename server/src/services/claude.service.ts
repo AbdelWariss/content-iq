@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { ContentLanguage, ContentType, GenerateContentInput } from "@contentiq/shared";
 import type { Response } from "express";
 import { env } from "../config/env.js";
+import { appLog } from "../utils/appLog.js";
 import { logger } from "../utils/logger.js";
 
 const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
@@ -257,9 +258,16 @@ export async function streamContentGeneration(
       res.write(`data: ${JSON.stringify({ done: true, tokensUsed })}\n\n`);
     }
   } catch (error) {
-    logger.error("Generation error", { error: error instanceof Error ? error.message : error });
-    const userMessage = sanitizeStreamError(error);
-    res.write(`data: ${JSON.stringify({ error: userMessage })}\n\n`);
+    const raw = error instanceof Error ? error.message : String(error);
+    logger.error("Generation error", { error: raw });
+    void appLog({
+      level: "error",
+      category: "generation",
+      action: "generate_error",
+      message: sanitizeStreamError(error),
+      details: { raw },
+    });
+    res.write(`data: ${JSON.stringify({ error: sanitizeStreamError(error) })}\n\n`);
   } finally {
     res.end();
   }

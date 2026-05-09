@@ -1,5 +1,6 @@
 import { PaginationSchema } from "@contentiq/shared";
 import type { Request, Response } from "express";
+import { AppLog } from "../models/AppLog.model.js";
 import { Content } from "../models/Content.model.js";
 import { CreditTransaction } from "../models/CreditTransaction.model.js";
 import { User } from "../models/User.model.js";
@@ -99,4 +100,49 @@ export async function banUser(req: Request, res: Response): Promise<void> {
     success: true,
     data: { message: "Utilisateur banni — sessions révoquées, crédits réinitialisés" },
   });
+}
+
+export async function listLogs(req: Request, res: Response): Promise<void> {
+  const {
+    page = "1",
+    limit = "50",
+    level,
+    category,
+    from,
+    to,
+  } = req.query as Record<string, string>;
+  const p = Math.max(1, Number.parseInt(page));
+  const l = Math.min(200, Math.max(1, Number.parseInt(limit)));
+
+  const filter: Record<string, unknown> = {};
+  if (level && ["info", "warn", "error"].includes(level)) filter.level = level;
+  if (category && ["auth", "generation", "credits", "system", "admin"].includes(category))
+    filter.category = category;
+  if (from || to) {
+    filter.createdAt = {
+      ...(from ? { $gte: new Date(from) } : {}),
+      ...(to ? { $lte: new Date(to) } : {}),
+    };
+  }
+
+  const [logs, total] = await Promise.all([
+    AppLog.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((p - 1) * l)
+      .limit(l)
+      .lean(),
+    AppLog.countDocuments(filter),
+  ]);
+
+  res.json({
+    success: true,
+    data: { logs, pagination: { page: p, limit: l, total, pages: Math.ceil(total / l) } },
+  });
+}
+
+export async function clearLogs(req: Request, res: Response): Promise<void> {
+  const { before } = req.query as { before?: string };
+  const filter = before ? { createdAt: { $lt: new Date(before) } } : {};
+  const { deletedCount } = await AppLog.deleteMany(filter);
+  res.json({ success: true, data: { deleted: deletedCount } });
 }

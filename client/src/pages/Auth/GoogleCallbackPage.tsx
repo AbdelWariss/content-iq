@@ -24,7 +24,7 @@ export default function GoogleCallbackPage() {
     authService
       .getMe(token)
       .then((res) => {
-        const user = res.data.data ?? res.data;
+        const user = res.data;
         const userLang = user.language ?? "fr";
         dispatch(
           setCredentials({

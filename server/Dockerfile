@@ -3,7 +3,7 @@ RUN npm install -g pnpm@10.33.3
 WORKDIR /app
 
 FROM base AS deps
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc .pnpmfile.cjs ./
 COPY server/package.json ./server/
 COPY packages/shared/package.json ./packages/shared/
 RUN pnpm install --frozen-lockfile --filter server --filter @contentiq/shared

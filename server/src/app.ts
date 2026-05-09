@@ -42,10 +42,14 @@ export function createApp(): import("express").Express {
     }),
   );
 
-  // CORS
+  // CORS — strip trailing slash to avoid browser origin mismatch
+  const allowedOrigin = env.CLIENT_URL?.replace(/\/$/, "");
   app.use(
     cors({
-      origin: env.CLIENT_URL,
+      origin: (origin, cb) => {
+        if (!origin || origin.replace(/\/$/, "") === allowedOrigin) cb(null, true);
+        else cb(new Error("Not allowed by CORS"));
+      },
       credentials: true,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],

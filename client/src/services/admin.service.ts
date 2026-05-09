@@ -41,20 +41,22 @@ export interface LogsParams {
 }
 
 export const adminService = {
-  async getStats(): Promise<{ success: boolean; data: AdminStats }> {
+  async getStats(): Promise<AdminStats> {
     const res = await api.get("/admin/stats");
-    return res.data;
+    return res.data.data as AdminStats;
   },
 
-  async listUsers(params?: { page?: number; limit?: number; search?: string; role?: string }) {
+  async listUsers(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    role?: string;
+  }): Promise<{
+    users: AdminUser[];
+    pagination: { page: number; limit: number; total: number; pages: number };
+  }> {
     const res = await api.get("/admin/users", { params });
-    return res.data as {
-      success: boolean;
-      data: {
-        users: AdminUser[];
-        pagination: { page: number; limit: number; total: number; pages: number };
-      };
-    };
+    return res.data.data;
   },
 
   async updateRole(userId: string, role: string): Promise<void> {

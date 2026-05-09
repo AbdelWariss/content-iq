@@ -3,7 +3,11 @@
   "compilerOptions": {
     "sourceMap": false,
     "declarationMap": false,
-    "paths": {}
+    "rootDir": "./src",
+    "paths": {
+      "@contentiq/shared": ["../packages/shared/dist/index.d.ts"]
+    }
   },
+  "include": ["src"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts", "scripts"]
 }

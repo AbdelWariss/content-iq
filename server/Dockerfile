@@ -17,7 +17,7 @@ COPY packages/shared ./packages/shared
 COPY server ./server
 RUN pnpm --filter @contentiq/shared build
 RUN pnpm --filter server build
-RUN pnpm --filter server deploy --prod /app/deploy
+RUN pnpm --filter server deploy --prod --legacy /app/deploy
 
 FROM node:22-alpine AS production
 WORKDIR /app

@@ -297,7 +297,7 @@ export default function HistoryPage() {
         </div>
 
         <select
-          className="select"
+          className="select hide-mobile"
           style={{ width: "auto" }}
           value={filterType}
           onChange={(e) => {
@@ -345,6 +345,27 @@ export default function HistoryPage() {
             {t("history.grid")}
           </button>
         </div>
+      </div>
+
+      {/* Mobile: type filter chips (horizontal scroll) */}
+      <div className="mobile-filter-chips" style={{ marginBottom: 12 }}>
+        <button
+          type="button"
+          className={`btn btn-sm${filterType === "" ? " btn-primary" : " btn-outline"}`}
+          onClick={() => { setFilterType(""); setPage(1); }}
+        >
+          {t("history.allTypes")}
+        </button>
+        {Object.entries(TYPE_LABELS).map(([v, l]) => (
+          <button
+            key={v}
+            type="button"
+            className={`btn btn-sm${filterType === v ? " btn-primary" : " btn-outline"}`}
+            onClick={() => { setFilterType(v); setPage(1); }}
+          >
+            {l}
+          </button>
+        ))}
       </div>
 
       {/* Content */}

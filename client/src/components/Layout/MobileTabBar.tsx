@@ -1,14 +1,12 @@
 import { CiqIcon, Ico } from "@/lib/ciq-icons";
-import { useAppDispatch, useAppSelector } from "@/store/index";
+import { useAppSelector } from "@/store/index";
 import { useTranslation } from "react-i18next";
 import { NavLink, useLocation } from "react-router-dom";
 
 export function MobileTabBar() {
   const { t } = useTranslation();
   const location = useLocation();
-  const dispatch = useAppDispatch();
-  const credits = useAppSelector((s) => s.auth.user?.credits?.remaining ?? 0);
-  const isAssistantOpen = useAppSelector((s) => s.assistant.isOpen);
+  const _credits = useAppSelector((s) => s.auth.user?.credits?.remaining ?? 0);
 
   const tabs = [
     { to: "/dashboard", icon: CiqIcon.dash, label: t("sidebar.dashboard", "Accueil") },
@@ -21,7 +19,7 @@ export function MobileTabBar() {
 
   return (
     <nav className="mobile-tab-bar" aria-label="Navigation mobile">
-      {/* Tabs gauche */}
+      {/* Tabs gauche: Accueil + Histo. */}
       {tabs.slice(0, 2).map((tab) => {
         const active = location.pathname === tab.to;
         return (
@@ -45,13 +43,16 @@ export function MobileTabBar() {
         className="mobile-tab-fab"
         style={{
           background: isGenerate ? "var(--ink)" : "var(--accent)",
+          boxShadow: isGenerate
+            ? "0 4px 16px -2px rgba(58,47,37,0.35)"
+            : "0 4px 16px -2px rgba(229,112,76,.45)",
         }}
         aria-label="Créer du contenu"
       >
         <Ico icon={CiqIcon.sparkle} size={22} style={{ color: "white" }} />
       </NavLink>
 
-      {/* Tabs droite */}
+      {/* Tabs droite: Templates + Profil */}
       {tabs.slice(2).map((tab) => {
         const active = location.pathname === tab.to;
         return (

@@ -113,6 +113,30 @@ export default function DashboardPage() {
 
   return (
     <div className="page-pad" style={{ overflow: "auto" }}>
+      {/* Mobile: credit ring card (hidden on desktop via CSS) */}
+      <div className="card mobile-credit-ring-card" style={{ marginBottom: 12, alignItems: "center", gap: 16, padding: 18 }}>
+        <svg className="ring-svg" width="68" height="68" viewBox="0 0 92 92">
+          <circle className="track" cx="46" cy="46" r="38" />
+          <circle
+            className="fill"
+            cx="46"
+            cy="46"
+            r="38"
+            stroke="var(--accent)"
+            strokeDasharray={`${2 * Math.PI * 38}`}
+            strokeDashoffset={`${2 * Math.PI * 38 * (1 - ringPct)}`}
+          />
+        </svg>
+        <div style={{ flex: 1 }}>
+          <span className="t-eyebrow">Crédits</span>
+          <div className="row" style={{ alignItems: "baseline", gap: 4 }}>
+            <span className="t-mono" style={{ fontSize: 26, fontWeight: 600 }}>{remaining}</span>
+            <span style={{ color: "var(--ink-mute)", fontSize: 12 }}>/ {total}</span>
+          </div>
+        </div>
+        <button className="btn btn-outline btn-sm" onClick={() => navigate("/pricing")}>Recharger</button>
+      </div>
+
       {/* Header */}
       <div className="row between" style={{ marginBottom: 28 }}>
         <div>

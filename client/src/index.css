@@ -1328,6 +1328,22 @@ body {
   display: none;
 }
 
+/* Mobile-only elements hidden on desktop */
+.mobile-credit-ring-card {
+  display: none;
+}
+.mobile-only {
+  display: none;
+}
+/* Generate sticky bar — no-op on desktop */
+.mobile-generate-sticky {
+  /* desktop: plain block, no sticky */
+}
+/* Filter chips — hidden on desktop */
+.mobile-filter-chips {
+  display: none;
+}
+
 @media (max-width: 640px) {
   /* Affiche la tab bar */
   .mobile-tab-bar {
@@ -1488,5 +1504,83 @@ body {
   /* Templates grid : 1 colonne */
   .templates-grid {
     grid-template-columns: 1fr !important;
+  }
+
+  /* ── Mobile utility classes ── */
+  .hide-mobile {
+    display: none !important;
+  }
+  .mobile-only {
+    display: flex !important;
+  }
+
+  /* Credit ring card mobile */
+  .mobile-credit-ring-card {
+    display: flex !important;
+  }
+
+  /* KPI grid 2x2 */
+  .mobile-kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  /* Content type grid 3x2 */
+  .mobile-content-type-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  /* Filter chips horizontal scroll */
+  .mobile-filter-chips {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 2px;
+  }
+  .mobile-filter-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Templates 2-col grid */
+  .mobile-templates-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  /* Voice orb overlay mobile */
+  .mobile-voice-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Editor action dock */
+  .mobile-editor-dock {
+    display: flex;
+    gap: 8px;
+    padding: 10px 14px;
+    border-top: 1px solid var(--line-soft);
+    background: var(--bg-elev);
+  }
+
+  /* Generate sticky action bar */
+  .mobile-generate-sticky {
+    position: sticky;
+    bottom: calc(68px + env(safe-area-inset-bottom, 8px));
+    left: 0;
+    right: 0;
+    z-index: 40;
+    background: var(--bg-elev);
+    border-top: 1px solid var(--line-soft);
+    padding: 10px 14px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
   }
 }

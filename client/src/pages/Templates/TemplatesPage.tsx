@@ -492,6 +492,7 @@ export default function TemplatesPage() {
       {/* Grid */}
       {isLoading ? (
         <div
+          className="mobile-templates-grid"
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
@@ -593,6 +594,7 @@ export default function TemplatesPage() {
         </div>
       ) : (
         <div
+          className="mobile-templates-grid"
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",

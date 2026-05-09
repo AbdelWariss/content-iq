@@ -358,7 +358,7 @@ export default function GeneratePage() {
               {/* Content type */}
               <div>
                 <label className="label">{t("generate.contentType")}</label>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
+                <div className="mobile-content-type-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
                   {CONTENT_TYPES.map(({ value, label, icon }) => {
                     const on = watchedType === value;
                     return (
@@ -539,45 +539,47 @@ export default function GeneratePage() {
             </div>
           </fieldset>
 
-          {/* Generate / Regenerate button */}
-          <button
-            type="submit"
-            disabled={isGenerating}
-            className="btn btn-accent btn-lg"
-            style={{ width: "100%", justifyContent: "center", marginTop: 18 }}
-          >
-            <Ico icon={CiqIcon.sparkle} />
-            {isGenerating
-              ? t("generate.generatingBtn")
-              : viewMode
-                ? t("generate.regenerate")
-                : t("generate.generateBtn")}
-          </button>
-
-          {isGenerating && (
+          {/* Generate / Regenerate button — sticky on mobile */}
+          <div className="mobile-generate-sticky" style={{ marginTop: 18 }}>
             <button
-              type="button"
-              className="btn btn-outline"
-              style={{ width: "100%", justifyContent: "center", marginTop: 8 }}
-              onClick={stop}
+              type="submit"
+              disabled={isGenerating}
+              className="btn btn-accent btn-lg"
+              style={{ width: "100%", justifyContent: "center" }}
             >
-              <Ico icon={CiqIcon.stop} />
-              {t("generate.stopBtn")}
+              <Ico icon={CiqIcon.sparkle} />
+              {isGenerating
+                ? t("generate.generatingBtn")
+                : viewMode
+                  ? t("generate.regenerate")
+                  : t("generate.generateBtn")}
             </button>
-          )}
 
-          {!viewMode && (
-            <div
-              style={{
-                fontSize: 11.5,
-                color: "var(--ink-mute)",
-                textAlign: "center",
-                marginTop: 8,
-              }}
-            >
-              {t("generate.hint")}
-            </div>
-          )}
+            {isGenerating && (
+              <button
+                type="button"
+                className="btn btn-outline"
+                style={{ width: "100%", justifyContent: "center", marginTop: 8 }}
+                onClick={stop}
+              >
+                <Ico icon={CiqIcon.stop} />
+                {t("generate.stopBtn")}
+              </button>
+            )}
+
+            {!viewMode && (
+              <div
+                style={{
+                  fontSize: 11.5,
+                  color: "var(--ink-mute)",
+                  textAlign: "center",
+                  marginTop: 8,
+                }}
+              >
+                {t("generate.hint")}
+              </div>
+            )}
+          </div>
         </form>
       </div>
 

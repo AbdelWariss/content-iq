@@ -34,13 +34,18 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ["react", "react-dom", "react-router-dom"],
-          redux: ["@reduxjs/toolkit", "react-redux"],
-          query: ["@tanstack/react-query"],
-          ui: ["framer-motion", "lucide-react"],
-          editor: ["@tiptap/react", "@tiptap/starter-kit"],
-          charts: ["recharts"],
+        manualChunks(id) {
+          if (
+            id.includes("react-dom") ||
+            id.includes("react-router-dom") ||
+            id.includes("node_modules/react/")
+          )
+            return "vendor";
+          if (id.includes("@reduxjs/toolkit") || id.includes("react-redux")) return "redux";
+          if (id.includes("@tanstack/react-query")) return "query";
+          if (id.includes("framer-motion") || id.includes("lucide-react")) return "ui";
+          if (id.includes("@tiptap")) return "editor";
+          if (id.includes("recharts")) return "charts";
         },
       },
     },

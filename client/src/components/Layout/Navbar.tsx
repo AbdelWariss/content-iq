@@ -60,12 +60,12 @@ export function Navbar() {
       <div className="row" style={{ gap: 18 }}>
         <div className="ciq-mark">
           <span className="dot">C</span>
-          <span className="name">
+          <span className="name" style={{ display: "var(--navbar-name-display, inline)" }}>
             <b>CONTENT</b>
             <span>.IQ</span>
           </span>
         </div>
-        <div className="row" style={{ gap: 6 }}>
+        <div className="row navbar-plan-badge" style={{ gap: 6 }}>
           <span className="pill">
             <span className="swatch" style={{ background: "var(--accent)" }} />
             {plan}
@@ -79,7 +79,13 @@ export function Navbar() {
 
       {/* Right: lang toggle + theme + avatar */}
       <div className="row" style={{ gap: 8 }}>
-        <div className="seg">
+        {/* Crédits — visible seulement sur mobile (plan badge masqué) */}
+        <span className="pill t-mono mobile-credits-pill" style={{ fontSize: 11 }}>
+          <Ico icon={CiqIcon.zap} size={11} />
+          {credits}
+        </span>
+
+        <div className="seg navbar-lang-toggle">
           <button
             type="button"
             className={lang === "fr" ? "on" : ""}
@@ -98,7 +104,7 @@ export function Navbar() {
 
         <button
           type="button"
-          className="btn btn-ghost btn-sm"
+          className="btn btn-ghost btn-sm hide-mobile"
           onClick={() => navigate("/generate")}
         >
           <Ico icon={CiqIcon.sparkle} />

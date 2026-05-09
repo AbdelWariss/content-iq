@@ -5,6 +5,7 @@ import { toggleOpen } from "@/store/assistantSlice";
 import { useAppDispatch, useAppSelector } from "@/store/index";
 import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
+import { MobileTabBar } from "./MobileTabBar";
 import { Navbar } from "./Navbar";
 import { Sidebar } from "./Sidebar";
 
@@ -116,7 +117,10 @@ export function AppLayout() {
       </div>
 
       <AssistantPanel />
+      {/* AssistantToggle : masqué sur mobile (remplacé par tab bar) */}
       <AssistantToggle />
+      {/* Bottom tab bar — mobile only (≤ 640px) */}
+      <MobileTabBar />
     </div>
   );
 }

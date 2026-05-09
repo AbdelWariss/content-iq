@@ -11,22 +11,31 @@ export default function GoogleCallbackPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // The Google OAuth flow sets a refresh-token cookie.
-    // Call refresh() to exchange it for an access token.
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+
+    if (!token) {
+      dispatch(setLoading(false));
+      navigate("/login?error=google_failed", { replace: true });
+      return;
+    }
+
+    // Use the access token from URL to fetch user profile
     authService
-      .refresh()
+      .getMe(token)
       .then((res) => {
-        const userLang = res.data.user.language ?? "fr";
+        const user = res.data.data ?? res.data;
+        const userLang = user.language ?? "fr";
         dispatch(
           setCredentials({
-            accessToken: res.data.accessToken,
+            accessToken: token,
             user: {
-              id: res.data.user._id,
-              name: res.data.user.name,
-              email: res.data.user.email,
-              role: res.data.user.role,
-              avatarUrl: res.data.user.avatarUrl,
-              credits: res.data.user.credits,
+              id: user._id,
+              name: user.name,
+              email: user.email,
+              role: user.role,
+              avatarUrl: user.avatarUrl,
+              credits: user.credits,
               language: userLang as "fr" | "en",
             },
           }),

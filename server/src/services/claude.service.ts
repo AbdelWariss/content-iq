@@ -2,8 +2,20 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { ContentLanguage, ContentType, GenerateContentInput } from "@contentiq/shared";
 import type { Response } from "express";
 import { env } from "../config/env.js";
+import { logger } from "../utils/logger.js";
 
 const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+
+function sanitizeStreamError(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error);
+  if (raw.includes("credit balance") || raw.includes("billing") || raw.includes("quota"))
+    return "Crédits API insuffisants. Veuillez contacter le support.";
+  if (raw.includes("overloaded") || raw.includes("529"))
+    return "Service temporairement surchargé. Réessayez dans quelques instants.";
+  if (raw.includes("rate_limit") || raw.includes("429"))
+    return "Limite de requêtes atteinte. Réessayez dans une minute.";
+  return "Erreur de génération. Réessayez ou contactez le support.";
+}
 
 const MAX_TOKENS: Record<string, number> = {
   short: 400,
@@ -245,8 +257,9 @@ export async function streamContentGeneration(
       res.write(`data: ${JSON.stringify({ done: true, tokensUsed })}\n\n`);
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Erreur génération";
-    res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
+    logger.error("Generation error", { error: error instanceof Error ? error.message : error });
+    const userMessage = sanitizeStreamError(error);
+    res.write(`data: ${JSON.stringify({ error: userMessage })}\n\n`);
   } finally {
     res.end();
   }
@@ -294,8 +307,8 @@ export async function improveContent(
 
     res.write(`data: ${JSON.stringify({ done: true, tokensUsed })}\n\n`);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Erreur amélioration";
-    res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
+    logger.error("Improve error", { error: error instanceof Error ? error.message : error });
+    res.write(`data: ${JSON.stringify({ error: sanitizeStreamError(error) })}\n\n`);
   } finally {
     res.end();
   }

@@ -49,7 +49,7 @@ export function MobileTabBar() {
         }}
         aria-label="Créer du contenu"
       >
-        <Ico icon={CiqIcon.sparkle} size={22} style={{ color: "white" }} />
+        <Ico icon={CiqIcon.sparkle} size={42} style={{ color: "white", display: "flex" }} />
       </NavLink>
 
       {/* Tabs droite: Templates + Profil */}

@@ -132,7 +132,7 @@ export function Navbar({ onMenuOpen }: NavbarProps) {
           className="btn btn-ghost btn-sm hide-mobile"
           onClick={() => navigate("/generate")}
         >
-          <Ico icon={CiqIcon.sparkle} />
+          <Ico icon={CiqIcon.sparkle} size={20} />
           {t("nav.generate")}
         </button>
 

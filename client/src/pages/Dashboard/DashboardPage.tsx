@@ -202,7 +202,7 @@ export default function DashboardPage() {
             {t("dashboard.historyBtn")}
           </button>
           <button type="button" className="btn btn-primary" onClick={() => navigate("/generate")}>
-            <Ico icon={CiqIcon.sparkle} />
+            <Ico icon={CiqIcon.sparkle} size={28} />
             {t("dashboard.newContent")}
           </button>
         </div>
@@ -760,7 +760,7 @@ export default function DashboardPage() {
                     style={{ width: "100%", justifyContent: "center", marginTop: 8 }}
                     onClick={() => navigate("/generate")}
                   >
-                    <Ico icon={CiqIcon.sparkle} />
+                    <Ico icon={CiqIcon.sparkle} size={34} />
                     {t("dashboard.generateBtn")}
                   </button>
                 </div>

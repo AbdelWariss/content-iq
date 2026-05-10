@@ -557,7 +557,7 @@ export default function GeneratePage() {
               className="btn btn-accent btn-lg"
               style={{ width: "100%", justifyContent: "center" }}
             >
-              <Ico icon={CiqIcon.sparkle} />
+              <Ico icon={CiqIcon.sparkle} size={34} />
               {isGenerating
                 ? t("generate.generatingBtn")
                 : viewMode

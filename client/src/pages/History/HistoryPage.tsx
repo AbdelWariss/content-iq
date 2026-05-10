@@ -467,7 +467,7 @@ export default function HistoryPage() {
           </div>
           {!search && !filterFavorite && (
             <Link to="/generate" className="btn btn-primary">
-              <Ico icon={CiqIcon.sparkle} />
+              <Ico icon={CiqIcon.sparkle} size={28} />
               {t("history.generateFirst")}
             </Link>
           )}

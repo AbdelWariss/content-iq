@@ -220,19 +220,7 @@ export default function DashboardPage() {
             textAlign: "center",
           }}
         >
-          <div
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: "50%",
-              background: "var(--ink)",
-              color: "var(--bg)",
-              display: "grid",
-              placeItems: "center",
-            }}
-          >
-            <Ico icon={CiqIcon.sparkle} size={28} />
-          </div>
+          <Ico icon={CiqIcon.sparkle} size={80} style={{ color: "var(--accent)" }} />
           <div>
             <p style={{ fontSize: 18, fontWeight: 600 }}>{t("dashboard.emptyTitle")}</p>
             <p style={{ fontSize: 14, color: "var(--ink-mute)", marginTop: 6 }}>

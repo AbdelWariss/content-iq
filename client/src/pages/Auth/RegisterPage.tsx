@@ -11,6 +11,8 @@ export default function RegisterPage() {
   const { register: registerUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [authMode, setAuthMode] = useState<"email" | "google">("email");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsError, setTermsError] = useState(false);
 
   const {
     register,
@@ -35,6 +37,10 @@ export default function RegisterPage() {
   const strengthLabel = ["", "Faible", "Correct", "Solide", "Fort"][strengthLevel];
 
   async function onSubmit(data: RegisterInput) {
+    if (!termsAccepted) {
+      setTermsError(true);
+      return;
+    }
     setIsLoading(true);
     try {
       await registerUser(data.name, data.email, data.password);
@@ -74,7 +80,7 @@ export default function RegisterPage() {
             Créez votre compte
           </h1>
           <p style={{ color: "var(--ink-soft)", margin: "0 0 22px", fontSize: 14 }}>
-            50 crédits offerts. Sans CB.
+            10 crédits offerts. Sans CB.
           </p>
 
           <div className="seg" style={{ width: "100%", marginBottom: 18 }}>
@@ -183,13 +189,28 @@ export default function RegisterPage() {
                   </select>
                 </div>
 
-                <label
-                  className="row"
-                  style={{ fontSize: 12, color: "var(--ink-soft)", gap: 8, cursor: "pointer" }}
-                >
-                  <input type="checkbox" defaultChecked />
-                  J'accepte les conditions et la politique de confidentialité.
-                </label>
+                <div>
+                  <label
+                    className="row"
+                    style={{ fontSize: 12, color: termsError ? "var(--accent)" : "var(--ink-soft)", gap: 8, cursor: "pointer", alignItems: "flex-start" }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={termsAccepted}
+                      onChange={(e) => {
+                        setTermsAccepted(e.target.checked);
+                        if (e.target.checked) setTermsError(false);
+                      }}
+                      style={{ marginTop: 2, flexShrink: 0, accentColor: "var(--accent)" }}
+                    />
+                    J'accepte les conditions générales d'utilisation et la politique de confidentialité.
+                  </label>
+                  {termsError && (
+                    <p style={{ fontSize: 11, color: "var(--accent)", marginTop: 4, marginLeft: 20 }}>
+                      Vous devez accepter les conditions pour continuer.
+                    </p>
+                  )}
+                </div>
 
                 <button
                   type="submit"

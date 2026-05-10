@@ -590,7 +590,7 @@ export default function LandingPage() {
 
       {/* ── Navbar ── */}
       <div
-        className="row between"
+        className="row between landing-navbar"
         style={{
           padding: "20px 56px",
           borderBottom: "1px solid rgba(255,255,255,0.25)",
@@ -609,7 +609,7 @@ export default function LandingPage() {
             <span>.IQ</span>
           </span>
         </div>
-        <div className="row" style={{ gap: 28, fontSize: 13.5, color: "var(--ink-soft)" }}>
+        <div className="row landing-nav-links" style={{ gap: 28, fontSize: 13.5, color: "var(--ink-soft)" }}>
           <a href="#product" className="landing-nav-link">
             Produit
           </a>
@@ -626,7 +626,7 @@ export default function LandingPage() {
             Cas d'usage
           </a>
         </div>
-        <div className="row" style={{ gap: 8 }}>
+        <div className="row landing-nav-actions" style={{ gap: 8 }}>
           <Link to="/login" className="btn btn-ghost btn-sm">
             Connexion
           </Link>
@@ -635,10 +635,20 @@ export default function LandingPage() {
             <Ico icon={CiqIcon.arrow} size={14} />
           </button>
         </div>
+        <button
+          type="button"
+          className="landing-nav-mobile-icon btn btn-primary btn-sm"
+          onClick={() => navigate("/register")}
+          style={{ color: "white" }}
+        >
+          Essai gratuit
+          <Ico icon={CiqIcon.arrow} size={14} />
+        </button>
       </div>
 
       {/* ── Hero ── */}
       <div
+        className="landing-hero-grid"
         style={{
           padding: "72px 56px 0",
           display: "grid",
@@ -649,7 +659,7 @@ export default function LandingPage() {
           margin: "0 auto",
         }}
       >
-        <div>
+        <div className="landing-hero-copy">
           <span
             className="pill voice"
             style={{ marginBottom: 22, display: "inline-flex", alignItems: "center", gap: 8 }}
@@ -678,18 +688,18 @@ export default function LandingPage() {
             Claude. Dictez vos consignes, naviguez à la voix, conversez avec l'IQ Assistant. Sans
             toucher au clavier.
           </p>
-          <div className="row" style={{ gap: 10 }}>
+          <div className="row landing-hero-btns" style={{ gap: 10 }}>
             <button className="btn btn-primary btn-lg" onClick={() => navigate("/register")}>
-              Démarrer — 50 crédits offerts
+              Démarrer · 50 cr. offerts
               <Ico icon={CiqIcon.arrow} size={16} />
             </button>
             <button className="btn btn-outline btn-lg" onClick={() => setShowDemo(true)}>
               <Ico icon={CiqIcon.play} />
-              Voir la démo · 0:42
+              Démo vocale · 0:42
             </button>
           </div>
           <div
-            className="row"
+            className="row landing-trust-row"
             style={{ gap: 24, marginTop: 36, color: "var(--ink-mute)", fontSize: 12.5 }}
           >
             <span>★★★★★ 4.9 · 82 avis Product Hunt</span>
@@ -698,12 +708,14 @@ export default function LandingPage() {
             <span>·</span>
             <span>FR · EN · ES · AR</span>
           </div>
+          <div className="landing-trust-mobile">★★★★★ 4.9 · Sans CB · FR EN ES AR</div>
         </div>
 
         {/* App mockup */}
-        <div style={{ position: "relative", height: 540 }}>
+        <div className="landing-hero-mockup" style={{ position: "relative", height: 540 }}>
           {/* Gradient blobs — refracted by the glass surface above */}
           <div
+            className="landing-mockup-blobs"
             style={{
               position: "absolute",
               inset: -24,
@@ -853,7 +865,7 @@ export default function LandingPage() {
 
           {/* Floating mic pill — glass */}
           <div
-            className="card"
+            className="card landing-mic-pill"
             style={{
               position: "absolute",
               left: -28,
@@ -898,7 +910,7 @@ export default function LandingPage() {
       </div>
 
       {/* ── Trust bar ── */}
-      <div style={{ padding: "64px 56px 0", maxWidth: 1320, margin: "0 auto" }}>
+      <div className="landing-pensepour" style={{ padding: "64px 56px 0", maxWidth: 1320, margin: "0 auto" }}>
         <div className="t-eyebrow" style={{ textAlign: "center", marginBottom: 22 }}>
           Pensé pour
         </div>
@@ -925,11 +937,12 @@ export default function LandingPage() {
       </div>
 
       {/* ── Three pillars ── */}
-      <div id="product" style={{ padding: "96px 56px", maxWidth: 1320, margin: "0 auto" }}>
-        <h2 className="t-display" style={{ fontSize: 56, margin: "0 0 14px", maxWidth: 720 }}>
+      <div id="product" className="landing-pillars-section" style={{ padding: "96px 56px", maxWidth: 1320, margin: "0 auto" }}>
+        <h2 className="t-display landing-pillars-title" style={{ fontSize: 56, margin: "0 0 14px", maxWidth: 720 }}>
           Trois manières de produire. <em style={{ color: "var(--ink-mute)" }}>Une seule app.</em>
         </h2>
         <div
+          className="landing-pillars-grid"
           style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18, marginTop: 48 }}
         >
           {PILLARS.map((p) => (
@@ -969,6 +982,7 @@ export default function LandingPage() {
         }}
       >
         <div
+          className="landing-voice-grid"
           style={{
             padding: "80px 56px",
             maxWidth: 1320,
@@ -1112,6 +1126,7 @@ export default function LandingPage() {
 
       {/* ── CTA band ── */}
       <div
+        className="landing-cta-band"
         style={{
           margin: "0 56px 80px",
           background: "var(--ink)",
@@ -1146,6 +1161,7 @@ export default function LandingPage() {
 
       {/* ── Footer ── */}
       <div
+        className="landing-footer"
         style={{
           background: "var(--bg-sunk)",
           padding: "40px 56px",
@@ -1153,7 +1169,7 @@ export default function LandingPage() {
         }}
       >
         <div
-          className="row between"
+          className="row between landing-footer-row"
           style={{ maxWidth: 1320, margin: "0 auto", color: "var(--ink-mute)", fontSize: 12.5 }}
         >
           <span>CODEXA Solutions · Abdel Wariss OSSENI · 2026</span>

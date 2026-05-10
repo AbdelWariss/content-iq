@@ -137,10 +137,10 @@ export default function ProfilePage() {
 
   return (
     <div style={{ padding: "32px 40px", overflowY: "auto", maxWidth: 980 }}>
-      <h1 className="t-display" style={{ fontSize: 40, margin: "0 0 6px" }}>
+      <h1 className="t-display desktop-page-title" style={{ fontSize: 40, margin: "0 0 6px" }}>
         {t("profile.title")}
       </h1>
-      <p style={{ color: "var(--ink-soft)", marginBottom: 28 }}>{t("profile.subtitle")}</p>
+      <p className="desktop-page-title" style={{ color: "var(--ink-soft)", marginBottom: 28 }}>{t("profile.subtitle")}</p>
 
       {/* Account */}
       <form onSubmit={handleSubmit(onSubmit)}>

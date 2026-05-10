@@ -67,8 +67,8 @@ const UserSchema = new Schema<IUser>(
     passwordResetToken: { type: String },
     passwordResetExpiry: { type: Date },
     credits: {
-      remaining: { type: Number, default: 50, min: 0 },
-      total: { type: Number, default: 50 },
+      remaining: { type: Number, default: 10, min: 0 },
+      total: { type: Number, default: 10 },
       resetDate: { type: Date, default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) },
     },
     subscription: {

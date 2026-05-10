@@ -97,7 +97,7 @@ export async function sendWelcomeEmail(to: string, name: string): Promise<void> 
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
         <h1 style="color: #6366f1;">CONTENT.IQ</h1>
         <h2>Bienvenue ${name} ! 🎉</h2>
-        <p>Votre compte est activé. Vous disposez de <strong>50 crédits gratuits</strong> pour commencer.</p>
+        <p>Votre compte est activé. Vous disposez de <strong>10 crédits gratuits</strong> pour commencer.</p>
         <a href="${env.CLIENT_URL}/generate" style="display:inline-block;background:#6366f1;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">
           Générer mon premier contenu
         </a>

@@ -64,8 +64,9 @@ function ExportMenu({ item }: { item: ContentItem }) {
     try {
       await exportService.download(item._id, format, item.title);
       toast({ title: `Export ${format.toUpperCase()} téléchargé !` });
-    } catch {
-      toast({ title: "Erreur export", variant: "destructive" });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur export";
+      toast({ title: msg, variant: "destructive" });
     }
   };
 
@@ -75,27 +76,25 @@ function ExportMenu({ item }: { item: ContentItem }) {
         type="button"
         className="btn btn-ghost btn-sm"
         style={{ padding: "4px 8px" }}
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpen((o) => !o);
-        }}
+        onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
         title="Exporter"
       >
         <Ico icon={CiqIcon.download} size={14} />
       </button>
       {open && (
         <>
-          <div style={{ position: "fixed", inset: 0, zIndex: 10 }} onClick={() => setOpen(false)} />
+          <div style={{ position: "fixed", inset: 0, zIndex: 100 }} onClick={() => setOpen(false)} />
           <div
             className="card"
             style={{
               position: "absolute",
+              top: "calc(100% + 4px)",
               right: 0,
-              zIndex: 20,
-              marginTop: 4,
+              zIndex: 101,
               padding: 4,
-              minWidth: 80,
+              minWidth: 90,
               background: "var(--bg-elev)",
+              boxShadow: "var(--shadow-pop)",
             }}
           >
             {EXPORT_FORMATS.map(({ format, label }) => (
@@ -228,7 +227,7 @@ export default function HistoryPage() {
   };
 
   return (
-    <div style={{ padding: "32px 40px", overflow: "auto" }}>
+    <div className="history-page-wrap" style={{ padding: "32px 40px", overflow: "auto" }}>
       {/* Delete confirmation dialog */}
       {deleteConfirmId && (
         <DeleteConfirmDialog
@@ -237,8 +236,39 @@ export default function HistoryPage() {
         />
       )}
 
-      {/* Header */}
-      <div className="row between" style={{ marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
+      {/* Mobile-only page header */}
+      <div className="history-mobile-header row between" style={{ marginBottom: 16 }}>
+        <div>
+          <h1 className="t-display" style={{ fontSize: 30, margin: 0, lineHeight: 1.1 }}>
+            {t("history.title")}
+          </h1>
+          {pagination && (
+            <p style={{ fontSize: 13, color: "var(--ink-mute)", margin: "3px 0 0" }}>
+              {pagination.total} contenus
+            </p>
+          )}
+        </div>
+        {/* Toggle liste / grille en remplacement du filtre */}
+        <div className="seg">
+          <button
+            type="button"
+            className={viewMode === "list" ? "on" : ""}
+            onClick={() => setViewMode("list")}
+          >
+            {t("history.list")}
+          </button>
+          <button
+            type="button"
+            className={viewMode === "grid" ? "on" : ""}
+            onClick={() => setViewMode("grid")}
+          >
+            {t("history.grid")}
+          </button>
+        </div>
+      </div>
+
+      {/* Header — desktop */}
+      <div className="row between desktop-page-title" style={{ marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
         <h1 className="t-display" style={{ fontSize: 40, margin: 0 }}>
           {t("history.title")}
         </h1>
@@ -273,7 +303,7 @@ export default function HistoryPage() {
       </div>
 
       {/* Filters */}
-      <div className="row" style={{ gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
+      <div className="row" style={{ gap: 10, marginBottom: 14, flexWrap: "wrap", alignItems: "stretch" }}>
         <div
           className="row"
           style={{
@@ -283,7 +313,6 @@ export default function HistoryPage() {
             padding: "8px 12px",
             flex: 1,
             gap: 8,
-            minWidth: 220,
           }}
         >
           <Ico icon={CiqIcon.search} style={{ color: "var(--ink-mute)" }} />
@@ -294,14 +323,27 @@ export default function HistoryPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm history-search-mic"
+            style={{ padding: "2px 4px", color: "var(--accent)", marginLeft: "auto" }}
+          >
+            <Ico icon={CiqIcon.mic} size={16} />
+          </button>
         </div>
 
         <select
-          className="select hide-mobile"
-          style={{ width: "auto" }}
-          value={filterType}
+          className="select"
+          style={{ width: "auto", padding: "8px 12px", fontSize: 14, alignSelf: "center", textAlign: "center", textAlignLast: "center" }}
+          value={filterFavorite ? "__fav" : filterType}
           onChange={(e) => {
-            setFilterType(e.target.value);
+            if (e.target.value === "__fav") {
+              setFilterFavorite(true);
+              setFilterType("");
+            } else {
+              setFilterFavorite(false);
+              setFilterType(e.target.value);
+            }
             setPage(1);
           }}
         >
@@ -311,25 +353,28 @@ export default function HistoryPage() {
               {l}
             </option>
           ))}
+          <option value="__fav">{t("history.favorites")}</option>
         </select>
 
         <button
           type="button"
-          className={`btn btn-outline btn-sm${filterFavorite ? " btn-accent" : ""}`}
+          className={`btn btn-outline btn-sm hide-mobile${filterFavorite ? " btn-accent" : ""}`}
+          style={{ padding: "8px 14px" }}
           onClick={() => {
             setFilterFavorite((f) => !f);
             setPage(1);
           }}
         >
           <Ico
-            icon={CiqIcon.star}
+            icon={filterFavorite ? CiqIcon.starFilled : CiqIcon.star}
+            size={14}
             style={{ color: filterFavorite ? "white" : "var(--ink-mute)" }}
           />
           {t("history.favorites")}
         </button>
 
-        {/* List / Grid toggle */}
-        <div className="seg" style={{ marginLeft: "auto" }}>
+        {/* List / Grid toggle — desktop only */}
+        <div className="seg hide-mobile" style={{ marginLeft: "auto", alignItems: "center" }}>
           <button
             type="button"
             className={viewMode === "list" ? "on" : ""}
@@ -345,27 +390,6 @@ export default function HistoryPage() {
             {t("history.grid")}
           </button>
         </div>
-      </div>
-
-      {/* Mobile: type filter chips (horizontal scroll) */}
-      <div className="mobile-filter-chips" style={{ marginBottom: 12 }}>
-        <button
-          type="button"
-          className={`btn btn-sm${filterType === "" ? " btn-primary" : " btn-outline"}`}
-          onClick={() => { setFilterType(""); setPage(1); }}
-        >
-          {t("history.allTypes")}
-        </button>
-        {Object.entries(TYPE_LABELS).map(([v, l]) => (
-          <button
-            key={v}
-            type="button"
-            className={`btn btn-sm${filterType === v ? " btn-primary" : " btn-outline"}`}
-            onClick={() => { setFilterType(v); setPage(1); }}
-          >
-            {l}
-          </button>
-        ))}
       </div>
 
       {/* Content */}
@@ -462,39 +486,19 @@ export default function HistoryPage() {
         </div>
       ) : viewMode === "grid" ? (
         /* Grid view */
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-            gap: 14,
-          }}
-        >
+        <div className="history-grid-container">
           {items.map((item: ContentItem) => (
             <div
               key={item._id}
-              className="card"
-              style={{
-                padding: 18,
-                display: "flex",
-                flexDirection: "column",
-                gap: 10,
-                cursor: "pointer",
-              }}
+              className="card history-grid-card"
+              style={{ padding: 18, display: "flex", flexDirection: "column", gap: 10, cursor: "pointer" }}
               onClick={() => handleRowClick(item)}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLDivElement).style.boxShadow = "var(--shadow-pop)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLDivElement).style.boxShadow = "";
-              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = "var(--shadow-pop)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = ""; }}
             >
               <div className="row between" style={{ alignItems: "flex-start" }}>
                 <div className="row" style={{ gap: 8, alignItems: "center" }}>
-                  <Ico
-                    icon={TYPE_ICON[item.type] ?? CiqIcon.blog}
-                    size={16}
-                    style={{ color: "var(--ink-mute)", flexShrink: 0 }}
-                  />
+                  <Ico icon={TYPE_ICON[item.type] ?? CiqIcon.blog} size={16} style={{ color: "var(--ink-mute)", flexShrink: 0 }} />
                   <span className="t-eyebrow" style={{ fontSize: 10, color: "var(--accent)" }}>
                     {TYPE_LABELS[item.type] ?? item.type}
                   </span>
@@ -502,78 +506,29 @@ export default function HistoryPage() {
                 <button
                   type="button"
                   className="btn btn-ghost btn-sm"
-                  style={{
-                    padding: "2px 4px",
-                    color: item.isFavorite ? "var(--accent)" : "var(--ink-mute)",
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleFavMutation.mutate(item._id);
-                  }}
+                  style={{ padding: "2px 4px", color: item.isFavorite ? "var(--accent)" : "var(--ink-mute)" }}
+                  onClick={(e) => { e.stopPropagation(); toggleFavMutation.mutate(item._id); }}
                 >
                   <Ico icon={CiqIcon.star} size={13} />
                 </button>
               </div>
-              <span
-                style={{
-                  fontSize: 13.5,
-                  fontWeight: 600,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
+              <span style={{ fontSize: 13.5, fontWeight: 500, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.35 }}>
                 {item.title ?? item.prompt?.subject ?? `Contenu ${item.type}`}
               </span>
-              <p
-                style={{
-                  fontSize: 12,
-                  color: "var(--ink-soft)",
-                  lineHeight: 1.5,
-                  margin: 0,
-                  overflow: "hidden",
-                  display: "-webkit-box",
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: "vertical",
-                }}
-              >
+              <p style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.5, margin: 0, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
                 {(item.bodyPlain ?? "").replace(/<[^>]*>/g, "").slice(0, 120) || "—"}
               </p>
-              <div
-                className="row between"
-                style={{
-                  borderTop: "1px solid var(--line-soft)",
-                  paddingTop: 8,
-                  marginTop: "auto",
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
+              <div className="row between" style={{ borderTop: "1px solid var(--line-soft)", paddingTop: 8, marginTop: "auto" }} onClick={(e) => e.stopPropagation()}>
                 <span style={{ fontSize: 11, color: "var(--ink-mute)" }}>
-                  {formatDistanceToNow(new Date(item.createdAt), {
-                    addSuffix: false,
-                    locale: dateLocale,
-                  })}
+                  {formatDistanceToNow(new Date(item.createdAt), { addSuffix: false, locale: dateLocale })}
                 </span>
                 <div className="row" style={{ gap: 2 }}>
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    style={{ padding: "3px 5px" }}
-                    onClick={(e) => handleCopy(item, e)}
-                  >
+                  <button type="button" className="btn btn-ghost btn-sm" style={{ padding: "3px 5px" }} onClick={(e) => handleCopy(item, e)}>
                     <Ico icon={copied === item._id ? CiqIcon.check : CiqIcon.copy} size={13} />
                   </button>
                   <ExportMenu item={item} />
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    style={{ padding: "3px 5px", color: "var(--ink-mute)" }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeleteConfirmId(item._id);
-                    }}
-                  >
-                    <Ico icon={CiqIcon.x} size={13} />
+                  <button type="button" className="btn btn-ghost btn-sm" style={{ padding: "3px 5px", color: "var(--ink-mute)" }} onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(item._id); }}>
+                    <Ico icon={CiqIcon.trash} size={13} />
                   </button>
                 </div>
               </div>
@@ -582,10 +537,10 @@ export default function HistoryPage() {
         </div>
       ) : (
         /* List view (default) */
-        <div className="card" style={{ overflow: "hidden" }}>
-          {/* Table header */}
+        <div className="card">
+          {/* Table header — desktop */}
           <div
-            className="row"
+            className="row history-desktop-header"
             style={{
               padding: "10px 16px",
               background: "var(--bg-sunk)",
@@ -610,9 +565,10 @@ export default function HistoryPage() {
 
           {/* Table rows */}
           {items.map((item: ContentItem, i) => (
+            <div key={item._id}>
+            {/* Desktop row */}
             <div
-              key={item._id}
-              className="row"
+              className="history-desktop-row row"
               style={{
                 padding: "11px 16px",
                 gap: 12,
@@ -734,9 +690,45 @@ export default function HistoryPage() {
                   onClick={() => setDeleteConfirmId(item._id)}
                   title="Supprimer"
                 >
-                  <Ico icon={CiqIcon.x} size={13} />
+                  <Ico icon={CiqIcon.trash} size={13} />
                 </button>
               </div>
+            </div>
+
+            {/* Mobile row */}
+            <div
+              className="history-mobile-row row"
+              style={{
+                padding: "14px 16px",
+                gap: 12,
+                borderBottom: i < items.length - 1 ? "1px solid var(--line-soft)" : "none",
+                cursor: "pointer",
+                alignItems: "center",
+              }}
+              onClick={() => handleRowClick(item)}
+            >
+              <Ico
+                icon={TYPE_ICON[item.type] ?? CiqIcon.blog}
+                size={18}
+                style={{ color: "var(--ink-soft)", flexShrink: 0 }}
+              />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {item.title ?? item.prompt?.subject ?? `Contenu ${item.type}`}
+                </div>
+                <div style={{ fontSize: 12, color: "var(--ink-mute)", marginTop: 2 }}>
+                  {TYPE_LABELS[item.type] ?? item.type} · {(item.prompt?.language ?? "fr").toUpperCase()} · {item.tokensUsed ?? 0} t. · {formatDistanceToNow(new Date(item.createdAt), { addSuffix: false, locale: dateLocale })}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                style={{ padding: "4px 6px", color: item.isFavorite ? "var(--accent)" : "var(--ink-mute)", flexShrink: 0 }}
+                onClick={(e) => { e.stopPropagation(); toggleFavMutation.mutate(item._id); }}
+              >
+                <Ico icon={CiqIcon.star} size={16} />
+              </button>
+            </div>
             </div>
           ))}
         </div>

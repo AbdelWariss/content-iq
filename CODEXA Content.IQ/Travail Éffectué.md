@@ -511,8 +511,9 @@ TypeScript 5.7 strict partout · pnpm workspaces · Biome v1.9 (remplace ESLint+
 | 3 | IQ Assistant + Templates + Voix | 18 fichiers | ~1 400 lignes | ✅ |
 | 4 | Stripe + Exports + Dashboard + Admin | 9 fichiers | ~600 lignes | ✅ |
 | 5 | QA + Déploiement | 12 fichiers | ~750 lignes | ✅ |
+| Déploiement Live | Render + Vercel | 6 fichiers | ~50 lignes | ✅ |
 
-**Total écrit à ce jour : ~152 fichiers · ~8 050 lignes de code**
+**Total écrit à ce jour : ~158 fichiers · ~8 100 lignes de code**
 
 ---
 
@@ -1420,3 +1421,52 @@ pnpm exec biome check → warnings pre-existants uniquement (no errors)
 ```
 
 **Total à ce jour : ~175 fichiers · ~10 600 lignes de code**
+
+---
+
+### [2026-05-09] — Déploiement Live : Render + Vercel — COMPLÉTÉ ✅
+- **Session :** 6
+- **Statut :** Complété
+
+#### Contexte
+Premier déploiement live de l'application en production. Choix de Render (backend gratuit + Docker) + Vercel (frontend) en remplacement de Railway (payant).
+
+#### URLs de production
+- **Frontend** : `https://content-iq-client.vercel.app`
+- **Backend** : `https://codexa-content-iq-backend.onrender.com`
+- **GitHub** : `https://github.com/AbdelWariss/content-iq`
+
+#### Fichiers modifiés
+
+| Fichier | Modification |
+|---------|-------------|
+| `server/Dockerfile` | Pin pnpm@10.33.3 · copie `.npmrc` + `.pnpmfile.cjs` · `pnpm deploy --prod --legacy` · stage production autonome |
+| `server/tsconfig.build.json` | `rootDir: ./src` + `include: [src]` + paths vers shared dist → `dist/index.js` à la racine |
+| `client/vite.config.ts` | `manualChunks` objet → fonction (compliance type Rollup) |
+| `client/tsconfig.node.json` | `skipLibCheck: true` (supprime erreur chai/vitest) |
+| `pnpm-lock.yaml` | Mis à jour pour correspondre à pnpm 10.33.3 |
+| `vercel.json` | Déjà configuré (build shared+client, SPA rewrites) |
+
+#### Problèmes résolus (dans l'ordre)
+
+1. **Dockerfile path** : Render cherchait `./Dockerfile` → configuré `./server/Dockerfile` dans Settings
+2. **pnpm lockfile mismatch** : `pnpmfileChecksum` ne correspondait pas → ajout `.pnpmfile.cjs` + `.npmrc` dans `COPY`
+3. **pnpm version** : version non fixée → `pnpm@10.33.3` (version locale)
+4. **dist/index.js manquant** : `include: ["../packages/shared/src"]` dans tsconfig décalait le rootDir → override dans `tsconfig.build.json`
+5. **socket.io introuvable** : symlinks pnpm cassés en prod → `pnpm deploy --prod --legacy` crée un `node_modules` autonome
+6. **pnpm deploy pnpm v10** : flag `--legacy` requis depuis pnpm v10
+7. **manualChunks TypeScript** : objet → fonction pour correspondre au type `ManualChunksFunction`
+8. **tsup not found** : stage build avait besoin de `COPY --from=deps /app/packages ./packages`
+9. **tsc not found** : stage build avait besoin de `COPY --from=deps /app/server/node_modules ./server/node_modules`
+
+#### État post-déploiement
+- Backend : **Live** (Render Free, cold start ~50s après inactivité)
+- Frontend : **Live** (Vercel, chargement lent dû au cold start backend)
+- `CLIENT_URL` sur Render : à mettre à jour → `https://content-iq-client.vercel.app`
+- `GOOGLE_CALLBACK_URL` sur Render : à mettre à jour → `https://codexa-content-iq-backend.onrender.com/api/auth/google/callback`
+- **UptimeRobot** : à configurer pour éviter la mise en veille du backend
+
+#### Prochaines actions immédiates
+1. Mettre à jour `CLIENT_URL` et `GOOGLE_CALLBACK_URL` dans Render → Environment
+2. Mettre à jour `GOOGLE_CALLBACK_URL` dans Google Cloud Console (OAuth credentials)
+3. Configurer UptimeRobot (ping toutes les 5 min sur `/health`)

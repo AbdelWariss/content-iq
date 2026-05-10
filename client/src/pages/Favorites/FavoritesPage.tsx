@@ -306,10 +306,10 @@ export default function FavoritesPage() {
       {/* Header */}
       <div className="row between" style={{ marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
         <div className="col" style={{ gap: 4 }}>
-          <span className="t-eyebrow" style={{ color: "var(--accent)" }}>
+          <span className="t-eyebrow desktop-page-title" style={{ color: "var(--accent)" }}>
             {t("sidebar.favorites")}
           </span>
-          <h1 className="t-display" style={{ fontSize: 36, margin: 0 }}>
+          <h1 className="t-display desktop-page-title" style={{ fontSize: 36, margin: 0 }}>
             {i18n.language === "fr" ? "Mes favoris" : "My favorites"}
           </h1>
           {!loading && (

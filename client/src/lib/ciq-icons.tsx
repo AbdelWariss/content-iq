@@ -114,6 +114,11 @@ export const CiqIcon = {
       <path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1L3.2 9.4l6.1-.9z" />
     </svg>
   ),
+  starFilled: (
+    <svg viewBox="0 0 24 24">
+      <path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1L3.2 9.4l6.1-.9z" fill="currentColor" stroke="none" />
+    </svg>
+  ),
   gear: (
     <svg viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="3" />
@@ -224,6 +229,12 @@ export const CiqIcon = {
   x: (
     <svg viewBox="0 0 24 24">
       <path d="M5 5l14 14M19 5L5 19" />
+    </svg>
+  ),
+  trash: (
+    <svg viewBox="0 0 24 24">
+      <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 11v6M14 11v6" strokeLinecap="round" />
     </svg>
   ),
   filter: (

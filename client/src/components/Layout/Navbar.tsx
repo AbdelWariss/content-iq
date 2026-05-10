@@ -3,14 +3,32 @@ import api from "@/services/axios";
 import { updateUser } from "@/store/authSlice";
 import { useAppDispatch, useAppSelector } from "@/store/index";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
-export function Navbar() {
+const PAGE_TITLES: Record<string, string> = {
+  "/dashboard": "Tableau de bord",
+  "/generate": "Créer",
+  "/history": "Historique",
+  "/templates": "Templates",
+  "/favorites": "Favoris",
+  "/profile": "Profil",
+  "/pricing": "Tarifs",
+  "/admin": "Admin",
+};
+
+interface NavbarProps {
+  onMenuOpen?: () => void;
+}
+
+export function Navbar({ onMenuOpen }: NavbarProps) {
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const navigate = useNavigate();
+  const location = useLocation();
   const { t, i18n } = useTranslation();
   const lang = user?.language ?? "fr";
+
+  const pageTitle = PAGE_TITLES[location.pathname] ?? "CONTENT.IQ";
 
   async function setLanguage(newLang: "fr" | "en") {
     if (newLang === lang) return;
@@ -46,7 +64,7 @@ export function Navbar() {
 
   return (
     <div
-      className="row between"
+      className="row between navbar-container"
       style={{
         padding: "12px 18px",
         borderBottom: "1px solid rgba(255,255,255,0.25)",
@@ -56,32 +74,39 @@ export function Navbar() {
         flex: "0 0 auto",
       }}
     >
-      {/* Left: logo + plan pills */}
+      {/* ── Left side ── */}
       <div className="row" style={{ gap: 18 }}>
-        <div className="ciq-mark">
+        {/* Logo — masqué sur mobile */}
+        <div className="ciq-mark navbar-logo">
           <span className="dot">C</span>
           <span className="name" style={{ display: "var(--navbar-name-display, inline)" }}>
             <b>CONTENT</b>
             <span>.IQ</span>
           </span>
         </div>
+
+        {/* Titre de la page — mobile seulement */}
+        <span className="navbar-page-title">
+          {pageTitle}
+        </span>
+
         <div className="row navbar-plan-badge" style={{ gap: 6 }}>
-          <span className="pill">
+          <span className="pill" style={{ borderRadius: 8 }}>
             <span className="swatch" style={{ background: "var(--accent)" }} />
             {plan}
           </span>
-          <span className="pill t-mono">
+          <span className="pill t-mono" style={{ borderRadius: 8 }}>
             <Ico icon={CiqIcon.zap} size={12} />
             {credits} cr.
           </span>
         </div>
       </div>
 
-      {/* Right: lang toggle + theme + avatar */}
+      {/* ── Right side ── */}
       <div className="row" style={{ gap: 8 }}>
-        {/* Crédits — visible seulement sur mobile (plan badge masqué) */}
-        <span className="pill t-mono mobile-credits-pill" style={{ fontSize: 11 }}>
-          <Ico icon={CiqIcon.zap} size={11} />
+        {/* Crédits — desktop seulement */}
+        <span className="pill t-mono navbar-credits-desktop" style={{ fontSize: 11, borderRadius: 8 }}>
+          <span style={{ color: "var(--accent)" }}><Ico icon={CiqIcon.zap} size={11} /></span>
           {credits}
         </span>
 
@@ -111,7 +136,9 @@ export function Navbar() {
           {t("nav.generate")}
         </button>
 
+        {/* Avatar — masqué sur mobile */}
         <div
+          className="hide-mobile"
           style={{
             width: 28,
             height: 28,
@@ -126,6 +153,20 @@ export function Navbar() {
         >
           {initials}
         </div>
+
+        {/* Burger — mobile seulement */}
+        <button
+          type="button"
+          className="navbar-mobile-hamburger"
+          onClick={onMenuOpen}
+          aria-label="Ouvrir le menu"
+        >
+          <span className="navbar-burger-bars">
+            <i />
+            <i style={{ width: "70%" }} />
+            <i />
+          </span>
+        </button>
       </div>
     </div>
   );

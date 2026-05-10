@@ -122,7 +122,7 @@ const fr = {
     tag: "Tagger",
     searchPlaceholder: "Rechercher dans tous mes contenus… ⌘K",
     allTypes: "Tous types",
-    favorites: "⭐ Favoris",
+    favorites: "Favoris",
     list: "Liste",
     grid: "Grille",
     colContent: "Contenu",

@@ -44,6 +44,12 @@ export class InsufficientCreditsError extends AppError {
   }
 }
 
+export class EmailNotVerifiedError extends AppError {
+  constructor() {
+    super("Vérifiez votre email avant de générer du contenu.", 403, "EMAIL_NOT_VERIFIED");
+  }
+}
+
 export const errorHandler: ErrorRequestHandler = (
   err: unknown,
   _req: Request,

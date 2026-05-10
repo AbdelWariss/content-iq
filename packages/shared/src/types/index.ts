@@ -78,7 +78,7 @@ export interface PlanLimits {
 
 export const PLAN_LIMITS: Record<UserRole, PlanLimits> = {
   free: {
-    credits: 50,
+    credits: 10,
     contentTypes: ["blog", "linkedin", "instagram", "twitter", "email", "product"],
     voiceCommands: false,
     assistantMessagesPerDay: 5,

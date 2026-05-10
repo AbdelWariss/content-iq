@@ -60,6 +60,9 @@ export function App() {
           {/* Google OAuth callback — outside AuthLayout so it can navigate freely */}
           <Route path="/auth/callback" element={<GoogleCallbackPage />} />
 
+          {/* Page tarifs — publique (non connecté → /register, connecté → Stripe) */}
+          <Route path="/pricing" element={<PricingPage />} />
+
           {/* Routes protégées */}
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
@@ -67,7 +70,6 @@ export function App() {
               <Route path="/generate" element={<GeneratePage />} />
               <Route path="/history" element={<HistoryPage />} />
               <Route path="/templates" element={<TemplatesPage />} />
-              <Route path="/pricing" element={<PricingPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/favorites" element={<FavoritesPage />} />
             </Route>

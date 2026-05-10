@@ -88,6 +88,7 @@ export default function GeneratePage() {
   const [voiceElapsed, setVoiceElapsed] = useState(0);
   const voiceTimer = useRef<ReturnType<typeof setInterval>>();
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout>>();
+  const editorRef = useRef<HTMLDivElement>(null);
 
   const {
     register,
@@ -247,6 +248,15 @@ export default function GeneratePage() {
     }, 30000);
     return () => clearTimeout(autoSaveTimer.current);
   }, [displayContent, dispatch]);
+
+  // Auto-scroll vers le champ résultat sur mobile dès que la génération démarre
+  useEffect(() => {
+    if (isGenerating && window.innerWidth <= 640) {
+      setTimeout(() => {
+        editorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
+  }, [isGenerating]);
 
   return (
     <div className="generate-layout">
@@ -634,7 +644,7 @@ export default function GeneratePage() {
       </div>
 
       {/* Right — editor */}
-      <div className="generate-editor-panel" style={{ padding: "24px 32px" }}>
+      <div ref={editorRef} className="generate-editor-panel" style={{ padding: "24px 32px" }}>
         {/* Editor toolbar header */}
         <div
           className="row between"

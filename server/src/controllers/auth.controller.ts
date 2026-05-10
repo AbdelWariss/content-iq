@@ -57,8 +57,8 @@ export async function register(req: Request, res: Response): Promise<void> {
     emailVerificationToken: verificationTokenHash,
     emailVerificationExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
     credits: {
-      remaining: 50,
-      total: 50,
+      remaining: 10,
+      total: 10,
       resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     },
   });
@@ -295,4 +295,26 @@ export async function getMe(req: Request, res: Response): Promise<void> {
   if (!user) throw new NotFoundError("Utilisateur");
 
   res.json({ success: true, data: { user: user.toJSON() } });
+}
+
+export async function resendVerification(req: Request, res: Response): Promise<void> {
+  const { userId } = getAuthUser(req);
+  const user = await User.findById(userId);
+  if (!user) throw new NotFoundError("Utilisateur");
+
+  if (user.emailVerified) {
+    res.json({ success: true, data: { message: "Email déjà vérifié." } });
+    return;
+  }
+
+  const verificationToken = generateSecureToken();
+  user.emailVerificationToken = hashToken(verificationToken);
+  user.emailVerificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  await user.save();
+
+  await sendVerificationEmail(user.email, user.name, verificationToken).catch((err) =>
+    logger.error("Erreur renvoi email vérification :", err),
+  );
+
+  res.json({ success: true, data: { message: "Email de vérification renvoyé." } });
 }

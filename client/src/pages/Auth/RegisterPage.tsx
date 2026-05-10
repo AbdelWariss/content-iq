@@ -50,6 +50,7 @@ export default function RegisterPage() {
 
   return (
     <div
+      className="auth-page-wrap"
       style={{
         height: "100%",
         display: "flex",
@@ -59,7 +60,7 @@ export default function RegisterPage() {
         overflowY: "auto",
       }}
     >
-      <div style={{ width: 480 }}>
+      <div className="auth-page-inner" style={{ width: 480 }}>
         <div className="ciq-mark" style={{ marginBottom: 28, justifyContent: "center" }}>
           <span className="dot">C</span>
           <span className="name">
@@ -68,7 +69,7 @@ export default function RegisterPage() {
           </span>
         </div>
 
-        <div className="card" style={{ padding: 32 }}>
+        <div className="card auth-register-card" style={{ padding: 32 }}>
           <h1 className="t-display" style={{ fontSize: 36, margin: "0 0 6px" }}>
             Créez votre compte
           </h1>

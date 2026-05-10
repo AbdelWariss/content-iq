@@ -7,6 +7,7 @@ interface UserState {
   email: string;
   role: UserRole;
   avatarUrl?: string;
+  emailVerified: boolean;
   credits: {
     remaining: number;
     total: number;

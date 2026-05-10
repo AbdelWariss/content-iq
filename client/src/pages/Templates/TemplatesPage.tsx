@@ -147,28 +147,31 @@ function TemplateCard({
   const isMine = !template.isPublic || canDelete;
 
   return (
-    <div className="card" style={{ padding: 20, position: "relative" }}>
+    <div className="card template-card" style={{ padding: 20, position: "relative" }}>
       <div className="row between" style={{ marginBottom: 14 }}>
         <TypeBadge type={template.type} />
         {isMine ? (
-          <span className="pill accent" style={{ padding: "1px 8px", fontSize: 10 }}>
+          <span className="pill accent template-card-badge" style={{ padding: "1px 8px", fontSize: 10 }}>
             perso
           </span>
         ) : (
-          <span className="pill" style={{ padding: "1px 8px", fontSize: 10 }}>
-            {template.category}
+          <span className="pill template-card-badge" style={{ padding: "1px 8px", fontSize: 10 }}>
+            {template.isPublic ? "system" : template.category}
           </span>
         )}
       </div>
 
       <h3 style={{ fontSize: 16, margin: "0 0 4px", fontWeight: 600 }}>{template.name}</h3>
-      <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: "0 0 14px", lineHeight: 1.5 }}>
+      <p className="template-card-type" style={{ fontSize: 13, color: "var(--ink-soft)", margin: "0 0 4px" }}>
+        {TYPE_LABELS[template.type] ?? template.type}
+      </p>
+      <p className="template-card-descr" style={{ fontSize: 13, color: "var(--ink-soft)", margin: "0 0 14px", lineHeight: 1.5 }}>
         {template.description ?? t("templates.noDescr")}
       </p>
 
-      <div className="hr" style={{ margin: "12px 0" }} />
+      <div className="hr template-card-hr" style={{ margin: "12px 0" }} />
 
-      <div className="row between" style={{ fontSize: 11.5, color: "var(--ink-mute)" }}>
+      <div className="row between template-card-footer" style={{ fontSize: 11.5, color: "var(--ink-mute)" }}>
         <span className="t-mono">
           {t("templates.usageCount", { n: template.usageCount?.toLocaleString() ?? 0 })}
         </span>
@@ -181,14 +184,24 @@ function TemplateCard({
               onClick={() => onDelete(template._id)}
               title={t("templates.deleteTitle")}
             >
-              <Ico icon={CiqIcon.x} size={13} />
+              <Ico icon={CiqIcon.trash} size={13} />
             </button>
           )}
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => onUse(template)}>
+          <button type="button" className="btn btn-ghost btn-sm hide-mobile" onClick={() => onUse(template)}>
             {t("templates.useBtn")}
           </button>
         </div>
       </div>
+
+      {/* Mobile: bouton Utiliser plein largeur */}
+      <button
+        type="button"
+        className="btn btn-outline template-card-use-mobile"
+        style={{ width: "100%", justifyContent: "center", marginTop: 10 }}
+        onClick={() => onUse(template)}
+      >
+        {t("templates.useBtn")}
+      </button>
     </div>
   );
 }
@@ -356,6 +369,7 @@ export default function TemplatesPage() {
     { value: "creative", label: t("templates.catCreative") },
   ];
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [mobileSourceFilter, setMobileSourceFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
 
@@ -402,20 +416,57 @@ export default function TemplatesPage() {
   );
 
   const templates = data?.data ?? [];
-  const filtered = search
-    ? templates.filter(
+  const systemCount = templates.filter((t) => t.isPublic).length;
+  const persoCount = templates.filter((t) => !t.isPublic).length;
+
+  const filtered = (() => {
+    let list = templates;
+    if (search) {
+      list = list.filter(
         (t) =>
           t.name.toLowerCase().includes(search.toLowerCase()) ||
           t.description?.toLowerCase().includes(search.toLowerCase()),
-      )
-    : templates;
+      );
+    }
+    if (mobileSourceFilter === "system") list = list.filter((t) => t.isPublic);
+    else if (mobileSourceFilter === "perso") list = list.filter((t) => !t.isPublic);
+    else if (mobileSourceFilter !== "all") list = list.filter((t) => t.type === mobileSourceFilter);
+    return list;
+  })();
 
   const canCreateTemplates = user?.role && ["pro", "business", "admin"].includes(user.role);
 
   return (
-    <div style={{ padding: "32px 40px", overflow: "auto" }}>
-      {/* Header */}
-      <div className="row between" style={{ marginBottom: 6 }}>
+    <div className="templates-page-wrap" style={{ padding: "32px 40px", overflow: "auto" }}>
+      {/* Mobile-only page header */}
+      <div className="templates-mobile-header row between" style={{ marginBottom: 16 }}>
+        <div>
+          <h1 className="t-display" style={{ fontSize: 30, margin: 0, lineHeight: 1.1 }}>
+            {t("templates.title")}
+          </h1>
+          <p style={{ fontSize: 13, color: "var(--ink-mute)", margin: "3px 0 0" }}>
+            {systemCount} système · {persoCount} personnels
+          </p>
+        </div>
+        <div className="row" style={{ gap: 6 }}>
+          <button type="button" className="btn btn-ghost btn-sm" style={{ padding: 8 }}>
+            <Ico icon={CiqIcon.filter} size={18} />
+          </button>
+          {canCreateTemplates && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              style={{ padding: 8, color: "var(--accent)" }}
+              onClick={() => setShowCreate(true)}
+            >
+              <Ico icon={CiqIcon.plus} size={20} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Header — desktop */}
+      <div className="row between desktop-page-title" style={{ marginBottom: 6 }}>
         <h1 className="t-display" style={{ fontSize: 40, margin: 0 }}>
           {t("templates.title")}
         </h1>
@@ -426,12 +477,12 @@ export default function TemplatesPage() {
           </button>
         )}
       </div>
-      <p style={{ color: "var(--ink-soft)", marginBottom: 22 }}>
+      <p className="desktop-page-title" style={{ color: "var(--ink-soft)", marginBottom: 22 }}>
         {t("templates.countDesc", { n: templates.length })}
       </p>
 
       {/* Search + category tabs */}
-      <div className="row" style={{ gap: 12, marginBottom: 22, flexWrap: "wrap" }}>
+      <div className="row" style={{ gap: 12, marginBottom: 14, flexWrap: "wrap" }}>
         <div
           className="row"
           style={{
@@ -453,7 +504,7 @@ export default function TemplatesPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div className="seg">
+        <div className="seg hide-mobile">
           {CATEGORIES.map((c) => (
             <button
               key={c.value}
@@ -465,6 +516,30 @@ export default function TemplatesPage() {
           ))}
           <button onClick={() => setSelectedCategory("mine")}>{t("templates.myTemplates")}</button>
         </div>
+      </div>
+
+      {/* Mobile chips filter */}
+      <div className="mobile-filter-chips" style={{ marginBottom: 14 }}>
+        {[
+          { v: "all", l: "Tous" },
+          { v: "system", l: "Système" },
+          { v: "perso", l: "Persos" },
+          { v: "linkedin", l: "LinkedIn" },
+          { v: "blog", l: "Article" },
+          { v: "email", l: "Email" },
+          { v: "twitter", l: "X" },
+          { v: "product", l: "Produit" },
+          { v: "bio", l: "Bio" },
+        ].map(({ v, l }) => (
+          <button
+            key={v}
+            type="button"
+            className={`history-chip${mobileSourceFilter === v ? " active" : ""}`}
+            onClick={() => setMobileSourceFilter(v)}
+          >
+            {l}
+          </button>
+        ))}
       </div>
 
       {/* Plan upgrade notice */}

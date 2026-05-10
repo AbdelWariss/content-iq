@@ -8,15 +8,16 @@ import {
   logout,
   refresh,
   register,
+  resendVerification,
   resetPassword,
   verifyEmail,
 } from "../controllers/auth.controller.js";
 import { authenticate } from "../middleware/authenticate.js";
-import { authLimiter } from "../middleware/rateLimiter.js";
+import { authLimiter, registerLimiter, resendVerificationLimiter } from "../middleware/rateLimiter.js";
 
 const router: import("express").Router = Router();
 
-router.post("/register", authLimiter, register);
+router.post("/register", authLimiter, registerLimiter, register);
 router.post("/login", authLimiter, login);
 router.post("/logout", authenticate, logout);
 router.post("/refresh", authLimiter, refresh);
@@ -37,6 +38,7 @@ router.get(
 router.post("/forgot-password", authLimiter, forgotPassword);
 router.post("/reset-password", authLimiter, resetPassword);
 router.get("/verify-email/:token", verifyEmail);
+router.post("/resend-verification", authenticate, resendVerificationLimiter, resendVerification);
 router.get("/me", authenticate, getMe);
 
 export default router;

@@ -605,6 +605,30 @@
   transition: stroke-dashoffset 0.6s;
 }
 
+/* Ring crédits mobile — couleur coral + glow */
+.mobile-credit-ring-card .ring-svg .fill {
+  stroke: var(--accent) !important;
+  filter: drop-shadow(0 0 4px rgba(229, 112, 76, 0.45)) drop-shadow(0 0 8px rgba(229, 112, 76, 0.2));
+}
+
+/* Ring crédits desktop — SVG custom */
+.desktop-ring {
+  transform: rotate(-90deg);
+}
+.desktop-ring circle {
+  fill: none;
+  stroke-width: 14;
+}
+.desktop-ring .d-track {
+  stroke: var(--bg-sunk);
+}
+.desktop-ring .d-fill {
+  stroke: var(--accent);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s ease;
+  filter: drop-shadow(0 0 4px rgba(229, 112, 76, 0.45)) drop-shadow(0 0 8px rgba(229, 112, 76, 0.2));
+}
+
 /* ─── Striped image placeholder ─── */
 .imgph {
   background-image: repeating-linear-gradient(135deg, var(--line-soft) 0 8px, transparent 8px 16px);
@@ -1127,7 +1151,7 @@ body {
     top: 0;
     left: 0;
     height: 100vh;
-    z-index: 50;
+    z-index: 70;
     transform: translateX(-110%);
     display: flex;
   }
@@ -1150,7 +1174,7 @@ body {
   position: fixed;
   inset: 0;
   background: rgba(20, 16, 12, 0.42);
-  z-index: 49;
+  z-index: 69;
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
 }
@@ -1335,6 +1359,48 @@ body {
 .mobile-only {
   display: none;
 }
+
+/* Navbar — titre de page mobile : masqué sur desktop */
+.navbar-page-title {
+  display: none;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  line-height: 1;
+}
+
+/* Navbar — burger mobile : masqué sur desktop */
+.navbar-mobile-hamburger {
+  display: none;
+  border: none;
+  background: transparent;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 6px 4px;
+  flex-shrink: 0;
+}
+.navbar-burger-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 20px;
+}
+.navbar-burger-bars i {
+  display: block;
+  height: 2px;
+  background: var(--ink);
+  border-radius: 2px;
+  width: 100%;
+}
+
+/* Credits pill desktop — affiché seulement si logo présent (desktop) */
+.navbar-credits-desktop {
+  display: none;
+}
 /* Generate sticky bar — no-op on desktop */
 .mobile-generate-sticky {
   /* desktop: plain block, no sticky */
@@ -1342,6 +1408,49 @@ body {
 /* Filter chips — hidden on desktop */
 .mobile-filter-chips {
   display: none;
+}
+/* Mobile page headers — hidden on desktop */
+.history-mobile-header,
+.templates-mobile-header {
+  display: none;
+}
+/* History: desktop rows/header — always shown on desktop */
+.history-desktop-row { display: flex; }
+.history-mobile-row  { display: none; }
+.history-search-mic  { display: none; }
+/* Template card mobile-use button — hidden on desktop */
+.template-card-use-mobile { display: none; }
+/* Template card type label — always shown */
+.template-card-type { display: block; }
+
+/* History grid — desktop */
+.history-grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+/* History chip style */
+.history-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 13px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg-elev);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.1s, color 0.1s;
+  flex-shrink: 0;
+}
+.history-chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
 }
 
 @media (max-width: 640px) {
@@ -1422,6 +1531,35 @@ body {
     display: inline-flex;
   }
 
+  /* ── Navbar mobile ── */
+  /* Logo → masqué sur mobile */
+  .navbar-logo {
+    display: none !important;
+  }
+  /* Titre de page → visible sur mobile */
+  .navbar-page-title {
+    display: block;
+  }
+  /* Burger → visible sur mobile */
+  .navbar-mobile-hamburger {
+    display: flex;
+  }
+  /* Credits pill desktop → masqué sur mobile */
+  .navbar-credits-desktop {
+    display: none !important;
+  }
+  /* Titres de page dans le contenu → masqués sur mobile */
+  .desktop-page-title {
+    display: none !important;
+  }
+  /* Supprimer la séparation et le fond du header sur mobile */
+  .navbar-container {
+    border-bottom: none !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
   /* Masque le bouton AssistantToggle (sparkle fixe) sur mobile */
   .fixed.bottom-4.right-4 {
     display: none !important;
@@ -1439,7 +1577,7 @@ body {
 
   /* Page padding mobile */
   .page-pad {
-    padding: 14px 14px !important;
+    padding: 6px 14px 14px !important;
   }
 
   /* Generate layout : colonne unique plein écran */
@@ -1466,21 +1604,55 @@ body {
     z-index: 55;
   }
 
-  /* Dashboard : 1 colonne */
+  /* ── Dashboard mobile ── */
+
+  /* Header: masquer le desktop, montrer le mobile */
+  .dash-desktop-header {
+    display: none !important;
+  }
+  .dash-mobile-header {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+
+  /* Carte crédits desktop dans la grille KPI → masquée */
+  .dash-kpi-credits-desktop {
+    display: none !important;
+  }
+
+  /* KPI grid : 2 colonnes symétriques */
   .dashboard-kpi-grid {
     grid-template-columns: 1fr 1fr !important;
     gap: 10px !important;
   }
+
+  /* Graphique activité : pleine largeur */
   .dashboard-charts-grid {
     grid-template-columns: 1fr !important;
   }
+  /* Masquer le type breakdown sur mobile */
+  .dash-chart-types {
+    display: none !important;
+  }
+  /* Masquer le bouton 1an sur mobile */
+  .dash-period-year {
+    display: none !important;
+  }
+
+  /* Section inférieure : 1 colonne */
   .dashboard-bottom-grid {
     grid-template-columns: 1fr !important;
   }
+  /* Masquer le journal voix sur mobile */
+  .dash-voice-journal {
+    display: none !important;
+  }
 
-  /* Navbar : masque les éléments non essentiels */
-  .navbar-plan-badge,
-  .navbar-lang-toggle {
+  /* Navbar : masque le badge plan sur mobile */
+  .navbar-plan-badge {
     display: none;
   }
 
@@ -1551,6 +1723,27 @@ body {
     gap: 8px !important;
   }
 
+  /* ── History page mobile ── */
+  .history-page-wrap { padding: 14px 14px 100px !important; }
+  .history-mobile-header { display: flex; }
+  .history-desktop-row  { display: none !important; }
+  .history-mobile-row   { display: flex; }
+  .history-desktop-header { display: none !important; }
+  .history-search-mic   { display: flex !important; }
+  /* Grid history — 2 colonnes ajustées à l'écran */
+  .history-grid-container { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+  .history-grid-card    { padding: 12px !important; min-width: 0; }
+
+  /* ── Templates page mobile ── */
+  .templates-page-wrap  { padding: 14px 14px 100px !important; }
+  .templates-mobile-header { display: flex; }
+  .template-card-descr  { display: none !important; }
+  .template-card-hr     { display: none !important; }
+  .template-card-footer { display: none !important; }
+  .template-card-use-mobile { display: flex !important; }
+  .template-card { padding: 14px !important; }
+  .template-card-badge { font-size: 9px !important; }
+
   /* Voice orb overlay mobile */
   .mobile-voice-overlay {
     position: fixed;
@@ -1570,17 +1763,201 @@ body {
     background: var(--bg-elev);
   }
 
-  /* Generate sticky action bar */
+  /* Generate — bouton en flux normal sur mobile (pas de sticky pour éviter le chevauchement) */
   .mobile-generate-sticky {
-    position: sticky;
-    bottom: calc(68px + env(safe-area-inset-bottom, 8px));
-    left: 0;
-    right: 0;
-    z-index: 40;
-    background: var(--bg-elev);
-    border-top: 1px solid var(--line-soft);
-    padding: 10px 14px;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    position: static;
+    background: transparent;
+    border-top: none;
+    padding: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  /* Réduction du padding-bottom superflu maintenant que le bouton est en flux */
+  .generate-form-panel {
+    padding-bottom: 32px !important;
+  }
+}
+
+/* ─── Landing page — mobile layout ─── */
+
+/* Mobile grid icon: hidden on desktop */
+.landing-nav-mobile-icon {
+  display: none !important;
+}
+
+/* Dashboard mobile header: hidden on desktop */
+.dash-mobile-header {
+  display: none;
+}
+
+/* Titre de page dans le contenu — masqué sur mobile (le navbar-page-title suffit) */
+.desktop-page-title {
+  display: block;
+}
+
+/* Mobile trust line: hidden on desktop */
+.landing-trust-mobile {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  /* ── Navbar ── */
+  .landing-navbar {
+    padding: 14px 20px !important;
+  }
+  .landing-nav-links,
+  .landing-nav-actions {
+    display: none !important;
+  }
+  .landing-nav-mobile-icon {
+    display: flex !important;
+    margin-left: auto;
+    padding: 8px;
+    color: var(--ink-soft);
+  }
+
+  /* ── Hero ── */
+  .landing-hero-grid {
+    grid-template-columns: 1fr !important;
+    padding: 36px 20px 0 !important;
+    gap: 28px !important;
+  }
+  .landing-hero-copy .t-display {
+    font-size: 40px !important;
+    line-height: 1.08 !important;
+    margin: 8px 0 14px !important;
+  }
+  .landing-hero-copy > p {
+    font-size: 15px !important;
+    max-width: 100% !important;
+    margin-bottom: 20px !important;
+  }
+
+  /* Buttons: stacked, full-width */
+  .landing-hero-btns {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+  .landing-hero-btns > * {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Trust: hide desktop row, show compact single line */
+  .landing-trust-row {
+    display: none !important;
+  }
+  .landing-trust-mobile {
+    display: block;
+    margin-top: 18px;
+    font-size: 12px;
+    color: var(--ink-mute);
+    font-family: var(--font-mono);
+    letter-spacing: 0.02em;
+  }
+
+  /* ── Mockup card ── */
+  .landing-hero-mockup {
+    height: 400px !important;
+    width: 100% !important;
+  }
+  .landing-mockup-blobs,
+  .landing-mic-pill {
+    display: none !important;
+  }
+
+  /* ── "Pensé pour" section ── */
+  .landing-pensepour {
+    padding: 48px 20px 0 !important;
+  }
+  .landing-pensepour .row {
+    gap: 16px !important;
+    justify-content: flex-start !important;
+  }
+  .landing-pensepour .row > div {
+    font-size: 18px !important;
+  }
+
+  /* ── Pillars ── */
+  .landing-pillars-section {
+    padding: 64px 20px !important;
+  }
+  .landing-pillars-title {
+    font-size: 36px !important;
+  }
+  .landing-pillars-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* ── Voice section ── */
+  .landing-voice-grid {
+    grid-template-columns: 1fr !important;
+    padding: 48px 20px !important;
+    gap: 36px !important;
+  }
+  .landing-voice-grid .t-display {
+    font-size: 40px !important;
+    line-height: 1.05 !important;
+  }
+
+  /* ── CTA band ── */
+  .landing-cta-band {
+    margin: 0 16px 56px !important;
+    padding: 36px 24px !important;
+    grid-template-columns: 1fr !important;
+    text-align: center;
+    gap: 20px !important;
+  }
+  .landing-cta-band .t-display {
+    font-size: 30px !important;
+    margin-bottom: 6px !important;
+  }
+  .landing-cta-band .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* ── Footer ── */
+  .landing-footer {
+    padding: 32px 20px !important;
+  }
+  .landing-footer-row {
+    flex-direction: column !important;
+    gap: 14px !important;
+    align-items: flex-start !important;
+  }
+
+  /* ── Logo landing navbar (plus grand sur mobile) ── */
+  .landing-navbar .ciq-mark .dot {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    font-size: 18px;
+  }
+  .landing-navbar .ciq-mark .name {
+    font-size: 16px;
+    letter-spacing: -0.025em;
+  }
+
+  /* ── Formulaire d'inscription (moins haut sur mobile) ── */
+  .auth-page-wrap {
+    padding: 16px !important;
+    align-items: flex-start !important;
+  }
+  .auth-page-inner {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-top: 8px;
+  }
+  .auth-register-card {
+    padding: 20px !important;
+  }
+  .auth-register-card h1.t-display {
+    font-size: 26px !important;
+    margin-bottom: 4px !important;
+  }
+  .auth-register-card .col {
+    gap: 10px !important;
   }
 }

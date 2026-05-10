@@ -1,5 +1,7 @@
 import { CiqIcon, Ico, MicWave } from "@/lib/ciq-icons";
 import api from "@/services/axios";
+import { updateUser } from "@/store/authSlice";
+import { useAppDispatch } from "@/store/index";
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { DynamicPanel } from "./AuthPage";
@@ -8,6 +10,7 @@ export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const token = searchParams.get("token");
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     if (!token) {
@@ -16,9 +19,12 @@ export default function VerifyEmailPage() {
     }
     api
       .get(`/auth/verify-email/${token}`)
-      .then(() => setStatus("success"))
+      .then(() => {
+        dispatch(updateUser({ emailVerified: true }));
+        setStatus("success");
+      })
       .catch(() => setStatus("error"));
-  }, [token]);
+  }, [token, dispatch]);
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1.1fr", height: "100%" }}>

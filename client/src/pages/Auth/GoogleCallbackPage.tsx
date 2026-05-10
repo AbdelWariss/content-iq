@@ -43,6 +43,7 @@ export default function GoogleCallbackPage() {
               email: user.email,
               role: user.role,
               avatarUrl: user.avatarUrl,
+              emailVerified: user.emailVerified ?? true,
               credits: user.credits,
               language: userLang as "fr" | "en",
             },

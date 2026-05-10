@@ -20,6 +20,7 @@ const fakeUser = {
   email: "alice@example.com",
   role: "free" as const,
   avatarUrl: undefined,
+  emailVerified: false,
   credits: { remaining: 50, total: 50, resetDate: "" },
   language: "fr" as const,
 };

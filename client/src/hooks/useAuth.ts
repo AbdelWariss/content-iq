@@ -14,6 +14,7 @@ function buildUser(u: Awaited<ReturnType<typeof authService.refresh>>["data"]["u
     email: u.email,
     role: u.role,
     avatarUrl: u.avatarUrl,
+    emailVerified: u.emailVerified ?? false,
     credits: u.credits,
     language: (u.language ?? "fr") as "fr" | "en",
   };

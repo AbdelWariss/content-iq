@@ -31,8 +31,8 @@ export const CiqIcon = {
   ),
   sparkle: (
     <svg viewBox="0 0 24 24">
-      <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
-      <path d="M19 4l.8 2L22 7l-2.2.8L19 10l-.8-2.2L16 7l2.2-1z" />
+      <path d="M12 5l1.8 5.2L19 12l-5.2 1.8L12 19l-1.8-5.2L5 12l5.2-1.8z" />
+      <path d="M19 3l.8 2L22 6l-2.2.8L19 9l-.8-2.2L16 6l2.2-.8z" />
     </svg>
   ),
   bolt: (

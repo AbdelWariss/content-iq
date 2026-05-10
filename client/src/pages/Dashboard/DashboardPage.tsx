@@ -216,8 +216,10 @@ export default function DashboardPage() {
             alignItems: "center",
             justifyContent: "center",
             paddingTop: 80,
+            paddingBottom: 80,
             gap: 20,
             textAlign: "center",
+            overflow: "visible",
           }}
         >
           <Ico icon={CiqIcon.sparkle} size={80} style={{ color: "var(--accent)" }} />
@@ -228,7 +230,7 @@ export default function DashboardPage() {
             </p>
           </div>
           <button className="btn btn-accent btn-lg" onClick={() => navigate("/generate")}>
-            <Ico icon={CiqIcon.sparkle} />
+            <Ico icon={CiqIcon.sparkle} size={28} />
             {t("dashboard.emptyBtn")}
           </button>
         </div>

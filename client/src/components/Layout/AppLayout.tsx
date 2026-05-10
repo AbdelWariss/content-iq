@@ -92,7 +92,7 @@ function AssistantToggle() {
       )}
       title="IQ Assistant"
     >
-      <Ico icon={CiqIcon.sparkle} size={36} />
+      <Ico icon={CiqIcon.sparkle} size={30} style={{ display: "flex" }} />
     </button>
   );
 }

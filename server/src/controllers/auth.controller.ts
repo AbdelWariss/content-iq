@@ -312,9 +312,12 @@ export async function resendVerification(req: Request, res: Response): Promise<v
   user.emailVerificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
   await user.save();
 
-  await sendVerificationEmail(user.email, user.name, verificationToken).catch((err) =>
-    logger.error("Erreur renvoi email vérification :", err),
-  );
+  try {
+    await sendVerificationEmail(user.email, user.name, verificationToken);
+  } catch (err) {
+    logger.error("Erreur renvoi email vérification :", err);
+    throw new AppError("Échec de l'envoi de l'email. Réessayez dans quelques instants.", 503);
+  }
 
   res.json({ success: true, data: { message: "Email de vérification renvoyé." } });
 }

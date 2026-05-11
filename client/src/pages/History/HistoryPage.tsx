@@ -10,6 +10,13 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 
+const ICON_BTN: import("react").CSSProperties = {
+  background: "transparent",
+  border: "none",
+  boxShadow: "none",
+  padding: "4px 5px",
+};
+
 const TYPE_LABELS: Record<string, string> = {
   blog: "Article",
   linkedin: "LinkedIn",
@@ -75,11 +82,11 @@ function ExportMenu({ item }: { item: ContentItem }) {
       <button
         type="button"
         className="btn btn-ghost btn-sm"
-        style={{ padding: "4px 8px" }}
+        style={ICON_BTN}
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
         title="Exporter"
       >
-        <Ico icon={CiqIcon.download} size={14} />
+        <Ico icon={CiqIcon.download} size={16} />
       </button>
       {open && (
         <>
@@ -498,7 +505,7 @@ export default function HistoryPage() {
             >
               <div className="row between" style={{ alignItems: "flex-start" }}>
                 <div className="row" style={{ gap: 8, alignItems: "center" }}>
-                  <Ico icon={TYPE_ICON[item.type] ?? CiqIcon.blog} size={16} style={{ color: "var(--ink-mute)", flexShrink: 0 }} />
+                  <Ico icon={TYPE_ICON[item.type] ?? CiqIcon.blog} size={20} style={{ color: "var(--ink-mute)", flexShrink: 0 }} />
                   <span className="t-eyebrow" style={{ fontSize: 10, color: "var(--accent)" }}>
                     {TYPE_LABELS[item.type] ?? item.type}
                   </span>
@@ -523,12 +530,12 @@ export default function HistoryPage() {
                   {formatDistanceToNow(new Date(item.createdAt), { addSuffix: false, locale: dateLocale })}
                 </span>
                 <div className="row" style={{ gap: 2 }}>
-                  <button type="button" className="btn btn-ghost btn-sm" style={{ padding: "3px 5px" }} onClick={(e) => handleCopy(item, e)}>
-                    <Ico icon={copied === item._id ? CiqIcon.check : CiqIcon.copy} size={13} />
+                  <button type="button" className="btn btn-ghost btn-sm" style={ICON_BTN} onClick={(e) => handleCopy(item, e)}>
+                    <Ico icon={copied === item._id ? CiqIcon.check : CiqIcon.copy} size={16} />
                   </button>
                   <ExportMenu item={item} />
-                  <button type="button" className="btn btn-ghost btn-sm" style={{ padding: "3px 5px", color: "var(--ink-mute)" }} onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(item._id); }}>
-                    <Ico icon={CiqIcon.trash} size={13} />
+                  <button type="button" className="btn btn-ghost btn-sm" style={{ ...ICON_BTN, color: "var(--ink-mute)" }} onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(item._id); }}>
+                    <Ico icon={CiqIcon.trash} size={16} />
                   </button>
                 </div>
               </div>
@@ -585,10 +592,10 @@ export default function HistoryPage() {
               }}
             >
               {/* Type icon */}
-              <div style={{ width: 20, flexShrink: 0, display: "flex", alignItems: "center" }}>
+              <div style={{ width: 22, flexShrink: 0, display: "flex", alignItems: "center" }}>
                 <Ico
                   icon={TYPE_ICON[item.type] ?? CiqIcon.blog}
-                  size={16}
+                  size={20}
                   style={{ color: "var(--ink-mute)" }}
                 />
               </div>
@@ -661,36 +668,15 @@ export default function HistoryPage() {
                 style={{ width: 100, flexShrink: 0, gap: 2, justifyContent: "flex-end" }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  style={{ padding: "4px 6px" }}
-                  onClick={(e) => handleCopy(item, e)}
-                  title="Copier"
-                >
-                  <Ico icon={copied === item._id ? CiqIcon.check : CiqIcon.copy} size={13} />
+                <button type="button" className="btn btn-ghost btn-sm" style={ICON_BTN} onClick={(e) => handleCopy(item, e)} title="Copier">
+                  <Ico icon={copied === item._id ? CiqIcon.check : CiqIcon.copy} size={16} />
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  style={{
-                    padding: "4px 6px",
-                    color: item.isFavorite ? "var(--accent)" : "var(--ink-mute)",
-                  }}
-                  onClick={() => toggleFavMutation.mutate(item._id)}
-                  title="Favori"
-                >
-                  <Ico icon={CiqIcon.star} size={13} />
+                <button type="button" className="btn btn-ghost btn-sm" style={{ ...ICON_BTN, color: item.isFavorite ? "var(--accent)" : "var(--ink-mute)" }} onClick={() => toggleFavMutation.mutate(item._id)} title="Favori">
+                  <Ico icon={CiqIcon.star} size={16} />
                 </button>
                 <ExportMenu item={item} />
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  style={{ padding: "4px 6px", color: "var(--ink-mute)" }}
-                  onClick={() => setDeleteConfirmId(item._id)}
-                  title="Supprimer"
-                >
-                  <Ico icon={CiqIcon.trash} size={13} />
+                <button type="button" className="btn btn-ghost btn-sm" style={{ ...ICON_BTN, color: "var(--ink-mute)" }} onClick={() => setDeleteConfirmId(item._id)} title="Supprimer">
+                  <Ico icon={CiqIcon.trash} size={16} />
                 </button>
               </div>
             </div>
@@ -709,7 +695,7 @@ export default function HistoryPage() {
             >
               <Ico
                 icon={TYPE_ICON[item.type] ?? CiqIcon.blog}
-                size={18}
+                size={20}
                 style={{ color: "var(--ink-soft)", flexShrink: 0 }}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -720,14 +706,18 @@ export default function HistoryPage() {
                   {TYPE_LABELS[item.type] ?? item.type} · {(item.prompt?.language ?? "fr").toUpperCase()} · {item.tokensUsed ?? 0} t. · {formatDistanceToNow(new Date(item.createdAt), { addSuffix: false, locale: dateLocale })}
                 </div>
               </div>
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm"
-                style={{ padding: "4px 6px", color: item.isFavorite ? "var(--accent)" : "var(--ink-mute)", flexShrink: 0 }}
-                onClick={(e) => { e.stopPropagation(); toggleFavMutation.mutate(item._id); }}
-              >
-                <Ico icon={CiqIcon.star} size={16} />
-              </button>
+              <div className="row" style={{ gap: 0, flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+                <button type="button" className="btn btn-ghost btn-sm" style={ICON_BTN} onClick={(e) => handleCopy(item, e)} title="Copier">
+                  <Ico icon={copied === item._id ? CiqIcon.check : CiqIcon.copy} size={16} />
+                </button>
+                <button type="button" className="btn btn-ghost btn-sm" style={{ ...ICON_BTN, color: item.isFavorite ? "var(--accent)" : "var(--ink-mute)" }} onClick={(e) => { e.stopPropagation(); toggleFavMutation.mutate(item._id); }}>
+                  <Ico icon={item.isFavorite ? CiqIcon.starFilled : CiqIcon.star} size={16} />
+                </button>
+                <ExportMenu item={item} />
+                <button type="button" className="btn btn-ghost btn-sm" style={{ ...ICON_BTN, color: "var(--ink-mute)" }} onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(item._id); }}>
+                  <Ico icon={CiqIcon.trash} size={16} />
+                </button>
+              </div>
             </div>
             </div>
           ))}

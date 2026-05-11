@@ -1770,7 +1770,7 @@ body {
   .history-grid-card    { padding: 12px !important; min-width: 0; }
 
   /* ── Profile page mobile ── */
-  .profile-page-wrap { padding: 14px 14px 100px !important; max-width: 100% !important; }
+  .profile-page-wrap { max-width: 100% !important; }
 
   /* ── Templates page mobile ── */
   .templates-page-wrap  { padding: 14px 14px 100px !important; }

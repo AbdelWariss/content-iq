@@ -40,7 +40,7 @@ function TypeBadge({ type }: { type: string }) {
     >
       <Ico
         icon={cfg?.icon ?? CiqIcon.templ}
-        size={22}
+        size={26}
         style={{ color: cfg?.color ?? "var(--ink-mute)" }}
       />
     </div>
@@ -77,15 +77,15 @@ function TemplateCard({
   const isMine = !template.isPublic || canDelete;
 
   return (
-    <div className="card template-card" style={{ padding: 20, position: "relative" }}>
+    <div className="card template-card" style={{ padding: 20, position: "relative", display: "flex", flexDirection: "column" }}>
       <div className="row between" style={{ marginBottom: 14 }}>
         <TypeBadge type={template.type} />
         {isMine ? (
-          <span className="pill accent template-card-badge" style={{ padding: "1px 8px", fontSize: 10 }}>
+          <span className="pill accent template-card-badge" style={{ padding: "2px 9px", fontSize: 10, borderRadius: 6 }}>
             perso
           </span>
         ) : (
-          <span className="pill template-card-badge" style={{ padding: "1px 8px", fontSize: 10 }}>
+          <span className="pill template-card-badge" style={{ padding: "2px 9px", fontSize: 10, borderRadius: 6 }}>
             {template.isPublic ? "system" : template.category}
           </span>
         )}
@@ -127,7 +127,7 @@ function TemplateCard({
       <button
         type="button"
         className="btn btn-outline template-card-use-mobile"
-        style={{ width: "100%", justifyContent: "center", marginTop: 10 }}
+        style={{ width: "100%", justifyContent: "center", marginTop: "auto" }}
         onClick={() => onUse(template)}
       >
         {t("templates.useBtn")}

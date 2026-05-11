@@ -386,12 +386,12 @@ export default function ProfilePage() {
               const isSelected = selectedVoice === name;
               const isPlaying  = previewing === name;
               return (
-                <div key={name} className="card" style={{ padding: 16, border: isSelected ? "1.5px solid var(--ink)" : isPlaying ? "1.5px solid var(--voice)" : undefined, cursor: "pointer", transition: "border-color 0.2s" }} onClick={() => handleVoiceChange(name)}>
+                <div key={name} className="card" style={{ padding: 16, border: isSelected ? "1.5px solid var(--ink)" : isPlaying ? "1.5px solid var(--voice)" : undefined, cursor: "pointer", transition: "border-color 0.2s" }} onClick={() => { handleVoiceChange(name); previewVoice(name, voiceId, lang); }}>
                   <div className="row between">
                     <strong style={{ fontSize: 15 }}>{name}</strong>
-                    <button type="button" onClick={(e) => { e.stopPropagation(); previewVoice(name, voiceId, lang); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 2, color: isPlaying ? "var(--voice)" : "var(--ink-mute)", display: "flex", alignItems: "center" }}>
+                    <span style={{ padding: 2, color: isPlaying ? "var(--voice)" : "var(--ink-mute)", display: "flex", alignItems: "center" }}>
                       <Ico icon={isPlaying ? CiqIcon.stop : CiqIcon.play} />
-                    </button>
+                    </span>
                   </div>
                   <div className="t-mono" style={{ fontSize: 11, color: "var(--ink-mute)", marginTop: 3 }}>{meta}</div>
                   <MicWave size="sm" listening={isPlaying} color={isPlaying ? "var(--voice)" : undefined} />

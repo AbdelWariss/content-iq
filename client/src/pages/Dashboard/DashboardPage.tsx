@@ -604,7 +604,7 @@ export default function DashboardPage() {
           {/* Recent content + voice log */}
           <div className="dashboard-bottom-grid">
             {/* Recent content */}
-            <div className="card" style={{ padding: 22 }}>
+            <div className="card" style={{ padding: 22, minWidth: 0, overflow: "hidden" }}>
               <div className="row between" style={{ marginBottom: 14 }}>
                 <span className="t-eyebrow">Derniers contenus</span>
                 <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigate("/history")}
@@ -630,6 +630,7 @@ export default function DashboardPage() {
                         borderBottom: i < arr.length - 1 ? "1px solid var(--line-soft)" : "none",
                         cursor: "pointer",
                         transition: "background 0.1s",
+                        minWidth: 0,
                       }}
                       onMouseEnter={(e) =>
                         ((e.currentTarget as HTMLDivElement).style.background = "var(--bg-sunk)")

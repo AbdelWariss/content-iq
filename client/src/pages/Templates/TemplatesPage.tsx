@@ -291,22 +291,24 @@ export default function TemplatesPage() {
   const queryClient = useQueryClient();
   const user = useAppSelector((s) => s.auth.user);
   const { t } = useTranslation();
-  const CATEGORIES = [
-    { value: "all", label: t("templates.catAll") },
-    { value: "marketing", label: t("templates.catMarketing") },
-    { value: "social", label: t("templates.catSocial") },
-    { value: "business", label: t("templates.catBusiness") },
-    { value: "creative", label: t("templates.catCreative") },
+  const TYPE_FILTERS = [
+    { v: "all",      l: t("templates.catAll") },
+    { v: "system",   l: "Système" },
+    { v: "perso",    l: "Persos" },
+    { v: "linkedin", l: "LinkedIn" },
+    { v: "blog",     l: "Article" },
+    { v: "email",    l: "Email" },
+    { v: "twitter",  l: "X" },
+    { v: "product",  l: "Produit" },
+    { v: "bio",      l: "Bio" },
   ];
-  const [selectedCategory, setSelectedCategory] = useState("all");
   const [mobileSourceFilter, setMobileSourceFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["templates", selectedCategory],
-    queryFn: () =>
-      templateService.list(selectedCategory !== "all" ? { category: selectedCategory } : undefined),
+    queryKey: ["templates"],
+    queryFn: () => templateService.list(undefined),
   });
 
   const deleteMutation = useMutation({
@@ -435,32 +437,22 @@ export default function TemplatesPage() {
           />
         </div>
         <div className="seg hide-mobile">
-          {CATEGORIES.map((c) => (
+          {TYPE_FILTERS.map(({ v, l }) => (
             <button
-              key={c.value}
-              className={selectedCategory === c.value ? "on" : ""}
-              onClick={() => setSelectedCategory(c.value)}
+              key={v}
+              type="button"
+              className={mobileSourceFilter === v ? "on" : ""}
+              onClick={() => setMobileSourceFilter(v)}
             >
-              {c.label}
+              {l}
             </button>
           ))}
-          <button onClick={() => setSelectedCategory("mine")}>{t("templates.myTemplates")}</button>
         </div>
       </div>
 
       {/* Mobile seg filter */}
       <div className="templates-mobile-seg">
-        {[
-          { v: "all", l: "Tous" },
-          { v: "system", l: "Système" },
-          { v: "perso", l: "Persos" },
-          { v: "linkedin", l: "LinkedIn" },
-          { v: "blog", l: "Article" },
-          { v: "email", l: "Email" },
-          { v: "twitter", l: "X" },
-          { v: "product", l: "Produit" },
-          { v: "bio", l: "Bio" },
-        ].map(({ v, l }) => (
+        {TYPE_FILTERS.map(({ v, l }) => (
           <button
             key={v}
             type="button"
@@ -567,30 +559,26 @@ export default function TemplatesPage() {
             >
               {search
                 ? t("templates.noResultDesc", { q: search })
-                : selectedCategory !== "all"
+                : mobileSourceFilter !== "all"
                   ? t("templates.emptyCatDesc", {
-                      cat:
-                        selectedCategory === "mine"
-                          ? t("templates.myTemplates")
-                          : (CATEGORIES.find((c) => c.value === selectedCategory)?.label ??
-                            selectedCategory),
+                      cat: TYPE_FILTERS.find((f) => f.v === mobileSourceFilter)?.l ?? mobileSourceFilter,
                     })
                   : t("templates.emptyDesc")}
             </p>
           </div>
-          {(search || selectedCategory !== "all") && (
+          {(search || mobileSourceFilter !== "all") && (
             <button
               type="button"
               className="btn btn-outline"
               onClick={() => {
                 setSearch("");
-                setSelectedCategory("all");
+                setMobileSourceFilter("all");
               }}
             >
               {t("templates.seeAll")}
             </button>
           )}
-          {canCreateTemplates && !search && selectedCategory === "all" && (
+          {canCreateTemplates && !search && mobileSourceFilter === "all" && (
             <button type="button" className="btn btn-primary" onClick={() => setShowCreate(true)}>
               <Ico icon={CiqIcon.plus} />
               {t("templates.createFirst")}

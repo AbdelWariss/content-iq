@@ -475,7 +475,7 @@ export default function ProfilePage() {
       {/* ══════════════════════════════════════════
           MOBILE layout (hidden on desktop)
           ══════════════════════════════════════════ */}
-      <div className="mobile-only" style={{ flexDirection: "column", padding: "14px 14px 100px" }}>
+      <div className="mobile-only" style={{ flexDirection: "column", padding: "14px 14px 100px", width: "100%", boxSizing: "border-box" }}>
 
         {/* Inline selectors */}
         {openSelector === "voice" && (

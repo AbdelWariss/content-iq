@@ -1409,6 +1409,9 @@ body {
 .mobile-filter-chips {
   display: none;
 }
+.templates-mobile-seg {
+  display: none;
+}
 /* Mobile page headers — hidden on desktop */
 .history-mobile-header,
 .templates-mobile-header {
@@ -1715,6 +1718,42 @@ body {
   }
   .mobile-filter-chips::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Templates mobile seg — same height as search bar, horizontal scroll */
+  .templates-mobile-seg {
+    display: flex !important;
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 3px;
+    gap: 2px;
+    background: var(--bg-sunk);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-sizing: border-box;
+    margin-bottom: 14px;
+  }
+  .templates-mobile-seg::-webkit-scrollbar { display: none; }
+  .templates-mobile-seg button {
+    appearance: none;
+    border: none;
+    background: transparent;
+    padding: 6px 12px;
+    border-radius: 7px;
+    font-family: var(--font-sans);
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background 0.12s, color 0.12s;
+  }
+  .templates-mobile-seg button.active {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 1px 4px rgba(229, 112, 76, 0.35);
   }
 
   /* Templates 2-col grid */

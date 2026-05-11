@@ -448,8 +448,8 @@ export default function TemplatesPage() {
         </div>
       </div>
 
-      {/* Mobile chips filter */}
-      <div className="mobile-filter-chips" style={{ marginBottom: 14 }}>
+      {/* Mobile seg filter */}
+      <div className="templates-mobile-seg">
         {[
           { v: "all", l: "Tous" },
           { v: "system", l: "Système" },
@@ -464,7 +464,7 @@ export default function TemplatesPage() {
           <button
             key={v}
             type="button"
-            className={`history-chip${mobileSourceFilter === v ? " active" : ""}`}
+            className={mobileSourceFilter === v ? "active" : ""}
             onClick={() => setMobileSourceFilter(v)}
           >
             {l}

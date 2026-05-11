@@ -188,13 +188,17 @@ export default function ProfilePage() {
       setPreviewing(null);
       return;
     }
+    // Stop any running preview then signal start immediately (no perceived lag)
     currentAudioRef.current?.pause();
     speechSynthesis.cancel();
     currentAudioRef.current = null;
     setPreviewing(name);
+
+    const isFemale = VOICES.find((v) => v.name === name)?.meta.includes("F") ?? true;
     const sampleText = lang === "fr"
       ? "Bonjour, je suis votre assistant Content IQ. Comment puis-je vous aider ?"
       : "Hello, I'm your Content IQ assistant. How can I help you today?";
+
     try {
       const res = await api.post("/voice/synthesize", { text: sampleText, voiceId, speed: 1 }, { responseType: "arraybuffer" });
       const ct = String(res.headers["content-type"] ?? "");
@@ -209,9 +213,19 @@ export default function ProfilePage() {
       } else {
         const json = JSON.parse(new TextDecoder().decode(res.data as ArrayBuffer)) as { data?: { useNativeTts?: boolean; text?: string } };
         if (json.data?.useNativeTts && json.data.text) {
+          // Gender-aware native TTS fallback — tries to match browser voice by gender + lang
           const utt = new SpeechSynthesisUtterance(json.data.text);
           utt.lang = lang === "fr" ? "fr-FR" : "en-US";
-          utt.onend = () => setPreviewing(null);
+          const availVoices = speechSynthesis.getVoices();
+          const langPrefix  = lang === "fr" ? "fr" : "en";
+          const genderVoice = availVoices.find((v) =>
+            v.lang.toLowerCase().startsWith(langPrefix) &&
+            (isFemale ? /female|femme|f$/i.test(v.name) : /male|homme|m$/i.test(v.name))
+          ) ?? availVoices.find((v) => v.lang.toLowerCase().startsWith(langPrefix));
+          if (genderVoice) utt.voice = genderVoice;
+          utt.pitch = isFemale ? 1.25 : 0.72;
+          utt.rate  = 0.92;
+          utt.onend   = () => setPreviewing(null);
           utt.onerror = () => setPreviewing(null);
           speechSynthesis.speak(utt);
         } else { setPreviewing(null); }
@@ -390,7 +404,7 @@ export default function ProfilePage() {
                   <div className="row between">
                     <strong style={{ fontSize: 15 }}>{name}</strong>
                     <span style={{ padding: 2, color: isPlaying ? "var(--voice)" : "var(--ink-mute)", display: "flex", alignItems: "center" }}>
-                      <Ico icon={isPlaying ? CiqIcon.stop : CiqIcon.play} />
+                      <Ico icon={isPlaying ? CiqIcon.stop : CiqIcon.play} size={22} />
                     </span>
                   </div>
                   <div className="t-mono" style={{ fontSize: 11, color: "var(--ink-mute)", marginTop: 3 }}>{meta}</div>

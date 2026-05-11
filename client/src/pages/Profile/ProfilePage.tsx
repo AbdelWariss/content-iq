@@ -92,6 +92,7 @@ export default function ProfilePage() {
   const [activationWord, setActivationWord] = useState("CONTENT");
   const [isMicTesting, setIsMicTesting]     = useState(false);
   const [openSelector, setOpenSelector]     = useState<null | "voice" | "speed" | "mic" | "activation">(null);
+  const [editingProfile, setEditingProfile] = useState(false);
 
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const [previewing, setPreviewing] = useState<string | null>(null);
@@ -208,13 +209,32 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-            <div className="row" style={{ justifyContent: "flex-end", marginTop: 16, gap: 8 }}>
-              <button type="submit" disabled={isSaving} className="btn btn-primary">
-                {isSaving ? t("profile.savingBtn") : t("profile.saveBtn")}
-              </button>
-              <button type="button" className="btn btn-outline" style={{ color: "var(--accent)" }} onClick={logout}>
-                {t("profile.logoutBtn")}
-              </button>
+            <div className="row between" style={{ marginTop: 16 }}>
+              {/* Subscription info inline */}
+              <div className="row" style={{ gap: 10 }}>
+                <span className="pill accent">{planLabel[user.role] ?? t("profile.subFree")}</span>
+                <span style={{ fontSize: 14, color: "var(--ink-soft)" }}>
+                  {user.role === "pro" ? t("profile.subPro") : user.role === "business" ? t("profile.subBusiness") : t("profile.subFree")}
+                </span>
+                {user.role !== "free" && (
+                  <button type="button" className="btn btn-ghost btn-sm" style={{ color: "var(--ink-mute)" }} onClick={() => stripeService.openPortal().catch(() => {})}>
+                    {t("profile.stripePortal")}
+                  </button>
+                )}
+                {user.role !== "business" && (
+                  <button type="button" className="btn btn-outline btn-sm" onClick={() => stripeService.createCheckout(user.role === "free" ? "pro" : "business").catch(() => {})}>
+                    {user.role === "free" ? t("profile.upgradePro") : t("profile.upgradeBusiness")}
+                  </button>
+                )}
+              </div>
+              <div className="row" style={{ gap: 8 }}>
+                <button type="submit" disabled={isSaving} className="btn btn-primary">
+                  {isSaving ? t("profile.savingBtn") : t("profile.saveBtn")}
+                </button>
+                <button type="button" className="btn btn-outline" style={{ color: "var(--accent)" }} onClick={logout}>
+                  {t("profile.logoutBtn")}
+                </button>
+              </div>
             </div>
           </div>
         </form>
@@ -326,32 +346,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Subscription */}
-        <div className="card" style={{ padding: 24 }}>
-          <div className="row between">
-            <div>
-              <span className="t-eyebrow">{t("profile.subSection")}</span>
-              <div className="row" style={{ gap: 10, marginTop: 8 }}>
-                <span className="pill accent">{planLabel[user.role] ?? t("profile.subFree")}</span>
-                <span style={{ fontSize: 14, color: "var(--ink-soft)" }}>
-                  {user.role === "pro" ? t("profile.subPro") : user.role === "business" ? t("profile.subBusiness") : t("profile.subFree")}
-                </span>
-              </div>
-            </div>
-            <div className="row" style={{ gap: 8 }}>
-              {user.role !== "free" && (
-                <button type="button" className="btn btn-outline" onClick={() => stripeService.openPortal().catch(() => {})}>
-                  {t("profile.stripePortal")}
-                </button>
-              )}
-              {user.role !== "business" && (
-                <button type="button" className="btn btn-primary" onClick={() => stripeService.createCheckout(user.role === "free" ? "pro" : "business").catch(() => {})}>
-                  {user.role === "free" ? t("profile.upgradePro") : t("profile.upgradeBusiness")}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* ══════════════════════════════════════════
@@ -386,8 +380,60 @@ export default function ProfilePage() {
                 ★ {planLabel[user.role] ?? "Free"} · {remaining} cr.
               </span>
             </div>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              style={{ padding: 8, flexShrink: 0, alignSelf: "flex-start" }}
+              onClick={() => setEditingProfile(true)}
+            >
+              <Ico icon={CiqIcon.edit} size={18} />
+            </button>
           </div>
         </div>
+
+        {/* Edit profile modal (mobile) */}
+        {editingProfile && (
+          <div
+            style={{ position: "fixed", inset: 0, zIndex: 60, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }}
+            onClick={() => setEditingProfile(false)}
+          >
+            <div
+              className="card"
+              style={{ width: "100%", maxWidth: 480, padding: 24, margin: "0", borderBottomLeftRadius: 0, borderBottomRightRadius: 0, borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="row between" style={{ marginBottom: 18 }}>
+                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>Modifier le profil</h3>
+                <button type="button" className="btn btn-ghost btn-sm" style={{ padding: 6 }} onClick={() => setEditingProfile(false)}>
+                  <Ico icon={CiqIcon.x} />
+                </button>
+              </div>
+              <form onSubmit={handleSubmit(async (data) => { await onSubmit(data); setEditingProfile(false); })}>
+                <div className="col" style={{ gap: 12 }}>
+                  <div>
+                    <label className="label">{t("profile.labelName")}</label>
+                    <input className="input" {...register("name")} />
+                    {errors.name && <p style={{ fontSize: 11, color: "var(--accent)", marginTop: 4 }}>{errors.name.message}</p>}
+                  </div>
+                  <div>
+                    <label className="label">{t("profile.labelEmail")}</label>
+                    <input className="input" defaultValue={user.email} readOnly style={{ opacity: 0.7 }} />
+                  </div>
+                  <div>
+                    <label className="label">{t("profile.labelBio")}</label>
+                    <input className="input" placeholder={t("profile.bioPh")} {...register("bio")} />
+                  </div>
+                </div>
+                <div className="row" style={{ gap: 10, marginTop: 18 }}>
+                  <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setEditingProfile(false)}>Annuler</button>
+                  <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={isSaving}>
+                    {isSaving ? t("profile.savingBtn") : t("profile.saveBtn")}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Préférences vocales */}
         <SectionHeader label="Préférences vocales" />
@@ -403,7 +449,20 @@ export default function ProfilePage() {
           </div>
           <SettingsRow label="Vitesse TTS" value={SPEEDS_MOBILE.find((s) => s.v === mobileSpeed)?.l ?? "1.0×"} onClick={() => setOpenSelector("speed")} />
           <SettingsRow label="Sensibilité micro" value={micSensitivity} onClick={() => setOpenSelector("mic")} />
-          <SettingsRow label="Mot d'activation" value={`« ${activationWord} »`} onClick={() => setOpenSelector("activation")} last />
+          <SettingsRow label="Mot d'activation" value={`« ${activationWord} »`} onClick={() => setOpenSelector("activation")} />
+          {/* Auto-play toggle */}
+          <div className="row between" style={{ padding: "14px 0" }}>
+            <div className="col" style={{ gap: 2 }}>
+              <span style={{ fontSize: 15 }}>Lecture auto des réponses</span>
+              <span style={{ fontSize: 12, color: "var(--ink-mute)" }}>L'assistant lit ses réponses à voix haute.</span>
+            </div>
+            <div
+              onClick={() => setAutoPlay((v) => !v)}
+              style={{ width: 44, height: 26, borderRadius: 999, background: autoPlay ? "var(--voice)" : "var(--line)", position: "relative", flexShrink: 0, transition: "background 0.2s", cursor: "pointer" }}
+            >
+              <span style={{ position: "absolute", top: 3, left: autoPlay ? "calc(100% - 23px)" : 3, width: 20, height: 20, borderRadius: "50%", background: "white", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
+            </div>
+          </div>
         </div>
 
         {/* Mic test card */}

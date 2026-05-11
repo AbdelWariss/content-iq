@@ -307,7 +307,7 @@ export default function ProfilePage() {
       {/* ══════════════════════════════════════════
           DESKTOP layout (hidden on mobile)
           ══════════════════════════════════════════ */}
-      <div className="hide-mobile" style={{ padding: "32px 40px" }}>
+      <div className="hide-mobile" style={{ padding: "32px 40px", maxWidth: 980, margin: "0 auto" }}>
         <h1 className="t-display" style={{ fontSize: 40, margin: "0 0 6px" }}>{t("profile.title")}</h1>
         <p style={{ color: "var(--ink-soft)", marginBottom: 28 }}>{t("profile.subtitle")}</p>
 

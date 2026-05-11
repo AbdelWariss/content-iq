@@ -9,110 +9,40 @@ import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
-const TYPE_BADGE_STYLE: Record<string, { background: string; content: React.ReactNode }> = {
-  linkedin: {
-    background: "#0077B5",
-    content: (
-      <span style={{ color: "white", fontWeight: 700, fontSize: 15, fontFamily: "serif" }}>in</span>
-    ),
-  },
-  instagram: {
-    background: "linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)",
-    content: <span style={{ color: "white", fontSize: 17 }}>&#128247;</span>,
-  },
-  twitter: {
-    background: "#000",
-    content: (
-      <span style={{ color: "white", fontWeight: 800, fontSize: 15, fontFamily: "sans-serif" }}>
-        X
-      </span>
-    ),
-  },
-  youtube: {
-    background: "#FF0000",
-    content: (
-      <span
-        style={{
-          color: "white",
-          fontSize: 13,
-          lineHeight: 1,
-          display: "inline-block",
-          borderLeft: "13px solid white",
-          borderTop: "8px solid transparent",
-          borderBottom: "8px solid transparent",
-        }}
-      />
-    ),
-  },
-  blog: {
-    background: "#f59e0b",
-    content: (
-      <span style={{ color: "white", fontWeight: 700, fontSize: 15, fontFamily: "serif" }}>A</span>
-    ),
-  },
-  press: {
-    background: "#f59e0b",
-    content: (
-      <span style={{ color: "white", fontWeight: 700, fontSize: 15, fontFamily: "serif" }}>A</span>
-    ),
-  },
-  email: {
-    background: "#3b82f6",
-    content: <span style={{ color: "white", fontSize: 17 }}>&#9993;</span>,
-  },
-  newsletter: {
-    background: "#3b82f6",
-    content: <span style={{ color: "white", fontSize: 17 }}>&#9993;</span>,
-  },
-  product: {
-    background: "#10b981",
-    content: <span style={{ color: "white", fontSize: 17 }}>&#128717;</span>,
-  },
-  bio: {
-    background: "#7c3aed",
-    content: <span style={{ color: "white", fontSize: 17 }}>&#128100;</span>,
-  },
-  pitch: {
-    background: "#f97316",
-    content: <span style={{ color: "white", fontSize: 17 }}>&#128227;</span>,
-  },
-  slogan: {
-    background: "#ec4899",
-    content: <span style={{ color: "white", fontSize: 17 }}>&#10024;</span>,
-  },
+const TYPE_ICON_CONFIG: Record<string, { icon: React.ReactNode; color: string; bg: string }> = {
+  linkedin:   { icon: CiqIcon.linkedin, color: "#0077B5", bg: "rgba(0,119,181,0.1)" },
+  instagram:  { icon: CiqIcon.insta,    color: "#dc2743", bg: "rgba(220,39,67,0.1)" },
+  twitter:    { icon: CiqIcon.twitter,  color: "#111",    bg: "rgba(0,0,0,0.07)" },
+  youtube:    { icon: CiqIcon.yt,       color: "#FF0000", bg: "rgba(255,0,0,0.09)" },
+  blog:       { icon: CiqIcon.blog,     color: "#d97706", bg: "rgba(245,158,11,0.1)" },
+  press:      { icon: CiqIcon.press,    color: "#d97706", bg: "rgba(245,158,11,0.1)" },
+  email:      { icon: CiqIcon.email,    color: "#2563eb", bg: "rgba(59,130,246,0.1)" },
+  newsletter: { icon: CiqIcon.email,    color: "#2563eb", bg: "rgba(59,130,246,0.1)" },
+  product:    { icon: CiqIcon.product,  color: "#059669", bg: "rgba(16,185,129,0.1)" },
+  bio:        { icon: CiqIcon.bio,      color: "#7c3aed", bg: "rgba(124,58,237,0.1)" },
+  pitch:      { icon: CiqIcon.pitch,    color: "#ea580c", bg: "rgba(249,115,22,0.1)" },
+  slogan:     { icon: CiqIcon.sparkle,  color: "#db2777", bg: "rgba(236,72,153,0.1)" },
 };
 
 function TypeBadge({ type }: { type: string }) {
-  const badge = TYPE_BADGE_STYLE[type];
-  if (!badge) {
-    return (
-      <div
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 10,
-          background: "var(--bg-sunk)",
-          display: "grid",
-          placeItems: "center",
-        }}
-      >
-        <Ico icon={CiqIcon.templ} />
-      </div>
-    );
-  }
+  const cfg = TYPE_ICON_CONFIG[type];
   return (
     <div
       style={{
-        width: 36,
-        height: 36,
-        borderRadius: 10,
-        background: badge.background,
+        width: 40,
+        height: 40,
+        borderRadius: 11,
+        background: cfg?.bg ?? "var(--bg-sunk)",
         display: "grid",
         placeItems: "center",
         flexShrink: 0,
       }}
     >
-      {badge.content}
+      <Ico
+        icon={cfg?.icon ?? CiqIcon.templ}
+        size={22}
+        style={{ color: cfg?.color ?? "var(--ink-mute)" }}
+      />
     </div>
   );
 }

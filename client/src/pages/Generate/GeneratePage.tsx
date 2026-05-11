@@ -384,7 +384,7 @@ export default function GeneratePage() {
                           cursor: "pointer",
                         }}
                       >
-                        <Ico icon={icon} style={{ color: on ? "var(--ink)" : "var(--ink-mute)" }} />
+                        <Ico icon={icon} size={26} style={{ color: on ? "var(--ink)" : "var(--ink-mute)" }} />
                         <div
                           style={{
                             fontSize: 11.5,

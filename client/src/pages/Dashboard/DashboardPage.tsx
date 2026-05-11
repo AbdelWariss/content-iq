@@ -417,43 +417,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* KPI: Brouillons */}
-            <div className="card" style={{ padding: 24, position: "relative", overflow: "hidden" }}>
-              <Ico
-                icon={CiqIcon.history}
-                size={120}
-                style={{
-                  position: "absolute",
-                  right: -16,
-                  bottom: -20,
-                  color: "var(--ink-soft)",
-                  opacity: 0.07,
-                  pointerEvents: "none",
-                }}
-              />
-              <div className="row between" style={{ marginBottom: 14, position: "relative" }}>
-                <span className="t-eyebrow">Brouillons</span>
-                <Ico icon={CiqIcon.history} style={{ color: "var(--ink-soft)" }} size={22} />
-              </div>
-              <div
-                className="t-mono"
-                style={{ fontSize: 48, fontWeight: 600, lineHeight: 1, position: "relative" }}
-              >
-                {stats.totals.contents > 0
-                  ? Math.max(0, stats.totals.contents - (stats.totals.contentsThisMonth ?? 0))
-                  : 0}
-              </div>
-              <div
-                style={{
-                  fontSize: 15,
-                  color: "var(--ink-mute)",
-                  marginTop: 10,
-                  position: "relative",
-                }}
-              >
-                auto-save
-              </div>
-            </div>
           </div>
 
           {/* Charts row */}

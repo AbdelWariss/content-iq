@@ -1649,10 +1649,6 @@ body {
   .dashboard-bottom-grid {
     grid-template-columns: 1fr !important;
   }
-  /* Masquer le journal voix sur mobile */
-  .dash-voice-journal {
-    display: none !important;
-  }
 
   /* Navbar : masque le badge plan sur mobile */
   .navbar-plan-badge {
@@ -1772,6 +1768,9 @@ body {
   /* Grid history — 2 colonnes ajustées à l'écran */
   .history-grid-container { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
   .history-grid-card    { padding: 12px !important; min-width: 0; }
+
+  /* ── Profile page mobile ── */
+  .profile-page-wrap { padding: 14px 14px 100px !important; max-width: 100% !important; }
 
   /* ── Templates page mobile ── */
   .templates-page-wrap  { padding: 14px 14px 100px !important; }

@@ -36,9 +36,8 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   ];
 
   const accountItems = [
-    { to: "/profile", icon: CiqIcon.user, label: t("sidebar.profile") },
+    { to: "/profile", icon: CiqIcon.user, label: "Profil & Paramètres" },
     { to: "/pricing", icon: CiqIcon.card, label: t("sidebar.billing") },
-    { to: "/profile#settings", icon: CiqIcon.gear, label: t("sidebar.settings") },
   ];
 
   return (

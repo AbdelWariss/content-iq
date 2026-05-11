@@ -8,6 +8,7 @@ import { markdownToHTML } from "@/lib/markdownToHtml";
 import api from "@/services/axios";
 import { contentService } from "@/services/content.service";
 import { exportService } from "@/services/export.service";
+import { templateService } from "@/services/template.service";
 import { resetEditor, setEditorContent, setParams } from "@/store/contentSlice";
 import { useAppDispatch, useAppSelector } from "@/store/index";
 import { type GenerateContentInput, GenerateContentSchema } from "@contentiq/shared";
@@ -77,6 +78,10 @@ export default function GeneratePage() {
   ];
   const [isExporting, setIsExporting] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [isSavingContent, setIsSavingContent] = useState(false);
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const { stream, stop } = useStreaming();
   const { startListening, stopListening, status: voiceStatus } = useVoice();
   const [copied, setCopied] = useState(false);
@@ -241,6 +246,43 @@ export default function GeneratePage() {
     [savedContentId, currentParams.subject],
   );
 
+  const handleSaveContent = useCallback(async () => {
+    if (!savedContentId) return;
+    setIsSavingContent(true);
+    try {
+      await contentService.update(savedContentId, { body: editorContent });
+      queryClient.invalidateQueries({ queryKey: ["contents"] });
+      toast({ title: t("generate.contentSaved") });
+    } catch {
+      toast({ title: "Erreur de sauvegarde", variant: "destructive" });
+    } finally {
+      setIsSavingContent(false);
+    }
+  }, [savedContentId, editorContent, queryClient, t]);
+
+  const handleSaveAsTemplate = useCallback(async () => {
+    if (!templateName.trim()) return;
+    setIsSavingTemplate(true);
+    const formValues = watch();
+    try {
+      await templateService.create({
+        name: templateName.trim(),
+        type: formValues.type as Parameters<typeof templateService.create>[0]["type"],
+        category: "marketing",
+        promptSchema: formValues.subject ?? "",
+        variables: [],
+        isPublic: false,
+      });
+      toast({ title: `Template "${templateName.trim()}" enregistré` });
+      setShowSaveTemplate(false);
+      setTemplateName("");
+    } catch {
+      toast({ title: "Erreur lors de l'enregistrement du template", variant: "destructive" });
+    } finally {
+      setIsSavingTemplate(false);
+    }
+  }, [templateName, watch]);
+
   useEffect(() => {
     if (!displayContent) return;
     autoSaveTimer.current = setTimeout(() => {
@@ -260,6 +302,68 @@ export default function GeneratePage() {
 
   return (
     <div className="generate-layout">
+      {/* Save-as-template modal */}
+      {showSaveTemplate && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 60,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(0,0,0,0.45)",
+            backdropFilter: "blur(6px)",
+          }}
+          onClick={() => setShowSaveTemplate(false)}
+        >
+          <div
+            className="card"
+            style={{ width: "100%", maxWidth: 420, padding: 24, margin: "0 16px" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="row between" style={{ marginBottom: 16 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>Enregistrer comme template</h3>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                style={{ padding: 6 }}
+                onClick={() => setShowSaveTemplate(false)}
+              >
+                <Ico icon={CiqIcon.x} />
+              </button>
+            </div>
+            <label className="label">Nom du template</label>
+            <input
+              className="input"
+              placeholder="Ex : Post LinkedIn inspirant"
+              value={templateName}
+              onChange={(e) => setTemplateName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSaveAsTemplate()}
+              autoFocus
+            />
+            <div className="row" style={{ gap: 10, marginTop: 16 }}>
+              <button
+                type="button"
+                className="btn btn-outline"
+                style={{ flex: 1 }}
+                onClick={() => setShowSaveTemplate(false)}
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ flex: 1 }}
+                disabled={!templateName.trim() || isSavingTemplate}
+                onClick={handleSaveAsTemplate}
+              >
+                {isSavingTemplate ? "Enregistrement…" : "Enregistrer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* VoiceOrb overlay */}
       {showVoiceOrb && (
         <VoiceOrb
@@ -688,6 +792,25 @@ export default function GeneratePage() {
               >
                 <Ico icon={CiqIcon.refresh} />
                 {t("generate.regenerate")}
+              </button>
+              {savedContentId && (
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={handleSaveContent}
+                  disabled={isSavingContent}
+                >
+                  <Ico icon={CiqIcon.check} />
+                  {isSavingContent ? "Sauvegarde…" : "Sauvegarder"}
+                </button>
+              )}
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={() => { setTemplateName(""); setShowSaveTemplate(true); }}
+              >
+                <Ico icon={CiqIcon.templ} />
+                Template
               </button>
               {savedContentId && (
                 <div style={{ position: "relative" }}>

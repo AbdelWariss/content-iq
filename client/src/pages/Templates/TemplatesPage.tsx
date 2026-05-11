@@ -294,11 +294,11 @@ export default function TemplatesPage() {
   const TYPE_FILTERS = [
     { v: "all",      l: t("templates.catAll") },
     { v: "system",   l: "Système" },
-    { v: "perso",    l: "Persos" },
+    { v: "perso",    l: "Mes templates" },
     { v: "linkedin", l: "LinkedIn" },
+    { v: "social",   l: "Réseaux Sociaux" },
     { v: "blog",     l: "Article" },
     { v: "email",    l: "Email" },
-    { v: "twitter",  l: "X" },
     { v: "product",  l: "Produit" },
     { v: "bio",      l: "Bio" },
   ];
@@ -362,6 +362,7 @@ export default function TemplatesPage() {
     }
     if (mobileSourceFilter === "system") list = list.filter((t) => t.isPublic);
     else if (mobileSourceFilter === "perso") list = list.filter((t) => !t.isPublic);
+    else if (mobileSourceFilter === "social") list = list.filter((t) => ["twitter", "instagram", "youtube"].includes(t.type));
     else if (mobileSourceFilter !== "all") list = list.filter((t) => t.type === mobileSourceFilter);
     return list;
   })();

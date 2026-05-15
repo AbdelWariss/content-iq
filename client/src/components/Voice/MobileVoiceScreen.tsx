@@ -33,7 +33,12 @@ export function MobileVoiceScreen({
   if (!isOpen) return null;
 
   return (
-    <div className="mobile-voice-overlay" aria-modal="true" role="dialog" aria-label="Dictée vocale">
+    <div
+      className="mobile-voice-overlay"
+      aria-modal="true"
+      role="dialog"
+      aria-label="Dictée vocale"
+    >
       {/* Close button */}
       <div
         style={{
@@ -70,7 +75,14 @@ export function MobileVoiceScreen({
         }}
       >
         {/* Pulsing orb */}
-        <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div
+          style={{
+            position: "relative",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           {/* Outer pulse ring */}
           <div
             style={{
@@ -127,7 +139,13 @@ export function MobileVoiceScreen({
 
         {/* Waveform bars */}
         <div className="wave" style={{ color: voice, height: 32 }}>
-          <i /><i /><i /><i /><i /><i /><i />
+          <i />
+          <i />
+          <i />
+          <i />
+          <i />
+          <i />
+          <i />
         </div>
 
         {/* Transcript area */}
@@ -169,7 +187,14 @@ export function MobileVoiceScreen({
       </div>
 
       {/* Action dock */}
-      <div className="mobile-editor-dock" style={{ justifyContent: "center", gap: 12, paddingBottom: "calc(10px + env(safe-area-inset-bottom, 0px))" }}>
+      <div
+        className="mobile-editor-dock"
+        style={{
+          justifyContent: "center",
+          gap: 12,
+          paddingBottom: "calc(10px + env(safe-area-inset-bottom, 0px))",
+        }}
+      >
         {onRestart && (
           <button
             type="button"

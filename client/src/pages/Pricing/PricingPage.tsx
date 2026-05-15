@@ -213,7 +213,10 @@ export default function PricingPage() {
                 }}
               >
                 {plan.featured && (
-                  <span className="pill accent" style={{ position: "absolute", top: -12, left: 28 }}>
+                  <span
+                    className="pill accent"
+                    style={{ position: "absolute", top: -12, left: 28 }}
+                  >
                     ★ {plan.tag}
                   </span>
                 )}
@@ -230,7 +233,12 @@ export default function PricingPage() {
                   <span style={{ fontSize: 12, color: "var(--ink-mute)" }}>$</span>
                   <span
                     className="t-mono"
-                    style={{ fontSize: 56, fontWeight: 300, letterSpacing: "-0.04em", lineHeight: 1 }}
+                    style={{
+                      fontSize: 56,
+                      fontWeight: 300,
+                      letterSpacing: "-0.04em",
+                      lineHeight: 1,
+                    }}
                   >
                     {price}
                   </span>
@@ -261,7 +269,12 @@ export default function PricingPage() {
                   <button
                     type="button"
                     className={`btn ${plan.featured ? "btn-primary" : "btn-outline"} btn-lg`}
-                    style={{ width: "100%", justifyContent: "center", marginBottom: 18, ...(plan.featured ? { color: "white" } : {}) }}
+                    style={{
+                      width: "100%",
+                      justifyContent: "center",
+                      marginBottom: 18,
+                      ...(plan.featured ? { color: "white" } : {}),
+                    }}
                     onClick={() => handleUpgrade(plan.id)}
                     disabled={!!loading}
                   >

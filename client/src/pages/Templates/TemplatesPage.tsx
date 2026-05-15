@@ -10,18 +10,18 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 const TYPE_ICON_CONFIG: Record<string, { icon: React.ReactNode; color: string; bg: string }> = {
-  linkedin:   { icon: CiqIcon.linkedin, color: "#0077B5", bg: "rgba(0,119,181,0.1)" },
-  instagram:  { icon: CiqIcon.insta,    color: "#dc2743", bg: "rgba(220,39,67,0.1)" },
-  twitter:    { icon: CiqIcon.twitter,  color: "#111",    bg: "rgba(0,0,0,0.07)" },
-  youtube:    { icon: CiqIcon.yt,       color: "#FF0000", bg: "rgba(255,0,0,0.09)" },
-  blog:       { icon: CiqIcon.blog,     color: "#d97706", bg: "rgba(245,158,11,0.1)" },
-  press:      { icon: CiqIcon.press,    color: "#d97706", bg: "rgba(245,158,11,0.1)" },
-  email:      { icon: CiqIcon.email,    color: "#2563eb", bg: "rgba(59,130,246,0.1)" },
-  newsletter: { icon: CiqIcon.email,    color: "#2563eb", bg: "rgba(59,130,246,0.1)" },
-  product:    { icon: CiqIcon.product,  color: "#059669", bg: "rgba(16,185,129,0.1)" },
-  bio:        { icon: CiqIcon.bio,      color: "#7c3aed", bg: "rgba(124,58,237,0.1)" },
-  pitch:      { icon: CiqIcon.pitch,    color: "#ea580c", bg: "rgba(249,115,22,0.1)" },
-  slogan:     { icon: CiqIcon.sparkle,  color: "#db2777", bg: "rgba(236,72,153,0.1)" },
+  linkedin: { icon: CiqIcon.linkedin, color: "#0077B5", bg: "rgba(0,119,181,0.1)" },
+  instagram: { icon: CiqIcon.insta, color: "#dc2743", bg: "rgba(220,39,67,0.1)" },
+  twitter: { icon: CiqIcon.twitter, color: "#111", bg: "rgba(0,0,0,0.07)" },
+  youtube: { icon: CiqIcon.yt, color: "#FF0000", bg: "rgba(255,0,0,0.09)" },
+  blog: { icon: CiqIcon.blog, color: "#d97706", bg: "rgba(245,158,11,0.1)" },
+  press: { icon: CiqIcon.press, color: "#d97706", bg: "rgba(245,158,11,0.1)" },
+  email: { icon: CiqIcon.email, color: "#2563eb", bg: "rgba(59,130,246,0.1)" },
+  newsletter: { icon: CiqIcon.email, color: "#2563eb", bg: "rgba(59,130,246,0.1)" },
+  product: { icon: CiqIcon.product, color: "#059669", bg: "rgba(16,185,129,0.1)" },
+  bio: { icon: CiqIcon.bio, color: "#7c3aed", bg: "rgba(124,58,237,0.1)" },
+  pitch: { icon: CiqIcon.pitch, color: "#ea580c", bg: "rgba(249,115,22,0.1)" },
+  slogan: { icon: CiqIcon.sparkle, color: "#db2777", bg: "rgba(236,72,153,0.1)" },
 };
 
 function TypeBadge({ type }: { type: string }) {
@@ -77,31 +77,49 @@ function TemplateCard({
   const isMine = !template.isPublic || canDelete;
 
   return (
-    <div className="card template-card" style={{ padding: 20, position: "relative", display: "flex", flexDirection: "column" }}>
+    <div
+      className="card template-card"
+      style={{ padding: 20, position: "relative", display: "flex", flexDirection: "column" }}
+    >
       <div className="row between" style={{ marginBottom: 14 }}>
         <TypeBadge type={template.type} />
         {isMine ? (
-          <span className="pill accent template-card-badge" style={{ padding: "2px 9px", fontSize: 10, borderRadius: 6 }}>
+          <span
+            className="pill accent template-card-badge"
+            style={{ padding: "2px 9px", fontSize: 10, borderRadius: 6 }}
+          >
             perso
           </span>
         ) : (
-          <span className="pill template-card-badge" style={{ padding: "2px 9px", fontSize: 10, borderRadius: 6 }}>
+          <span
+            className="pill template-card-badge"
+            style={{ padding: "2px 9px", fontSize: 10, borderRadius: 6 }}
+          >
             {template.isPublic ? "system" : template.category}
           </span>
         )}
       </div>
 
       <h3 style={{ fontSize: 16, margin: "0 0 4px", fontWeight: 600 }}>{template.name}</h3>
-      <p className="template-card-type" style={{ fontSize: 13, color: "var(--ink-soft)", margin: "0 0 4px" }}>
+      <p
+        className="template-card-type"
+        style={{ fontSize: 13, color: "var(--ink-soft)", margin: "0 0 4px" }}
+      >
         {TYPE_LABELS[template.type] ?? template.type}
       </p>
-      <p className="template-card-descr" style={{ fontSize: 13, color: "var(--ink-soft)", margin: "0 0 14px", lineHeight: 1.5 }}>
+      <p
+        className="template-card-descr"
+        style={{ fontSize: 13, color: "var(--ink-soft)", margin: "0 0 14px", lineHeight: 1.5 }}
+      >
         {template.description ?? t("templates.noDescr")}
       </p>
 
       <div className="hr template-card-hr" style={{ margin: "12px 0" }} />
 
-      <div className="row between template-card-footer" style={{ fontSize: 11.5, color: "var(--ink-mute)" }}>
+      <div
+        className="row between template-card-footer"
+        style={{ fontSize: 11.5, color: "var(--ink-mute)" }}
+      >
         <span className="t-mono">
           {t("templates.usageCount", { n: template.usageCount?.toLocaleString() ?? 0 })}
         </span>
@@ -117,7 +135,11 @@ function TemplateCard({
               <Ico icon={CiqIcon.trash} size={13} />
             </button>
           )}
-          <button type="button" className="btn btn-ghost btn-sm hide-mobile" onClick={() => onUse(template)}>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm hide-mobile"
+            onClick={() => onUse(template)}
+          >
             {t("templates.useBtn")}
           </button>
         </div>
@@ -292,15 +314,15 @@ export default function TemplatesPage() {
   const user = useAppSelector((s) => s.auth.user);
   const { t } = useTranslation();
   const TYPE_FILTERS = [
-    { v: "all",      l: t("templates.catAll") },
-    { v: "system",   l: "Système" },
-    { v: "perso",    l: "Mes templates" },
+    { v: "all", l: t("templates.catAll") },
+    { v: "system", l: "Système" },
+    { v: "perso", l: "Mes templates" },
     { v: "linkedin", l: "LinkedIn" },
-    { v: "social",   l: "Réseaux Sociaux" },
-    { v: "blog",     l: "Article" },
-    { v: "email",    l: "Email" },
-    { v: "product",  l: "Produit" },
-    { v: "bio",      l: "Bio" },
+    { v: "social", l: "Réseaux Sociaux" },
+    { v: "blog", l: "Article" },
+    { v: "email", l: "Email" },
+    { v: "product", l: "Produit" },
+    { v: "bio", l: "Bio" },
   ];
   const [mobileSourceFilter, setMobileSourceFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -362,7 +384,8 @@ export default function TemplatesPage() {
     }
     if (mobileSourceFilter === "system") list = list.filter((t) => t.isPublic);
     else if (mobileSourceFilter === "perso") list = list.filter((t) => !t.isPublic);
-    else if (mobileSourceFilter === "social") list = list.filter((t) => ["twitter", "instagram", "youtube"].includes(t.type));
+    else if (mobileSourceFilter === "social")
+      list = list.filter((t) => ["twitter", "instagram", "youtube"].includes(t.type));
     else if (mobileSourceFilter !== "all") list = list.filter((t) => t.type === mobileSourceFilter);
     return list;
   })();
@@ -562,7 +585,9 @@ export default function TemplatesPage() {
                 ? t("templates.noResultDesc", { q: search })
                 : mobileSourceFilter !== "all"
                   ? t("templates.emptyCatDesc", {
-                      cat: TYPE_FILTERS.find((f) => f.v === mobileSourceFilter)?.l ?? mobileSourceFilter,
+                      cat:
+                        TYPE_FILTERS.find((f) => f.v === mobileSourceFilter)?.l ??
+                        mobileSourceFilter,
                     })
                   : t("templates.emptyDesc")}
             </p>

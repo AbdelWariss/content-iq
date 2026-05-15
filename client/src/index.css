@@ -23,10 +23,10 @@
   --ink-mute: #99897f;
 
   /* Accents */
-  --accent: #3B82F6;
+  --accent: #3b82f6;
   --accent-ink: #1d4ed8;
   --accent-soft: #eff8ff;
-  --voice: #0891B2;
+  --voice: #0891b2;
   --voice-soft: #e0f9ff;
   --speak: #7dc97a;
   --warn: #c9a24f;
@@ -233,7 +233,7 @@
   color: white;
 }
 .btn-accent:hover {
-  background: #3B82F6;
+  background: #3b82f6;
 }
 .btn-ghost {
   background: transparent;
@@ -662,20 +662,20 @@
 
 /* ─── Gradients (keep compat) ─── */
 .gradient-coral {
-  background: linear-gradient(135deg, #3B82F6 0%, #3B82F6 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #3b82f6 100%);
 }
 .gradient-teal {
-  background: linear-gradient(135deg, #0891B2 0%, #0e7490 100%);
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
 }
 .gradient-voice {
-  background: linear-gradient(135deg, #0891B2 0%, #0e7490 100%);
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
 }
 .gradient-brand {
-  background: linear-gradient(135deg, #0891B2 0%, #3B82F6 100%);
+  background: linear-gradient(135deg, #0891b2 0%, #3b82f6 100%);
 }
 
 .text-gradient-brand {
-  background: linear-gradient(135deg, #0891B2, #3B82F6);
+  background: linear-gradient(135deg, #0891b2, #3b82f6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -698,7 +698,7 @@
   background: linear-gradient(135deg, #0d9488 0%, #10b981 100%);
 }
 .icon-gradient-purple {
-  background: linear-gradient(135deg, #3B82F6 0%, #ec4899 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #ec4899 100%);
 }
 .icon-gradient-red {
   background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
@@ -707,7 +707,7 @@
   background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
 }
 .icon-gradient-coral {
-  background: linear-gradient(135deg, #3B82F6 0%, #3B82F6 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #3b82f6 100%);
 }
 
 /* ─── Auth left panel — enlarged form elements ─── */
@@ -782,7 +782,7 @@
   box-shadow: 0 2px 12px rgba(59, 130, 246, 0.32);
 }
 .btn-accent:hover {
-  background: #3B82F6;
+  background: #3b82f6;
   box-shadow: 0 4px 22px rgba(59, 130, 246, 0.5);
 }
 
@@ -1002,8 +1002,8 @@ body {
   transition: box-shadow 0.25s ease, transform 0.22s ease;
 }
 .card-voice-hover:hover {
-  box-shadow: 0 12px 46px rgba(8, 145, 178, 0.54), 0 4px 14px rgba(58, 47, 37, 0.09), inset 0 1px
-    0 rgba(255, 255, 255, 0.8);
+  box-shadow: 0 12px 46px rgba(8, 145, 178, 0.54), 0 4px 14px rgba(58, 47, 37, 0.09), inset 0 1px 0
+    rgba(255, 255, 255, 0.8);
   transform: translateY(-3px);
 }
 
@@ -1418,13 +1418,23 @@ body {
   display: none;
 }
 /* History: desktop rows/header — always shown on desktop */
-.history-desktop-row { display: flex; }
-.history-mobile-row  { display: none; }
-.history-search-mic  { display: none; }
+.history-desktop-row {
+  display: flex;
+}
+.history-mobile-row {
+  display: none;
+}
+.history-search-mic {
+  display: none;
+}
 /* Template card mobile-use button — hidden on desktop */
-.template-card-use-mobile { display: none; }
+.template-card-use-mobile {
+  display: none;
+}
 /* Template card type label — always shown */
-.template-card-type { display: block; }
+.template-card-type {
+  display: block;
+}
 
 /* History grid — desktop */
 .history-grid-container {
@@ -1471,7 +1481,7 @@ body {
     padding: 0 8px env(safe-area-inset-bottom, 8px);
     background: var(--bg-elev);
     border-top: 1px solid var(--line-soft);
-    box-shadow: 0 -8px 24px -8px rgba(0,0,0,0.08);
+    box-shadow: 0 -8px 24px -8px rgba(0, 0, 0, 0.08);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
   }
@@ -1730,7 +1740,9 @@ body {
     box-sizing: border-box;
     margin-bottom: 14px;
   }
-  .templates-mobile-seg::-webkit-scrollbar { display: none; }
+  .templates-mobile-seg::-webkit-scrollbar {
+    display: none;
+  }
   .templates-mobile-seg button {
     appearance: none;
     border: none;
@@ -1759,28 +1771,64 @@ body {
   }
 
   /* ── History page mobile ── */
-  .history-page-wrap { padding: 14px 14px 100px !important; }
-  .history-mobile-header { display: flex; }
-  .history-desktop-row  { display: none !important; }
-  .history-mobile-row   { display: flex; }
-  .history-desktop-header { display: none !important; }
-  .history-search-mic   { display: flex !important; }
+  .history-page-wrap {
+    padding: 14px 14px 100px !important;
+  }
+  .history-mobile-header {
+    display: flex;
+  }
+  .history-desktop-row {
+    display: none !important;
+  }
+  .history-mobile-row {
+    display: flex;
+  }
+  .history-desktop-header {
+    display: none !important;
+  }
+  .history-search-mic {
+    display: flex !important;
+  }
   /* Grid history — 2 colonnes ajustées à l'écran */
-  .history-grid-container { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
-  .history-grid-card    { padding: 12px !important; min-width: 0; }
+  .history-grid-container {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  .history-grid-card {
+    padding: 12px !important;
+    min-width: 0;
+  }
 
   /* ── Profile page mobile ── */
-  .profile-page-wrap { max-width: 100% !important; }
+  .profile-page-wrap {
+    max-width: 100% !important;
+  }
 
   /* ── Templates page mobile ── */
-  .templates-page-wrap  { padding: 14px 14px 100px !important; }
-  .templates-mobile-header { display: flex; }
-  .template-card-descr  { display: none !important; }
-  .template-card-hr     { display: none !important; }
-  .template-card-footer { display: none !important; }
-  .template-card-use-mobile { display: flex !important; }
-  .template-card { padding: 14px !important; }
-  .template-card-badge { font-size: 9px !important; }
+  .templates-page-wrap {
+    padding: 14px 14px 100px !important;
+  }
+  .templates-mobile-header {
+    display: flex;
+  }
+  .template-card-descr {
+    display: none !important;
+  }
+  .template-card-hr {
+    display: none !important;
+  }
+  .template-card-footer {
+    display: none !important;
+  }
+  .template-card-use-mobile {
+    display: flex !important;
+  }
+  .template-card {
+    padding: 14px !important;
+  }
+  .template-card-badge {
+    font-size: 9px !important;
+  }
 
   /* Voice orb overlay mobile */
   .mobile-voice-overlay {

@@ -7,14 +7,7 @@ import { enUS, fr } from "date-fns/locale";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import {
-  Bar,
-  BarChart,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-} from "recharts";
+import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 
 const TYPE_ICON: Record<string, React.ReactNode> = {
   blog: CiqIcon.blog,
@@ -123,45 +116,88 @@ export default function DashboardPage() {
       {/* ── Mobile-only header ── */}
       <div className="dash-mobile-header">
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h1
-            className="t-display"
-            style={{ fontSize: 28, margin: "4px 0 0", lineHeight: 1.2 }}
-          >
+          <h1 className="t-display" style={{ fontSize: 28, margin: "4px 0 0", lineHeight: 1.2 }}>
             {t("dashboard.greeting", { name: firstName })}
           </h1>
           <p
             className="t-display"
-            style={{ fontSize: 22, margin: "2px 0 0", color: "var(--accent)", fontStyle: "italic", lineHeight: 1.2 }}
+            style={{
+              fontSize: 22,
+              margin: "2px 0 0",
+              color: "var(--accent)",
+              fontStyle: "italic",
+              lineHeight: 1.2,
+            }}
           >
             {t("dashboard.tagline")}
           </p>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4, flexShrink: 0, alignItems: "flex-end", marginTop: 10 }}>
-          <span style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 500,
-            padding: "4px 10px", borderRadius: 8,
-            border: "1px solid var(--line)", background: "var(--bg-elev)",
-            color: "var(--ink)", whiteSpace: "nowrap",
-          }}>
-            <span style={{ width: 6, height: 6, borderRadius: 999, background: "var(--accent)", flexShrink: 0 }} />
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 4,
+            flexShrink: 0,
+            alignItems: "flex-end",
+            marginTop: 10,
+          }}
+        >
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontFamily: "var(--font-mono)",
+              fontSize: 11,
+              fontWeight: 500,
+              padding: "4px 10px",
+              borderRadius: 8,
+              border: "1px solid var(--line)",
+              background: "var(--bg-elev)",
+              color: "var(--ink)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: 999,
+                background: "var(--accent)",
+                flexShrink: 0,
+              }}
+            />
             {plan}
           </span>
-          <span style={{
-            display: "inline-flex", alignItems: "center", gap: 5,
-            fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 500,
-            padding: "4px 10px", borderRadius: 8,
-            border: "1px solid var(--line)", background: "var(--bg-elev)",
-            color: "var(--ink)", whiteSpace: "nowrap",
-          }}>
-            <span style={{ color: "var(--accent)" }}><Ico icon={CiqIcon.zap} size={11} /></span>
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5,
+              fontFamily: "var(--font-mono)",
+              fontSize: 11,
+              fontWeight: 500,
+              padding: "4px 10px",
+              borderRadius: 8,
+              border: "1px solid var(--line)",
+              background: "var(--bg-elev)",
+              color: "var(--ink)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span style={{ color: "var(--accent)" }}>
+              <Ico icon={CiqIcon.zap} size={11} />
+            </span>
             {remaining} cr.
           </span>
         </div>
       </div>
 
       {/* Mobile: credit ring card */}
-      <div className="card mobile-credit-ring-card" style={{ marginBottom: 12, alignItems: "center", gap: 16, padding: "18px 20px" }}>
+      <div
+        className="card mobile-credit-ring-card"
+        style={{ marginBottom: 12, alignItems: "center", gap: 16, padding: "18px 20px" }}
+      >
         <svg className="ring-svg" width="80" height="80" viewBox="0 0 92 92" overflow="visible">
           <circle className="track" cx="46" cy="46" r="38" />
           <circle
@@ -177,14 +213,22 @@ export default function DashboardPage() {
         <div style={{ flex: 1 }}>
           <span className="t-eyebrow">Crédits</span>
           <div className="row" style={{ alignItems: "baseline", gap: 4, marginTop: 2 }}>
-            <span className="t-mono" style={{ fontSize: 32, fontWeight: 700, lineHeight: 1 }}>{remaining}</span>
+            <span className="t-mono" style={{ fontSize: 32, fontWeight: 700, lineHeight: 1 }}>
+              {remaining}
+            </span>
             <span style={{ color: "var(--ink-mute)", fontSize: 14 }}>/ {total}</span>
           </div>
           <div style={{ fontSize: 13, color: "var(--ink-mute)", marginTop: 4 }}>
             Renouvelle dans {daysUntilReset}j
           </div>
         </div>
-        <button type="button" className="btn btn-outline btn-sm" onClick={() => navigate("/pricing")}>Recharger</button>
+        <button
+          type="button"
+          className="btn btn-outline btn-sm"
+          onClick={() => navigate("/pricing")}
+        >
+          Recharger
+        </button>
       </div>
 
       {/* Header — desktop uniquement */}
@@ -197,7 +241,11 @@ export default function DashboardPage() {
           </h1>
         </div>
         <div className="row" style={{ gap: 8 }}>
-          <button type="button" className="btn btn-outline btn-sm" onClick={() => navigate("/history")}>
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            onClick={() => navigate("/history")}
+          >
             <Ico icon={CiqIcon.history} />
             {t("dashboard.historyBtn")}
           </button>
@@ -263,7 +311,10 @@ export default function DashboardPage() {
                   pointerEvents: "none",
                 }}
               />
-              <div className="desktop-credit-ring-wrap" style={{ width: 150, height: 150, flexShrink: 0, zIndex: 1 }}>
+              <div
+                className="desktop-credit-ring-wrap"
+                style={{ width: 150, height: 150, flexShrink: 0, zIndex: 1 }}
+              >
                 <svg
                   className="desktop-ring"
                   width="150"
@@ -416,7 +467,6 @@ export default function DashboardPage() {
                   : "pas encore de données"}
               </div>
             </div>
-
           </div>
 
           {/* Charts row */}
@@ -425,8 +475,7 @@ export default function DashboardPage() {
             <div className="card dash-chart-activity" style={{ padding: 22 }}>
               <div className="row between">
                 <span className="t-eyebrow">
-                  Activité{" "}
-                  {activePeriod === "7" ? "7j" : activePeriod === "365" ? "1an" : "30j"}
+                  Activité {activePeriod === "7" ? "7j" : activePeriod === "365" ? "1an" : "30j"}
                 </span>
                 <div className="seg">
                   <button
@@ -570,7 +619,10 @@ export default function DashboardPage() {
             <div className="card" style={{ padding: 22, minWidth: 0, overflow: "hidden" }}>
               <div className="row between" style={{ marginBottom: 14 }}>
                 <span className="t-eyebrow">Derniers contenus</span>
-                <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigate("/history")}
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => navigate("/history")}
                   style={{ color: "var(--accent)", fontWeight: 500 }}
                 >
                   Tout voir →

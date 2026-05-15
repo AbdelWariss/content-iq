@@ -86,9 +86,7 @@ export function Navbar({ onMenuOpen }: NavbarProps) {
         </div>
 
         {/* Titre de la page — mobile seulement */}
-        <span className="navbar-page-title">
-          {pageTitle}
-        </span>
+        <span className="navbar-page-title">{pageTitle}</span>
 
         <div className="row navbar-plan-badge" style={{ gap: 6 }}>
           <span className="pill" style={{ borderRadius: 8 }}>
@@ -105,8 +103,13 @@ export function Navbar({ onMenuOpen }: NavbarProps) {
       {/* ── Right side ── */}
       <div className="row" style={{ gap: 8 }}>
         {/* Crédits — desktop seulement */}
-        <span className="pill t-mono navbar-credits-desktop" style={{ fontSize: 11, borderRadius: 8 }}>
-          <span style={{ color: "var(--accent)" }}><Ico icon={CiqIcon.zap} size={11} /></span>
+        <span
+          className="pill t-mono navbar-credits-desktop"
+          style={{ fontSize: 11, borderRadius: 8 }}
+        >
+          <span style={{ color: "var(--accent)" }}>
+            <Ico icon={CiqIcon.zap} size={11} />
+          </span>
           {credits}
         </span>
 

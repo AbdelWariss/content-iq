@@ -192,7 +192,13 @@ export default function RegisterPage() {
                 <div>
                   <label
                     className="row"
-                    style={{ fontSize: 12, color: termsError ? "var(--accent)" : "var(--ink-soft)", gap: 8, cursor: "pointer", alignItems: "flex-start" }}
+                    style={{
+                      fontSize: 12,
+                      color: termsError ? "var(--accent)" : "var(--ink-soft)",
+                      gap: 8,
+                      cursor: "pointer",
+                      alignItems: "flex-start",
+                    }}
                   >
                     <input
                       type="checkbox"
@@ -203,10 +209,13 @@ export default function RegisterPage() {
                       }}
                       style={{ marginTop: 2, flexShrink: 0, accentColor: "var(--accent)" }}
                     />
-                    J'accepte les conditions générales d'utilisation et la politique de confidentialité.
+                    J'accepte les conditions générales d'utilisation et la politique de
+                    confidentialité.
                   </label>
                   {termsError && (
-                    <p style={{ fontSize: 11, color: "var(--accent)", marginTop: 4, marginLeft: 20 }}>
+                    <p
+                      style={{ fontSize: 11, color: "var(--accent)", marginTop: 4, marginLeft: 20 }}
+                    >
                       Vous devez accepter les conditions pour continuer.
                     </p>
                   )}

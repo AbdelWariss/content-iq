@@ -45,7 +45,7 @@ export function MobileTabBar() {
           background: isGenerate ? "var(--ink)" : "var(--accent)",
           boxShadow: isGenerate
             ? "0 4px 16px -2px rgba(58,47,37,0.35)"
-            : "0 4px 16px -2px rgba(229,112,76,.45)",
+            : "0 4px 16px -2px rgba(59,130,246,.45)",
         }}
         aria-label="Créer du contenu"
       >

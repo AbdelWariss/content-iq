@@ -6,10 +6,14 @@ import { generateAccessToken } from "../utils/token.js";
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
 vi.mock("../middleware/rateLimiter.js", () => ({
-  authLimiter: (_req: unknown, _res: unknown, next: () => void) => next(),
+  loginLimiterShort: (_req: unknown, _res: unknown, next: () => void) => next(),
+  loginLimiterLong: (_req: unknown, _res: unknown, next: () => void) => next(),
+  authGenericLimiter: (_req: unknown, _res: unknown, next: () => void) => next(),
+  registerLimiter: (_req: unknown, _res: unknown, next: () => void) => next(),
   apiLimiter: (_req: unknown, _res: unknown, next: () => void) => next(),
   generateLimiter: (_req: unknown, _res: unknown, next: () => void) => next(),
   voiceLimiter: (_req: unknown, _res: unknown, next: () => void) => next(),
+  resendVerificationLimiter: (_req: unknown, _res: unknown, next: () => void) => next(),
 }));
 
 vi.mock("../models/User.model.js", () => ({

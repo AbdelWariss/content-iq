@@ -511,7 +511,7 @@ export default function LandingPage() {
             width: 580,
             height: 580,
             borderRadius: "50%",
-            background: "rgba(229,112,76,0.10)",
+            background: "rgba(59,130,246,0.10)",
             filter: "blur(90px)",
             animation: "floatA 20s ease-in-out 0s infinite",
           }}
@@ -553,7 +553,7 @@ export default function LandingPage() {
             width: 500,
             height: 500,
             borderRadius: "50%",
-            background: "rgba(229,112,76,0.07)",
+            background: "rgba(59,130,246,0.07)",
             filter: "blur(100px)",
             animation: "floatC 18s ease-in-out 8s infinite",
           }}
@@ -581,7 +581,7 @@ export default function LandingPage() {
             width: 460,
             height: 460,
             borderRadius: "50%",
-            background: "rgba(229,112,76,0.07)",
+            background: "rgba(59,130,246,0.07)",
             filter: "blur(100px)",
             animation: "floatC 20s ease-in-out 10s infinite",
           }}
@@ -609,7 +609,10 @@ export default function LandingPage() {
             <span>.IQ</span>
           </span>
         </div>
-        <div className="row landing-nav-links" style={{ gap: 28, fontSize: 13.5, color: "var(--ink-soft)" }}>
+        <div
+          className="row landing-nav-links"
+          style={{ gap: 28, fontSize: 13.5, color: "var(--ink-soft)" }}
+        >
           <a href="#product" className="landing-nav-link">
             Produit
           </a>
@@ -690,7 +693,7 @@ export default function LandingPage() {
           </p>
           <div className="row landing-hero-btns" style={{ gap: 10 }}>
             <button className="btn btn-primary btn-lg" onClick={() => navigate("/register")}>
-              Démarrer · 50 cr. offerts
+              Démarrer · 10 cr. offerts
               <Ico icon={CiqIcon.arrow} size={16} />
             </button>
             <button className="btn btn-outline btn-lg" onClick={() => setShowDemo(true)}>
@@ -779,7 +782,7 @@ export default function LandingPage() {
               WebkitBackdropFilter: "blur(28px) saturate(180%) brightness(1.04)",
               border: "1px solid rgba(255,255,255,0.58)",
               boxShadow:
-                "0 16px 52px rgba(229,112,76,0.32), 0 8px 24px rgba(58,47,37,0.08), inset 0 1.5px 0 rgba(255,255,255,0.90), inset 0 -1px 0 rgba(0,0,0,0.04)",
+                "0 16px 52px rgba(59,130,246,0.32), 0 8px 24px rgba(58,47,37,0.08), inset 0 1.5px 0 rgba(255,255,255,0.90), inset 0 -1px 0 rgba(0,0,0,0.04)",
             }}
           >
             {/* Header — unchanged */}
@@ -910,7 +913,10 @@ export default function LandingPage() {
       </div>
 
       {/* ── Trust bar ── */}
-      <div className="landing-pensepour" style={{ padding: "64px 56px 0", maxWidth: 1320, margin: "0 auto" }}>
+      <div
+        className="landing-pensepour"
+        style={{ padding: "64px 56px 0", maxWidth: 1320, margin: "0 auto" }}
+      >
         <div className="t-eyebrow" style={{ textAlign: "center", marginBottom: 22 }}>
           Pensé pour
         </div>
@@ -937,8 +943,15 @@ export default function LandingPage() {
       </div>
 
       {/* ── Three pillars ── */}
-      <div id="product" className="landing-pillars-section" style={{ padding: "96px 56px", maxWidth: 1320, margin: "0 auto" }}>
-        <h2 className="t-display landing-pillars-title" style={{ fontSize: 56, margin: "0 0 14px", maxWidth: 720 }}>
+      <div
+        id="product"
+        className="landing-pillars-section"
+        style={{ padding: "96px 56px", maxWidth: 1320, margin: "0 auto" }}
+      >
+        <h2
+          className="t-display landing-pillars-title"
+          style={{ fontSize: 56, margin: "0 0 14px", maxWidth: 720 }}
+        >
           Trois manières de produire. <em style={{ color: "var(--ink-mute)" }}>Une seule app.</em>
         </h2>
         <div
@@ -1146,7 +1159,7 @@ export default function LandingPage() {
             Commencez gratuitement. <em style={{ color: "var(--accent)" }}>Aujourd'hui.</em>
           </h2>
           <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15 }}>
-            50 crédits offerts · Sans carte bancaire · Annulable à tout moment
+            10 crédits offerts · Sans carte bancaire · Annulable à tout moment
           </p>
         </div>
         <button

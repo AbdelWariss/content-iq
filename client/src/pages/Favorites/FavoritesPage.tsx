@@ -443,7 +443,7 @@ export default function FavoritesPage() {
               height: 80,
               borderRadius: "50%",
               background: "var(--accent-soft)",
-              border: "1px solid rgba(229,112,76,.3)",
+              border: "1px solid rgba(59,130,246,.3)",
               display: "grid",
               placeItems: "center",
             }}

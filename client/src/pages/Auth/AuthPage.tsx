@@ -894,7 +894,7 @@ export default function AuthPage() {
               padding: "28px 40px 24px",
               animation: "fadeSlideIn 0.3s ease",
               boxShadow:
-                "inset 0 1px 0 rgba(255,255,255,0.92), 0 4px 24px rgba(229,112,76,0.18), 0 12px 48px rgba(107,184,189,0.14), 0 2px 8px rgba(58,47,37,0.06)",
+                "inset 0 1px 0 rgba(255,255,255,0.92), 0 4px 24px rgba(59,130,246,0.18), 0 12px 48px rgba(107,184,189,0.14), 0 2px 8px rgba(58,47,37,0.06)",
             }}
             key={mode}
           >

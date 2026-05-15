@@ -1470,3 +1470,580 @@ Premier déploiement live de l'application en production. Choix de Render (backe
 1. Mettre à jour `CLIENT_URL` et `GOOGLE_CALLBACK_URL` dans Render → Environment
 2. Mettre à jour `GOOGLE_CALLBACK_URL` dans Google Cloud Console (OAuth credentials)
 3. Configurer UptimeRobot (ping toutes les 5 min sur `/health`)
+
+---
+
+### [2026-05-09] — Post-déploiement : corrections prod + Admin Logs + Mobile UI — COMPLÉTÉ ✅
+- **Session :** 7 post-deploy
+- **Statut :** Complété
+
+---
+
+#### 1 — CLAUDE.md — guide de codebase pour Claude Code
+
+**Fichier créé : `CLAUDE.md` (racine)**
+- Scripts pnpm (dev, build, lint, typecheck, test, seed)
+- Architecture monorepo (client / server / packages/shared)
+- Pattern lifecycle requête backend (route → middleware → controller → service → model)
+- Auth flow (JWT 15min + refresh 7j cookie httpOnly SameSite=None)
+- Design system CSS (tokens, classes utilitaires)
+- Conventions (réponses API, soft delete, variables d'env, tests)
+- Notes déploiement (Vercel + Render, pnpm deploy --legacy)
+
+---
+
+#### 2 — Corrections Google OAuth cross-domain
+
+**Problème :** OAuth Google retournait un cookie httpOnly, mais Render (backend) et Vercel (frontend) sont sur des domaines différents → `SameSite=Lax` bloquait le cookie.
+
+**`server/src/controllers/auth.controller.ts` — `googleCallback()`**
+- Cookie `SameSite=None; Secure` pour cross-domain
+- Stratégie : access token passé en query param `?token=<accessToken>` dans la redirect → `CLIENT_URL/auth/callback?token=...`
+
+**`client/src/pages/Auth/GoogleCallbackPage.tsx`**
+- Lit `token` depuis `URLSearchParams`
+- Appelle `fetch()` directement (PAS l'instance axios) pour éviter que l'intercepteur de refresh court-circuite le flux OAuth
+- Dispatche `setCredentials` et redirige `/dashboard`
+
+**`client/src/services/axios.ts`**
+- `AUTH_ROUTES` étendu pour inclure `/auth/google/callback`
+
+---
+
+#### 3 — Correction forme réponse `getMe`
+
+**`server/src/controllers/auth.controller.ts` — `getMe()`**
+- Réponse corrigée : `{ success: true, data: { user: ... } }` au lieu de `{ success: true, data: ... }`
+
+**`client/src/hooks/useAuth.ts`**
+- `res.data.data.user` au lieu de `res.data.data` pour extraire l'utilisateur
+
+---
+
+#### 4 — Correction CORS trailing slash
+
+**`server/src/app.ts` — configuration CORS**
+- `origin.replace(/\/$/, "")` — supprime le slash final de `CLIENT_URL` avant comparaison → élimine les erreurs CORS liées à la configuration Render
+
+---
+
+#### 5 — Sanitisation des erreurs API (sécurité)
+
+**`server/src/services/claude.service.ts`**
+- `sanitizeStreamError(err)` : masque les détails techniques Anthropic/API avant de les envoyer au client
+- Log serveur (`appLog()`) pour garder la trace complète côté backend
+
+---
+
+#### 6 — Admin Logs Page
+
+**Nouveau fichier : `server/src/utils/appLog.ts`**
+- `appLog({ level, message, meta })` : écrit en MongoDB (collection `applogs`, TTL 90 jours)
+- Fire-and-forget — ne bloque jamais la requête principale
+- Niveaux : `info`, `warn`, `error`
+
+**Nouveau modèle : `server/src/models/AppLog.model.ts`**
+- Champs : `level`, `message`, `meta` (JSON), `createdAt` (TTL index 90j)
+
+**`server/src/controllers/admin.controller.ts`**
+- Nouveau handler `getLogs()` : pagination + filtre par niveau + recherche texte
+- Instrumentation dans `generate()`, `login()`, `register()` → appels `appLog()`
+
+**`client/src/pages/Admin/AdminPage.tsx`**
+- Nouvel onglet "Logs" avec tableau filtrable (niveau, recherche, date)
+- Pagination + color-coding (info=gris, warn=amber, error=coral)
+
+**Fix : `client/src/services/admin.service.ts`**
+- Déballage `.data` corrigé pour préserver la compatibilité de type `AdminPage`
+
+---
+
+#### 7 — Interface Mobile complète (11 écrans)
+
+**Commits :** `58035d6` (bottom tab bar) + `2ad45c3` (11 écrans fidèles)
+
+**`client/src/components/Layout/MobileTabBar.tsx`** — NOUVEAU
+- Bottom tab bar fixe : Dashboard / Generate (FAB coral) / History / Profile
+- Visible uniquement `≤ 640px` via `.mobile-tab-bar` dans `index.css`
+- `NavLink` actif avec couleur accent, inactif `var(--ink-mute)`
+- FAB Generate : cercle 56px coral, `boxShadow: 0 4px 16px rgba(229,112,76,0.4)`
+
+**`client/src/index.css`** — Ajouts responsive mobile (≤ 640px)
+- `.sidenav { display: none }` — sidebar masqué sur mobile (remplacé par tab bar)
+- `.mobile-tab-bar { display: flex }` — tab bar visible
+- `.hide-mobile { display: none !important }` / `.mobile-only { display: flex !important }`
+- Layouts adaptatifs : `.dashboard-kpi-grid` 2 colonnes, `.generate-layout` vertical
+- `.page-pad` réduit à 16px mobile
+- `.dashboard-voice-journal` : supprimé `display: none !important` (visible sur mobile)
+
+**Écrans adaptés (layouts mobiles) :**
+
+| Page | Adaptation |
+|------|-----------|
+| DashboardPage | KPI 2 colonnes, suppression section Brouillons, "Derniers contenus" `overflow: hidden` |
+| GeneratePage | Layout vertical (form + éditeur empilés), toolbar condensée |
+| HistoryPage | Liste condensée, actions inline sur ligne |
+| TemplatesPage | Filtres `.seg` scrollable horizontal, cartes pleine largeur |
+| ProfilePage | iOS-style sections, SectionHeader + SettingsRow + InlineSelector |
+| FavoritesPage | Grille 1 col, actions condensées |
+
+---
+
+#### 8 — Vérification TypeScript — Session May 9
+
+```
+pnpm --filter client typecheck → 0 erreur
+pnpm --filter server typecheck → 0 erreur
+```
+
+**Total à ce jour : ~185 fichiers · ~11 200 lignes de code**
+
+---
+
+### [2026-05-10] — Anti-abus Auth + Email Templates + Visual Polish Icons — COMPLÉTÉ ✅
+- **Session :** 8
+- **Statut :** Complété
+
+---
+
+#### 1 — Anti-abus auth + corrections accès
+
+**Commit :** `4d287ba` — mobile UI, anti-abuse auth, export fixes, subdomain config
+
+**`client/src/pages/Auth/AuthPage.tsx` — RegisterForm**
+- Checkbox CGU : `required` → bloqué à la soumission si non coché
+- Message d'erreur visible si tentative de submit sans cocher
+
+**Export DOCX :** correction du déclenchement (le content-type retourné par le serveur était mal lu côté client dans certains navigateurs).
+
+---
+
+#### 2 — Correction build TypeScript Vercel
+
+**Commit :** `16aa1ed`
+
+**`client/tsconfig.node.json`** + **`client/vite.config.ts`**
+- Résolution d'erreurs bloquant le build Vercel (types Rollup `manualChunks`, `skipLibCheck`)
+- Tous les types TypeScript résolus → build Vercel vert
+
+---
+
+#### 3 — Email verification banner + refonte templates email
+
+**Commit :** `50970ec`
+
+**`server/src/services/email.service.ts`**
+- `sendVerificationEmail()` : HTML entièrement refondu (design brand coral + teal, structure claire)
+- `sendPasswordResetEmail()` : même refonte visuelle
+- `sendWelcomeEmail()` : mise à jour avec nouvelle charte
+- `sendLowCreditsAlert()` : design cohérent
+
+**`client/src/components/Layout/AppLayout.tsx` — `VerifyEmailBanner`**
+- Bannière visible si `!user.emailVerified` : fond `var(--warn)`, message + bouton "Renvoyer l'email"
+- Bouton désactivé après envoi (évite spam)
+
+**`server/src/controllers/auth.controller.ts` — `resendVerification()`**
+- Erreur remontée correctement au client (avant : swallowed silently)
+- Toast d'erreur explicite si échec d'envoi
+
+---
+
+#### 4 — Correction affichage crédits
+
+**Commit :** `50f2991`
+
+- Formule corrigée dans la sidebar : `remaining/total` affiché au lieu de `used/total`
+- Compteur `Derniers contenus` dashboard : total correct depuis la query
+
+---
+
+#### 5 — Dashboard empty state + icônes Sparkle
+
+**Commits :** `3e5711c`, `ee5b42f`, `8567cb8`
+
+**`client/src/pages/Dashboard/DashboardPage.tsx`**
+- Empty state : suppression du cercle sombre, icône sparkle agrandie, couleur `var(--accent)` (coral)
+- Correction glow clipping (overflow: visible sur le conteneur)
+
+**`client/src/components/Layout/AppLayout.tsx` — `AssistantToggle`**
+- Icône sparkle : `size={20}` → `size={36}` pour remplir le cercle 48px
+- Couleur : texte `text-background` (blanc) quand bouton fermé
+
+---
+
+#### 6 — Sparkle icons sur les boutons Generate
+
+**Commit :** `4f3d3d5`
+
+**`client/src/pages/Generate/GeneratePage.tsx`**
+- Bouton "Générer" principal : icône sparkle agrandie pour correspondre à la hauteur du bouton
+- Icônes de types de contenu dans le form : taille harmonisée
+
+---
+
+#### 7 — Mobile Tab Bar FAB : icône agrandie
+
+**Commit :** `6df0e30`
+
+**`client/src/components/Layout/MobileTabBar.tsx`**
+- Icône sparkle FAB Generate : `22px` → `42px` pour remplir le cercle 50px
+- Visuellement cohérent avec la taille du bouton
+
+---
+
+#### Vérification TypeScript — Session May 10
+
+```
+pnpm --filter client typecheck → 0 erreur
+```
+
+**Total à ce jour : ~185 fichiers · ~11 400 lignes de code**
+
+---
+
+### [2026-05-11] — Polish UI : Templates, History, Profile (iOS mobile + fonctionnel) — COMPLÉTÉ ✅
+- **Session :** 9
+- **Statut :** Complété
+
+---
+
+#### 1 — Templates : CiqIcon TypeBadge + icônes Generate agrandies
+
+**Commit :** `92aed0f`
+
+**`client/src/pages/Templates/TemplatesPage.tsx`**
+- `TypeBadge` : abandon du style couleur-par-réseau (LinkedIn bleu, Instagram gradient, etc.) → unification avec `CiqIcon.*` + design system (`.pill`, `.chip`, couleurs `var(--accent-soft)`)
+- Icônes de types dans `GeneratePage` : taille augmentée pour meilleure lisibilité
+
+---
+
+#### 2 — Templates : icônes, boutons mobiles, badges rectangulaires
+
+**Commit :** `3d2fad0`
+
+**`client/src/pages/Templates/TemplatesPage.tsx`**
+- Icônes des cartes templates : taille augmentée (`size={22}` → `size={28}`)
+- Boutons actions mobile (Utiliser / Détails) : alignement corrigé, hauteur harmonisée
+- Badges de type : `borderRadius: 999` → `borderRadius: 8` (rectangulaire avec coins arrondis)
+
+---
+
+#### 3 — History page : icônes, suppression frames, actions mobile
+
+**Commit :** `001d4145`
+
+**`client/src/pages/History/HistoryPage.tsx`**
+- Boutons d'action (copier, favori, supprimer) : suppression des frames `.btn-ghost` → icônes nues plus propres
+- Taille icônes : 13px → 18px
+- Mobile : ajout d'un menu d'actions inline sur chaque ligne (glissement ou tap)
+
+---
+
+#### 4 — Templates mobile : filtres seg scrollable
+
+**Commit :** `34ab407`
+
+**`client/src/pages/Templates/TemplatesPage.tsx`**
+- Filtres mobile : remplacement des chips par un `.seg` horizontal scrollable (cohérent avec le design system)
+- CSS `.templates-mobile-seg` : `overflow-x: auto`, `scrollbar-width: none`, `flex-wrap: nowrap`
+
+---
+
+#### 5 — Unification filtres templates desktop/mobile + Dashboard overflow
+
+**Commit :** `776455b`
+
+**`client/src/pages/Templates/TemplatesPage.tsx`**
+- `TYPE_FILTERS` unifié (même options desktop et mobile) :
+  ```ts
+  [all, système, Mes templates, LinkedIn, Réseaux Sociaux, Article, Email, Produit, Bio]
+  ```
+- Groupe "Réseaux Sociaux" : filtre `["twitter", "instagram", "youtube"]` côté client
+- LinkedIn gardé séparé (réseau professionnel distinct)
+- Query : `templateService.list(undefined)` — charge tous les templates, filtre côté client
+
+**`client/src/pages/Dashboard/DashboardPage.tsx`**
+- Section "Derniers contenus" : `style={{ minWidth: 0, overflow: "hidden" }}` sur la carte et les items → plus de débordement hors écran sur mobile
+
+---
+
+#### 6 — Refonte majeure Profile + Dashboard + Generate + Sidebar
+
+**Commit :** `3f59cf8` — multiple UI improvements
+
+**`client/src/pages/Dashboard/DashboardPage.tsx`**
+- Suppression du KPI "Brouillons" — simplifie la lecture du tableau de bord
+
+**`client/src/pages/Generate/GeneratePage.tsx`**
+- **Bouton "Sauvegarder"** : visible dès que `savedContentId` existe → appelle `contentService.update(savedContentId, { body: editorContent })`
+- **Bouton "Template"** : visible dès que du contenu est généré → ouvre modal de création de template personnel
+- **Modal "Sauvegarder comme template"** : input nom + bouton save → `templateService.create({ name, type, category: "marketing", promptSchema: subject, variables: [], isPublic: false })`
+- État : `isSavingContent`, `showSaveTemplate`, `templateName`, `isSavingTemplate`
+
+**`client/src/components/Layout/Sidebar.tsx`**
+- `accountItems` réduit de 3 à 2 : `/profile` ("Profil & Paramètres") + `/pricing` (facturation)
+- Bouton "Paramètres" supprimé (fusionné dans "Profil & Paramètres")
+
+**`client/src/pages/Profile/ProfilePage.tsx`** — refonte structure mobile (iOS-style)
+- Nouveaux composants helpers :
+  - `Toggle` : toggle iOS animé (width 44, borderRadius 999)
+  - `SectionHeader` : eyebrow text uppercase 11px pour regrouper les sections
+  - `SettingsRow` : ligne label + valeur + chevron + `onClick`
+  - `InlineSelector` : modal centré (overlay blur) avec liste d'options checkées
+  - `PlanBadge` : badge plan (rectangulaire, borderRadius 8)
+- **Layout dual** : `<div className="hide-mobile">` (desktop) + `<div className="mobile-only">` (mobile) dans un seul composant
+
+**`client/src/lib/ciq-icons.tsx`**
+- Ajout icône `edit` (crayon SVG) utilisée dans le bouton d'édition mobile du profil
+
+**`client/src/index.css`**
+- Suppression `.dash-voice-journal { display: none !important }` → section "Voix · Journal" visible sur mobile
+
+---
+
+#### 7 — Profile : restauration layout desktop, iOS mobile uniquement
+
+**Commit :** `4d96ed6`
+
+**`client/src/pages/Profile/ProfilePage.tsx`**
+- Layout desktop restauré depuis `git show HEAD~1` (4 sections verticales : Compte / Voix / Micro / Abonnement)
+- Pattern `hide-mobile` / `mobile-only` : desktop et mobile coexistent dans le même composant
+- Desktop : `maxWidth: 980, margin: "0 auto"` (rétabli ensuite via commit `295f0ba`)
+
+---
+
+#### 8 — Profile mobile : bouton édition + toggle autoplay + abonnement desktop fusionné
+
+**Commit :** `63126a1`
+
+**`client/src/pages/Profile/ProfilePage.tsx`**
+
+**Ajout — bouton édition profil mobile :**
+- Bouton crayon (`CiqIcon.edit`) sur la carte identité → ouvre une bottom-sheet modal
+- Bottom-sheet : formulaire nom + email (readonly) + bio + langue → `onSubmit` → save + fermer
+
+**Ajout — toggle "Lecture auto des réponses" mobile :**
+- Composant `Toggle` avec état `autoPlay` + handler `handleAutoPlayChange`
+- Sauvegardé en backend via `api.put("/users/me", { voicePreferences: { autoTts: val } })`
+
+**Desktop — widget Abonnement supprimé, fusionné dans la carte Compte :**
+- Footer de la carte Compte : `PlanBadge` + texte plan + bouton "Gérer" (Stripe Portal) + bouton "Mettre à niveau"
+- Widget Abonnement standalone supprimé
+
+---
+
+#### 9 — Profile : options fonctionnelles + full-width desktop + badge rectangulaire
+
+**Commit :** `8253100`
+
+**`client/src/pages/Profile/ProfilePage.tsx`** — réécriture complète (636 lignes)
+
+**Chargement des préférences au montage :**
+```ts
+useEffect(() => {
+  api.get("/users/me").then(res => {
+    // Hydrate selectedVoice, selectedSpeed, autoPlay, micLang, uiLang depuis voicePreferences
+  });
+}, []);
+```
+
+**Handlers fonctionnels (tous sauvegardés) :**
+
+| Handler | Sauvegarde |
+|---------|-----------|
+| `handleVoiceChange(name)` | `voicePreferences.ttsVoice` → backend |
+| `handleSpeedChange(speedV)` | `voicePreferences.speed` → backend |
+| `handleAutoPlayChange(val)` | `voicePreferences.autoTts` → backend |
+| `handleMicLangChange(lang)` | `voicePreferences.language` → backend |
+| `handleUiLangChange(lang)` | `language` → backend + `i18n.changeLanguage()` live |
+| `handleMicSensChange(val)` | `localStorage.ciq_mic_sens` |
+| `handleActivationWordChange(val)` | `localStorage.ciq_activation` |
+| `toggleMicTest()` | `navigator.mediaDevices.getUserMedia({ audio: true })` |
+
+**Desktop :**
+- `maxWidth: 980` retiré du wrapper global → widgets pleine largeur
+- Grille voix préférences : `gridTemplateColumns: "1fr 1fr 1fr"` (vitesse / lecture auto / langue interface)
+
+**`PlanBadge` :**
+- `borderRadius: 8` (rectangulaire avec coins arrondis, non pill)
+- `fontSize: 14, fontWeight: 600`
+- Bordure subtile `rgba(229,112,76,0.25)`
+
+**CTA :** "Passer Pro" → "Mettre à niveau" partout (desktop et mobile)
+
+**Redux sync :** `dispatch(updateUser({ name }))` après sauvegarde nom
+
+---
+
+#### 10 — Corrections de largeur (desktop + mobile)
+
+**Commits :** `295f0ba` + `10c586d`
+
+**Profile desktop :** `maxWidth: 980, margin: "0 auto"` rétabli sur `<div className="hide-mobile">` → widgets centrés à 980px max
+
+**Profile mobile :** `width: "100%", boxSizing: "border-box"` ajouté sur `<div className="mobile-only">` → les cartes occupent toute la largeur de l'écran sans débordement
+
+---
+
+#### 11 — Voix : aperçu automatique au clic + icône agrandie
+
+**Commits :** `e30dab5` + `3505a59`
+
+**`client/src/pages/Profile/ProfilePage.tsx`**
+
+**Auto-preview au clic sur une carte voix :**
+- `onClick` de la carte : `handleVoiceChange(name)` + `previewVoice(name, voiceId, lang)` simultanément
+- Bouton play séparé supprimé → icône play/stop (`size={22}`) dans un `<span>` non-cliquable (indicateur visuel uniquement)
+- Double clic → arrêt lecture
+
+**`previewVoice()` — fallback TTS natif genré :**
+- `setPreviewing(name)` placé AVANT l'appel API → icône bascule immédiatement
+- En l'absence d'ElevenLabs (`useNativeTts: true`) :
+  - `speechSynthesis.getVoices()` → cherche une voix correspondant au genre (regex `/female|femme/i` ou `/male|homme/i`) + langue
+  - `utt.pitch = 1.25` (voix féminines) / `utt.pitch = 0.72` (voix masculines)
+  - `utt.rate = 0.92`
+- Résultat : voix distinctes même sans ElevenLabs configuré
+
+---
+
+#### Vérification TypeScript — Session May 11
+
+```
+pnpm --filter client typecheck → 0 erreur (toutes les sessions)
+```
+
+**Total à ce jour : ~188 fichiers · ~12 000 lignes de code**
+
+---
+
+## Résumé global d'avancement (mis à jour 2026-05-11)
+
+| Phase | Contenu | Statut |
+|-------|---------|--------|
+| 0 | Setup & Infrastructure | ✅ |
+| 1 | Auth JWT + OAuth Google | ✅ |
+| 2 | Génération IA + Streaming SSE + Historique | ✅ |
+| 3 | IQ Assistant + Templates + Voix | ✅ |
+| 4 | Stripe + Exports + Dashboard + Admin | ✅ |
+| 5 | Tests (66) + Déploiement Vercel/Render | ✅ |
+| UI v2 | Design system + redesign complet | ✅ |
+| UI v3 | Responsive mobile (11 écrans + tab bar) | ✅ |
+| Post-deploy | Google OAuth cross-domain, CORS, Admin logs | ✅ |
+| Polish May 10 | Email templates, anti-abus, sparkle icons | ✅ |
+| Polish May 11 | Templates/History/Profile UI + voix fonctionnelle | ✅ |
+
+**Total estimé : ~188 fichiers · ~12 000 lignes de code · 46 commits (May 9–11)**
+
+---
+
+### [2026-05-11] — Analyse architecture + Décision paiement KKiaPay → Stripe — CLÔTURÉ ✅
+- **Session :** 10 (fin de journée)
+- **Statut :** Complété
+
+---
+
+#### 1 — Analyse complète de l'architecture du projet
+
+Exploration et documentation de l'ensemble du projet :
+- Structure monorepo (`client` / `server` / `packages/shared`)
+- Cycle de vie des requêtes backend (route → middleware → controller → service → model)
+- Toutes les routes `/api/*` documentées (auth, users, content, voice, assistant, export, templates, credits, webhooks, admin, stats, stripe)
+- Flux de génération SSE (useStreaming → appendToken → stopGeneration → savedContentId)
+- State management Redux (4 slices : auth, content, assistant, voice)
+- Design system CSS (tokens, classes utilitaires, responsive mobile)
+- Infra de déploiement (Vercel + Render + MongoDB Atlas + Redis Upstash)
+
+---
+
+#### 2 — Évaluation intégration KKiaPay (écarté)
+
+**Contexte :** Exploration de KKiaPay comme alternative à Stripe pour les utilisateurs d'Afrique de l'Ouest.
+
+**Recherche effectuée :**
+- SDK Node.js : `@kkiapay-org/nodejs-sdk` (installé puis désinstallé)
+- API : paiements uniques uniquement, pas d'abonnements récurrents natifs
+- Widget frontend : popup JS (`openKkiapayWidget`) ou redirection
+- Webhook : `POST` avec `{ transactionId, isPaymentSucces, amount }` + header `x-kkiapay-secret`
+
+**Décision finale :** KKiaPay écarté — absence de support abonnements récurrents automatiques.
+
+**Stripe conservé** — l'intégration existante reste en place.
+
+**SDK désinstallé :** `pnpm --filter server remove @kkiapay-org/nodejs-sdk`
+
+---
+
+#### 3 — Prochaine évolution Stripe prévue
+
+Afficher les prix en **EUR ou USD** selon la devise de l'utilisateur :
+- Détection automatique (IP géolocalisation ou `Intl.NumberFormat` navigateur)
+- Passer `currency` au `createCheckoutSession` côté backend
+- Affichage dynamique des prix sur `PricingPage` et `ProfilePage`
+
+---
+
+#### Mises à jour mémoire
+
+- `memory/project_contentiq.md` : décision KKiaPay documentée, prochaine tâche Stripe multi-devises enregistrée
+
+---
+
+### [2026-05-15] — Corrections UX auth + Refonte code couleur — COMPLÉTÉ ✅
+- **Session :** 11
+- **Statut :** Complété
+
+---
+
+#### 1 — Correction rate limiting à l'inscription
+
+**Problème :** L'ancien `authLimiter` (5 tentatives / 15 min) était partagé entre `/register` et `/login`. Un utilisateur soumettant un mot de passe faible lors de l'inscription consommait son quota et se retrouvait bloqué 15 minutes.
+
+**Fix :**
+
+| Fichier | Modification |
+|---------|-------------|
+| `server/src/middleware/rateLimiter.ts` | Supprimé `authLimiter` ; créé `loginLimiterShort` (5 tentatives/5 min), `loginLimiterLong` (10/15 min), `authGenericLimiter` (10/15 min) |
+| `server/src/routes/auth.routes.ts` | `/register` → seulement `registerLimiter` ; `/login` → `loginLimiterShort + loginLimiterLong` (progressif) ; `/refresh`, `/forgot-password`, `/reset-password` → `authGenericLimiter` |
+| `server/src/test/auth.test.ts` | Mock mis à jour : `authLimiter` → nouveaux exportés |
+| `server/src/test/admin.test.ts` | Idem |
+
+---
+
+#### 2 — Refonte code couleur
+
+**Passage de coral (#e5704c) → système bi-chrome bleu + teal**
+
+**Couleur accent principale :** Bleu `#3B82F6` (bleu-500, intensité modérée)
+- Hover/variante foncée : `#2563EB`
+- Ink/texte : `#1d4ed8`
+- Fond doux : `#eff8ff`
+
+**Couleur accent secondaire (voix) :** Teal `#0891B2` (enrichi depuis `#6bb8bd`)
+- Hover : `#0e7490`
+- Fond doux : `#e0f9ff`
+
+**Dégradé brand :** Teal → Bleu `#0891B2 → #3B82F6`
+
+**Fichiers modifiés :**
+
+| Fichier | Modifications |
+|---------|-------------|
+| `client/src/index.css` | Variables CSS complètes (accent, voice, primary Tailwind, ring, sélection, shadows, aurora, boutons, gradients) |
+| `client/tailwind.config.ts` | Palette `brand` (bleu-500), nouvelle palette `teal`, `voice` sur `--voice-tw` |
+| `client/src/components/Layout/AuthLayout.tsx` | Blobs fond : violet → bleu + teal |
+| `client/src/pages/Landing/LandingPage.tsx` | Couleurs inline |
+| `client/src/pages/Auth/AuthPage.tsx` | Couleurs inline |
+| `client/src/pages/Auth/VerifyEmailPage.tsx` | Couleurs inline |
+| `client/src/pages/Profile/ProfilePage.tsx` | Couleurs inline |
+| `client/src/pages/Generate/GeneratePage.tsx` | Couleurs inline |
+| `client/src/pages/Favorites/FavoritesPage.tsx` | Couleurs inline |
+| `client/src/components/Layout/MobileTabBar.tsx` | Couleurs inline |
+
+**Variables CSS finales :**
+```
+--accent: #3B82F6        --voice: #0891B2
+--accent-ink: #1d4ed8    --voice-soft: #e0f9ff
+--accent-soft: #eff8ff   --primary: 217 91% 60%
+```
+
+**Tests :** 41/41 serveur ✓ · TypeScript 0 erreur client et serveur ✓

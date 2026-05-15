@@ -10,9 +10,24 @@ const createLimiter = (windowMs: number, max: number, message: string) =>
     skip: (req) => req.ip === "127.0.0.1" && process.env.NODE_ENV === "test",
   });
 
-export const authLimiter = createLimiter(
-  15 * 60 * 1000,
+// Login: palier court (5 tentatives → 5 min de blocage)
+export const loginLimiterShort = createLimiter(
+  5 * 60 * 1000,
   5,
+  "Trop de tentatives. Réessayez dans 5 minutes.",
+);
+
+// Login: palier long (10 tentatives sur 15 min → 15 min de blocage)
+export const loginLimiterLong = createLimiter(
+  15 * 60 * 1000,
+  10,
+  "Trop de tentatives. Réessayez dans 15 minutes.",
+);
+
+// Autres endpoints auth (refresh, forgot/reset password)
+export const authGenericLimiter = createLimiter(
+  15 * 60 * 1000,
+  10,
   "Trop de tentatives. Réessayez dans 15 minutes.",
 );
 

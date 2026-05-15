@@ -323,7 +323,9 @@ export default function GeneratePage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="row between" style={{ marginBottom: 16 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>Enregistrer comme template</h3>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>
+                Enregistrer comme template
+              </h3>
               <button
                 type="button"
                 className="btn btn-ghost btn-sm"
@@ -340,7 +342,6 @@ export default function GeneratePage() {
               value={templateName}
               onChange={(e) => setTemplateName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSaveAsTemplate()}
-              autoFocus
             />
             <div className="row" style={{ gap: 10, marginTop: 16 }}>
               <button
@@ -400,7 +401,7 @@ export default function GeneratePage() {
               padding: "12px 14px",
               marginBottom: 16,
               background: "var(--accent-soft)",
-              border: "1px solid rgba(229,112,76,0.3)",
+              border: "1px solid rgba(59,130,246,0.3)",
               borderRadius: 10,
             }}
           >
@@ -472,7 +473,10 @@ export default function GeneratePage() {
               {/* Content type */}
               <div>
                 <label className="label">{t("generate.contentType")}</label>
-                <div className="mobile-content-type-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
+                <div
+                  className="mobile-content-type-grid"
+                  style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}
+                >
                   {CONTENT_TYPES.map(({ value, label, icon }) => {
                     const on = watchedType === value;
                     return (
@@ -488,7 +492,11 @@ export default function GeneratePage() {
                           cursor: "pointer",
                         }}
                       >
-                        <Ico icon={icon} size={26} style={{ color: on ? "var(--ink)" : "var(--ink-mute)" }} />
+                        <Ico
+                          icon={icon}
+                          size={26}
+                          style={{ color: on ? "var(--ink)" : "var(--ink-mute)" }}
+                        />
                         <div
                           style={{
                             fontSize: 11.5,
@@ -807,7 +815,10 @@ export default function GeneratePage() {
               <button
                 type="button"
                 className="btn btn-outline btn-sm"
-                onClick={() => { setTemplateName(""); setShowSaveTemplate(true); }}
+                onClick={() => {
+                  setTemplateName("");
+                  setShowSaveTemplate(true);
+                }}
               >
                 <Ico icon={CiqIcon.templ} />
                 Template

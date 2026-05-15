@@ -8,10 +8,14 @@ import { generateAccessToken } from "../utils/token.js";
 // ── Mocks hoistés avant tout import ──────────────────────────────────────────
 
 vi.mock("../middleware/rateLimiter.js", () => ({
-  authLimiter: (_req: Request, _res: Response, next: NextFunction) => next(),
+  loginLimiterShort: (_req: Request, _res: Response, next: NextFunction) => next(),
+  loginLimiterLong: (_req: Request, _res: Response, next: NextFunction) => next(),
+  authGenericLimiter: (_req: Request, _res: Response, next: NextFunction) => next(),
+  registerLimiter: (_req: Request, _res: Response, next: NextFunction) => next(),
   apiLimiter: (_req: Request, _res: Response, next: NextFunction) => next(),
   generateLimiter: (_req: Request, _res: Response, next: NextFunction) => next(),
   voiceLimiter: (_req: Request, _res: Response, next: NextFunction) => next(),
+  resendVerificationLimiter: (_req: Request, _res: Response, next: NextFunction) => next(),
 }));
 
 vi.mock("../models/User.model.js", () => ({

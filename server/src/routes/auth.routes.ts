@@ -13,14 +13,20 @@ import {
   verifyEmail,
 } from "../controllers/auth.controller.js";
 import { authenticate } from "../middleware/authenticate.js";
-import { authLimiter, registerLimiter, resendVerificationLimiter } from "../middleware/rateLimiter.js";
+import {
+  authGenericLimiter,
+  loginLimiterLong,
+  loginLimiterShort,
+  registerLimiter,
+  resendVerificationLimiter,
+} from "../middleware/rateLimiter.js";
 
 const router: import("express").Router = Router();
 
-router.post("/register", authLimiter, registerLimiter, register);
-router.post("/login", authLimiter, login);
+router.post("/register", registerLimiter, register);
+router.post("/login", loginLimiterShort, loginLimiterLong, login);
 router.post("/logout", authenticate, logout);
-router.post("/refresh", authLimiter, refresh);
+router.post("/refresh", authGenericLimiter, refresh);
 
 router.get(
   "/google",
@@ -35,8 +41,8 @@ router.get(
   googleCallback,
 );
 
-router.post("/forgot-password", authLimiter, forgotPassword);
-router.post("/reset-password", authLimiter, resetPassword);
+router.post("/forgot-password", authGenericLimiter, forgotPassword);
+router.post("/reset-password", authGenericLimiter, resetPassword);
 router.get("/verify-email/:token", verifyEmail);
 router.post("/resend-verification", authenticate, resendVerificationLimiter, resendVerification);
 router.get("/me", authenticate, getMe);

@@ -17,6 +17,9 @@ const en = {
     voice: "voice",
     favorites: "Favorites",
     settings: "Settings",
+    logout: "Log out",
+    expand: "Expand menu",
+    collapse: "Collapse menu",
   },
   // Dashboard
   dashboard: {

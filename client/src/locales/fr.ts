@@ -17,6 +17,9 @@ const fr = {
     voice: "voix",
     favorites: "Favoris",
     settings: "Paramètres",
+    logout: "Se déconnecter",
+    expand: "Déplier le menu",
+    collapse: "Replier le menu",
   },
   // Dashboard
   dashboard: {

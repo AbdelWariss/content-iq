@@ -1,7 +1,9 @@
+import { useAuth } from "@/hooks/useAuth";
 import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import api from "@/services/axios";
 import { updateUser } from "@/store/authSlice";
 import { useAppDispatch, useAppSelector } from "@/store/index";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -23,9 +25,23 @@ interface NavbarProps {
 export function Navbar({ onMenuOpen }: NavbarProps) {
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
+  const { logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { t, i18n } = useTranslation();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
   const lang = user?.language ?? "fr";
 
   const pageTitle = PAGE_TITLES[location.pathname] ?? "CONTENT.IQ";
@@ -139,22 +155,57 @@ export function Navbar({ onMenuOpen }: NavbarProps) {
           {t("nav.generate")}
         </button>
 
-        {/* Avatar — masqué sur mobile */}
-        <div
-          className="hide-mobile"
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: 999,
-            background: "var(--bg-sunk)",
-            border: "1px solid var(--line)",
-            display: "grid",
-            placeItems: "center",
-            fontSize: 11,
-            fontWeight: 600,
-          }}
-        >
-          {initials}
+        {/* Avatar + dropdown — masqué sur mobile */}
+        <div ref={menuRef} className="hide-mobile" style={{ position: "relative" }}>
+          <button
+            type="button"
+            className="nav-avatar-btn"
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label="Menu compte"
+            aria-expanded={menuOpen}
+          >
+            {initials}
+          </button>
+          {menuOpen && (
+            <div
+              style={{
+                position: "absolute",
+                top: 36,
+                right: 0,
+                background: "var(--bg-elev)",
+                border: "1px solid var(--line)",
+                borderRadius: 10,
+                boxShadow: "var(--shadow-pop)",
+                padding: 4,
+                minWidth: 172,
+                zIndex: 50,
+              }}
+            >
+              <button
+                type="button"
+                className="nav-dropdown-item"
+                onClick={() => {
+                  navigate("/profile");
+                  setMenuOpen(false);
+                }}
+              >
+                <Ico icon={CiqIcon.user} size={15} />
+                Mon profil
+              </button>
+              <div className="hr" style={{ margin: "4px 0" }} />
+              <button
+                type="button"
+                className="nav-dropdown-item danger"
+                onClick={() => {
+                  logout();
+                  setMenuOpen(false);
+                }}
+              >
+                <Ico icon={CiqIcon.logout} size={15} />
+                {t("profile.logoutBtn")}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Burger — mobile seulement */}

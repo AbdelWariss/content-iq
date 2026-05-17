@@ -150,6 +150,21 @@ export default function PricingPage() {
         </div>
       )}
 
+      {/* ── Bouton Retour — visible uniquement si connecté ── */}
+      {isAuthenticated && (
+        <div style={{ padding: "16px 56px 0" }}>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => navigate(-1)}
+            style={{ display: "flex", alignItems: "center", gap: 6 }}
+          >
+            <Ico icon={CiqIcon.chevL} size={15} />
+            Retour
+          </button>
+        </div>
+      )}
+
       <div style={{ padding: "60px 56px", maxWidth: 1280, margin: "0 auto" }}>
         {/* Header */}
         <div style={{ textAlign: "center", maxWidth: 720, margin: "0 auto 48px" }}>

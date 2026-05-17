@@ -647,6 +647,14 @@
     text-align: center;
     animation: fadeSlideIn 0.3s ease;
   }
+  [data-theme="dark"] .verify-card-mobile {
+    background-color: rgba(30, 27, 22, 0.84);
+    background-image: linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 4px 22px rgba(59, 130, 246, 0.18), 0 8px
+      36px rgba(8, 145, 178, 0.13);
+  }
 }
 
 /* ─── Voice waveform ─── */

@@ -1,8 +1,10 @@
+import { useAuth } from "@/hooks/useAuth";
 import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/store/index";
 import { format } from "date-fns";
 import { enUS, fr } from "date-fns/locale";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
 
@@ -14,7 +16,18 @@ interface SidebarProps {
 export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const { t, i18n } = useTranslation();
   const user = useAppSelector((s) => s.auth.user);
+  const { logout } = useAuth();
   const dateLocale = i18n.language === "en" ? enUS : fr;
+
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    return localStorage.getItem("ciq-sidebar-collapsed") === "true";
+  });
+
+  const toggleCollapsed = () => {
+    const next = !collapsed;
+    setCollapsed(next);
+    localStorage.setItem("ciq-sidebar-collapsed", String(next));
+  };
 
   const used = user?.credits ? user.credits.total - user.credits.remaining : 0;
   const total = user?.credits?.total ?? 500;
@@ -41,8 +54,8 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   ];
 
   return (
-    <aside className={cn("sidenav", isOpen && "mobile-open")}>
-      {/* ─── Logo + mobile close button ─── */}
+    <aside className={cn("sidenav", isOpen && "mobile-open", collapsed && "collapsed")}>
+      {/* ─── Logo + toggle ─── */}
       <div
         className="ciq-mark"
         style={{
@@ -52,34 +65,49 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           justifyContent: "space-between",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span className="dot">C</span>
-          <span className="name" style={{ fontSize: 15 }}>
-            <b>CONTENT</b>
-            <span>.IQ</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, overflow: "hidden" }}>
+          <span className="dot" style={{ flexShrink: 0 }}>
+            C
           </span>
+          {!collapsed && (
+            <span className="name" style={{ fontSize: 15, whiteSpace: "nowrap" }}>
+              <b>CONTENT</b>
+              <span>.IQ</span>
+            </span>
+          )}
         </div>
-        {/* Close button — only visible on mobile/tablet */}
-        <button
-          type="button"
-          className="mobile-menu-btn"
-          onClick={onClose}
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: 8,
-            border: "1px solid var(--line)",
-            background: "var(--bg-elev)",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            flexShrink: 0,
-            padding: 0,
-          }}
-          aria-label="Fermer le menu"
-        >
-          <Ico icon={CiqIcon.x} size={14} />
-        </button>
+        <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+          {/* Desktop toggle — masqué sur mobile */}
+          <button
+            type="button"
+            className="sidenav-toggle hide-mobile"
+            onClick={toggleCollapsed}
+            title={collapsed ? t("sidebar.expand") : t("sidebar.collapse")}
+          >
+            <Ico icon={collapsed ? CiqIcon.chevR : CiqIcon.chevL} size={13} />
+          </button>
+          {/* Mobile close */}
+          <button
+            type="button"
+            className="mobile-menu-btn"
+            onClick={onClose}
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 8,
+              border: "1px solid var(--line)",
+              background: "var(--bg-elev)",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              flexShrink: 0,
+              padding: 0,
+            }}
+            aria-label="Fermer le menu"
+          >
+            <Ico icon={CiqIcon.x} size={14} />
+          </button>
+        </div>
       </div>
 
       {/* ─── Main nav ─── */}
@@ -89,16 +117,19 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           to={it.to}
           className={({ isActive }) => `nav-item${isActive ? " on" : ""}`}
           onClick={onClose}
+          title={collapsed ? it.label : undefined}
         >
           <Ico icon={it.icon} size={18} />
-          {it.label}
+          {!collapsed && it.label}
         </NavLink>
       ))}
 
       {/* ─── Account section ─── */}
-      <div className="nav-section" style={{ fontSize: 11, marginTop: 8 }}>
-        {t("sidebar.account")}
-      </div>
+      {!collapsed && (
+        <div className="nav-section" style={{ fontSize: 11, marginTop: 8 }}>
+          {t("sidebar.account")}
+        </div>
+      )}
 
       {accountItems.map((it) => (
         <NavLink
@@ -106,9 +137,10 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           to={it.to}
           className={({ isActive }) => `nav-item${isActive ? " on" : ""}`}
           onClick={onClose}
+          title={collapsed ? it.label : undefined}
         >
           <Ico icon={it.icon} size={18} />
-          {it.label}
+          {!collapsed && it.label}
         </NavLink>
       ))}
 
@@ -117,32 +149,63 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           to="/admin"
           className={({ isActive }) => `nav-item${isActive ? " on" : ""}`}
           onClick={onClose}
+          title={collapsed ? "Admin" : undefined}
         >
           <Ico icon={CiqIcon.shield} size={18} />
-          Admin
+          {!collapsed && "Admin"}
         </NavLink>
       )}
 
       {/* ─── Spacer ─── */}
       <div style={{ flex: 1 }} />
 
-      {/* ─── Credits card ─── */}
-      <div className="card" style={{ padding: 14, marginTop: 12 }}>
-        <div className="row between" style={{ marginBottom: 8 }}>
-          <span className="t-eyebrow" style={{ fontSize: 11 }}>
-            {t("sidebar.credits")}
+      {/* ─── Crédits ─── */}
+      {collapsed ? (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 2,
+            padding: "8px 0",
+          }}
+          title={`${remaining}/${total} crédits`}
+        >
+          <Ico icon={CiqIcon.zap} size={14} style={{ color: "var(--accent)" }} />
+          <span className="t-mono" style={{ fontSize: 9, color: "var(--ink-mute)" }}>
+            {remaining}
           </span>
-          <span className="t-mono" style={{ fontSize: 13, color: "var(--ink-mute)" }}>
-            {remaining}/{total}
-          </span>
         </div>
-        <div className="gauge accent">
-          <i style={{ width: `${100 - pct}%` }} />
+      ) : (
+        <div className="card" style={{ padding: 14, marginTop: 12 }}>
+          <div className="row between" style={{ marginBottom: 8 }}>
+            <span className="t-eyebrow" style={{ fontSize: 11 }}>
+              {t("sidebar.credits")}
+            </span>
+            <span className="t-mono" style={{ fontSize: 13, color: "var(--ink-mute)" }}>
+              {remaining}/{total}
+            </span>
+          </div>
+          <div className="gauge accent">
+            <i style={{ width: `${100 - pct}%` }} />
+          </div>
+          <div style={{ fontSize: 12, color: "var(--ink-mute)", marginTop: 6 }}>
+            {t("sidebar.renewsOn", { date: resetDateFormatted })}
+          </div>
         </div>
-        <div style={{ fontSize: 12, color: "var(--ink-mute)", marginTop: 6 }}>
-          {t("sidebar.renewsOn", { date: resetDateFormatted })}
-        </div>
-      </div>
+      )}
+
+      {/* ─── Logout ─── */}
+      <button
+        type="button"
+        className="nav-item"
+        onClick={logout}
+        title={collapsed ? t("sidebar.logout") : undefined}
+        style={{ color: "#e05252", marginTop: 4, border: "none", background: "none" }}
+      >
+        <Ico icon={CiqIcon.logout} size={18} />
+        {!collapsed && t("sidebar.logout")}
+      </button>
     </aside>
   );
 }

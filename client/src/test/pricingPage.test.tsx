@@ -27,7 +27,7 @@ function renderWithStore(user: object | null) {
     reducer: { auth: authReducer },
     preloadedState: {
       auth: {
-        user: user as Parameters<typeof authReducer>[0]["user"],
+        user: user as NonNullable<Parameters<typeof authReducer>[0]>["user"],
         accessToken: user ? "tok" : null,
         isAuthenticated: !!user,
         isLoading: false,

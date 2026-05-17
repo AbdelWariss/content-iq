@@ -8,6 +8,7 @@ import {
   searchContents,
   suggestKeywordsHandler,
   toggleFavorite,
+  translateContentHandler,
   updateContent,
 } from "../controllers/content.controller.js";
 import { authenticate } from "../middleware/authenticate.js";
@@ -27,5 +28,6 @@ router.put("/:id", updateContent);
 router.delete("/:id", deleteContent);
 router.patch("/:id/favorite", toggleFavorite);
 router.post("/:id/improve", checkCredits, improveContentHandler);
+router.post("/translate", checkCredits, translateContentHandler);
 
 export default router;

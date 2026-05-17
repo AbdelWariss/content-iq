@@ -46,6 +46,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     { to: "/history", icon: CiqIcon.history, label: t("sidebar.history") },
     { to: "/templates", icon: CiqIcon.templ, label: t("sidebar.templates") },
     { to: "/favorites", icon: CiqIcon.star, label: t("sidebar.favorites") },
+    { to: "/voice", icon: CiqIcon.mic, label: t("sidebar.voice") },
   ];
 
   const accountItems = [

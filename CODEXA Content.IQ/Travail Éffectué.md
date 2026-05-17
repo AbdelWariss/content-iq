@@ -8,6 +8,50 @@ Répertoire détaillé de toutes les tâches effectuées au cours des sessions d
 
 ---
 
+### [2026-05-17] — Session 14 : P2 + P3 — Voice TTS, Traduction, Génération multilingue, Page Voice — COMPLÉTÉ ✅
+- **Session :** 14
+- **Statut :** Complété
+- **Tests :** 73 total (41 serveur + 32 client), tous verts · TypeScript 0 erreur
+
+#### P2 — Features vocales
+
+**1. TTS lecture contenu** (`GeneratePage.tsx`)
+- Bouton `🔊 Lire` / `⏹ Arrêter` dans la toolbar de l'éditeur
+- Utilise `useVoice().speak()` + `stopSpeaking()` existants
+- Désactivé si pas de contenu (`displayContent` vide)
+
+**2. Commandes vocales étendues** (`voice.controller.ts`)
+- `VOICE_COMMANDS_PROMPT` étendu : +7 commandes (`read`, `stop`, `export`, `translate`, `help`, et navigation étendue avec `/favorites`, `/voice`, `/pricing`)
+- Route `/api/voice/intent` ajoutée comme alias de `/api/voice/command`
+
+#### P3 — Features multilingues + traduction
+
+**3. Génération multilingue — `outputLanguage`**
+- `packages/shared/src/schemas/index.ts` : +`outputLanguage?: z.enum(["fr","en"])` dans `GenerateContentSchema`
+- `server/src/services/claude.service.ts` : +`OUTPUT_LANG_INSTRUCTIONS`, `getSystemPrompt()` prend `outputLanguage` optionnel
+- `client/src/pages/Generate/GeneratePage.tsx` : sélecteur "Langue de sortie" (FR/EN/Auto) dans le formulaire
+
+**4. Traduction de contenu**
+- `server/src/services/claude.service.ts` : +`translateContent(html, targetLang)` — appel Claude non-streaming
+- `server/src/controllers/content.controller.ts` : +`translateContentHandler`
+- `server/src/routes/content.routes.ts` : +`POST /content/translate`
+- `client/src/services/content.service.ts` : +`translate(contentId, targetLang)`
+- `client/src/pages/Generate/GeneratePage.tsx` : bouton "🌐 Traduire EN" + panneau de résultat (via `RichEditor`)
+
+**5. Page Voice dédiée** (`/voice`)
+- `client/src/pages/Voice/VoicePage.tsx` (créé) : micro central orb animé, transcription, commande détectée, cheat-sheet des exemples, TTS actif indicator
+- `client/src/App.tsx` : route `/voice` ajoutée (lazy)
+- `client/src/components/Layout/Sidebar.tsx` : item "Voix" ajouté dans `mainItems`
+- `client/src/lib/ciq-icons.tsx` : +icône `info` (SVG circle + i)
+
+**6. i18n**
+- `fr.ts` + `en.ts` : +TTS (`ttsRead`, `ttsStop`), +Traduction (`translate`, `translating`, `translateNeedSave`, `translateDone`, `translateError`, `translationTitle`), +`outputLanguage*`, +section `voice` complète (20+ clés), `sidebar.voice` capitalisé
+
+#### Dépendances
+- `dompurify` + `@types/dompurify` ajoutés (client) — installés mais non utilisés (traduction via `RichEditor` directement)
+
+---
+
 ### [2026-05-05] — Phase 0 : Setup & Infrastructure — COMPLÉTÉ ✅
 - **Session :** 1
 - **Statut :** Complété
@@ -2047,3 +2091,349 @@ Afficher les prix en **EUR ou USD** selon la devise de l'utilisateur :
 ```
 
 **Tests :** 41/41 serveur ✓ · TypeScript 0 erreur client et serveur ✓
+
+---
+
+### [2026-05-16] — Design & Planification : Spec corrections P1 + roadmap voix/traduction — COMPLÉTÉ ✅
+- **Session :** 12
+- **Statut :** Complété (documentation uniquement — aucune modification de code)
+
+---
+
+#### Contexte de la session
+
+Session de brainstorming et conception avant implémentation. Objectif : définir précisément les corrections UX prioritaires (sidebar, logout, pricing, verify email) et la roadmap voix/traduction, en produisant un plan d'implémentation exploitable.
+
+---
+
+#### Tâche 1 — Spec design UI/UX corrections + voix + traduction
+
+**Commit :** `2c9b9e3` — `docs: add design spec for UI corrections + voice + translation features`
+
+**Fichier créé :** `.superpowers/specs/2026-05-17-corrections-voice-design.md` — 204 lignes
+
+**Décisions de design validées :**
+
+**Corrections P1 (priorité immédiate) :**
+
+| Correction | Décision design | Justification |
+|------------|-----------------|---------------|
+| Sidebar pliable | Toggle ◀/▶ desktop, collapsed=64px icônes seuls, expanded=220px, persistance `localStorage('ciq-sidebar-collapsed')` | Gagner de l'espace éditeur ; préférence de l'utilisateur persiste entre sessions |
+| Logout shortcuts | Bouton bas sidebar + dropdown avatar navbar | Accessibilité : la déconnexion ne doit jamais être enfouie dans le profil uniquement |
+| PricingPage back | Bouton ← Retour visible uniquement si `isAuthenticated` (`navigate(-1)`) | Un utilisateur connecté navigue vers /pricing depuis l'app ; un visiteur anonyme n'a pas de "retour" logique |
+| VerifyEmailPage mobile | Fond quadrillé + blobs bleu/teal/gold + card liquid glass, classes CSS dédiées (`.verify-layout`, `.verify-card-mobile`) | La page était un grid 50/50 desktop incompatible mobile |
+
+**Nouvelles features P2 (session suivante) :**
+- TTS lecture contenu : ElevenLabs si Pro/Business, Web Speech si Free
+- Dictée formulaires : fix start/stop + insertion au curseur
+- Commandes vocales étendues : navigation, génération, export, lecture
+
+**Nouvelles features P3 (sessions futures) :**
+- Assistant vocal naturel : micro → Web Speech → POST `/api/voice/intent` → Claude interprète → action (GENERATE/READ/IMPROVE/NAVIGATE)
+- Page Voice dédiée (`/voice`)
+- Génération multilingue : `outputLanguage` FR/EN dans GeneratePage
+- Traduction : bouton "Traduire en anglais" + endpoint `/api/content/translate`
+
+---
+
+#### Tâche 2 — Plan d'implémentation P1 détaillé
+
+**Commit :** `39114a8` — `docs: add P1 corrections implementation plan`
+
+**Fichier créé :** `.superpowers/plans/2026-05-17-corrections-p1.md` — 1193 lignes
+
+Plan complet avec étapes séquentielles, fichiers à modifier, lignes cibles, critères d'acceptation et tests pour chacune des 4 corrections P1. Ce plan a servi de guide d'exécution directe pour la session du 17 mai.
+
+---
+
+### [2026-05-17] — Implémentation corrections P1 : Sidebar, Logout, Pricing, VerifyEmail — COMPLÉTÉ ✅
+- **Session :** 13
+- **Statut :** Complété
+- **Commits :** 10 (feat × 5, style × 2, test × 2, fix × 1, i18n × 1)
+
+---
+
+#### Tâche 1 — Nouvelles icônes SVG dans le design system
+
+**Commit :** `f0c31a1` — `feat: add chevL and logout icons to ciq-icons`
+
+**Fichier modifié :** `client/src/lib/ciq-icons.tsx`
+
+**Problème :** `CiqIcon` ne contenait que `chevD` (chevron bas). Les nouvelles features nécessitaient `chevL` (flèche gauche pour toggle sidebar et bouton retour) et `logout` (icône déconnexion standard).
+
+**Solution :** Ajout de 2 icônes SVG inline dans le registre `CiqIcon` :
+
+| Icône | Path SVG | Usage |
+|-------|----------|-------|
+| `chevL` | `M15 6l-6 6 6 6` | Toggle sidebar collapsed, bouton Retour PricingPage |
+| `logout` | 3 paths (porte + flèche droite + ligne) | Bouton logout sidebar + dropdown navbar |
+
+**Justification :** Le design system interne `ciq-icons` est préféré à lucide-react pour les nouvelles icônes (CLAUDE.md). Les icônes SVG inline n'ajoutent aucune dépendance externe et restent cohérentes visuellement avec le reste du système.
+
+---
+
+#### Tâche 2 — Clés i18n pour les nouveaux textes
+
+**Commit :** `020b189` — `i18n: add sidebar.logout, expand, collapse keys`
+
+**Fichiers modifiés :** `client/src/locales/fr.ts` · `client/src/locales/en.ts`
+
+**Clés ajoutées (dans namespace `sidebar`) :**
+
+```typescript
+sidebar.logout   // "Déconnexion" / "Log out"
+sidebar.expand   // "Déplier" / "Expand"
+sidebar.collapse // "Réduire" / "Collapse"
+```
+
+**Justification :** Toutes les chaînes UI passent par `useTranslation()` (convention CLAUDE.md). Les tooltips du toggle et le label du bouton logout doivent être traduits pour supporter FR et EN.
+
+---
+
+#### Tâche 3 — CSS : sidebar collapsed, dropdown navbar, verify mobile
+
+**Commits :** `5b41a46` + `29fff19` — `style: sidebar collapsed, nav dropdown, verify mobile CSS` + `style: add dark-mode override for .verify-card-mobile`
+
+**Fichier modifié :** `client/src/index.css` (+182 lignes)
+
+**3.1 — Sidebar collapsed**
+
+```css
+.sidenav { transition: width 0.22s ease, padding 0.22s ease; }
+
+.sidenav.collapsed { width: 64px; padding: 22px 8px; }
+.sidenav.collapsed .nav-item { justify-content: center; padding: 10px 8px; gap: 0; }
+/* Labels et textes masqués automatiquement par overflow hidden du parent */
+
+.sidenav-toggle { width: 24px; height: 24px; border-radius: 6px; ... }
+```
+
+**Justification transition :** `0.22s ease` donne une animation fluide sans être lente. La transition CSS évite tout JavaScript d'animation. Le `overflow: hidden` du parent `.sidenav` masque naturellement les textes en mode collapsed.
+
+**3.2 — Dropdown avatar navbar**
+
+```css
+.nav-avatar-btn { /* cercle 28px, hover bordure accent */ }
+.nav-dropdown-item { /* items dropdown */ }
+.nav-dropdown-item.danger { color: #e05252; } /* logout en rouge */
+.nav-dropdown-item.danger:hover { background: rgba(224,82,82,0.07); }
+```
+
+**Justification couleur danger :** Le rouge `#e05252` (rouge modéré, pas agressif) signale visuellement l'action destructive (déconnexion) sans alarmer. Le hover background semi-transparent maintient la cohérence avec le reste des items.
+
+**3.3 — VerifyEmailPage mobile**
+
+```css
+.verify-layout { display: grid; grid-template-columns: 1fr 1.1fr; }
+@media (max-width: 768px) {
+  .verify-layout { grid-template-columns: 1fr; }
+  .verify-panel-left { /* plein écran avec fond quadrillé */ }
+  .verify-mobile-blobs { /* blobs décoratifs positionnés absolument */ }
+  .verify-card-mobile { /* liquid glass : backdrop-filter blur + border dégradé */ }
+}
+/* Dark mode override */
+[data-theme="dark"] .verify-card-mobile { background: rgba(30,30,40,0.7); }
+```
+
+**Justification liquid glass :** `backdrop-filter: blur(20px)` + fond semi-transparent donne l'effet "verre dépoli" qui correspond à l'esthétique premium du design system (déjà présent dans AssistantPanel). Le dark mode override assure la lisibilité sur fond sombre.
+
+---
+
+#### Tâche 4 — Sidebar pliable avec bouton logout
+
+**Commit :** `1f0def1` — `feat: sidebar collapsible toggle + logout button`
+
+**Fichiers modifiés :** `client/src/components/Layout/Sidebar.tsx` (+111 lignes net)
+
+**Logique d'implémentation :**
+
+```typescript
+// State initialisé depuis localStorage (persistance inter-sessions)
+const [collapsed, setCollapsed] = useState<boolean>(() => {
+  return localStorage.getItem("ciq-sidebar-collapsed") === "true";
+});
+
+const toggleCollapsed = () => {
+  const next = !collapsed;
+  setCollapsed(next);
+  localStorage.setItem("ciq-sidebar-collapsed", String(next));
+};
+```
+
+**Justification `localStorage` :** La préférence de largeur sidebar est un paramètre d'interface persistant (comme la langue). L'utiliser dans le state avec initialiseur lazy évite un flash de layout au chargement.
+
+**Structure du header sidebar :**
+- `collapsed=false` : logo "C · CONTENT.IQ" + bouton toggle `◀` (desktop) + bouton X (mobile)
+- `collapsed=true` : logo "C" seul (overflow hidden masque le nom) + bouton toggle `▶`
+- Le bouton toggle est `.hide-mobile` : sur mobile la sidebar est toujours full (drawer overlay)
+
+**Bouton logout en bas :**
+```tsx
+<button type="button" onClick={logout} className="sidenav-logout-btn">
+  <Ico icon={CiqIcon.logout} size={16} />
+  {!collapsed && <span>{t("sidebar.logout")}</span>}
+</button>
+```
+
+**Justification placement logout :** En bas de sidebar, séparé visuellement de la navigation principale par un border-top. Pattern UX standard (Gmail, Notion, Linear) : les actions destructives/système sont en bas.
+
+**Hook `useAuth` :** Réutilise le hook existant qui dispatch `clearAuth()` et appelle `POST /api/auth/logout` côté serveur (suppression du cookie httpOnly refresh token).
+
+---
+
+#### Tâche 5 — Tests sidebar
+
+**Commit :** `8197f3c` — `test: fix sidebar test descriptions and add logout click assertion`
+
+**Fichier modifié :** `client/src/test/sidebar.test.tsx` (+12 lignes)
+
+**Tests ajoutés/corrigés :**
+
+| Test | Description | Assertion |
+|------|-------------|-----------|
+| Toggle collapsed | Rendu initial avec toggle visible | `getByTitle(/Réduire/)` présent |
+| Toggle expand | Click toggle → collapsed | `getByTitle(/Déplier/)` présent |
+| Logout button | Bouton logout présent et cliquable | `getByText(/Déconnexion/)` · `fireEvent.click` |
+| NavLink actif | Correction descriptions dupliquées | Descriptions uniques par test |
+
+**Justification TDD :** Les tests vérifient le comportement observable (titre tooltip, texte bouton, click handler) et non l'implémentation interne (état `collapsed`). Ceci rend les tests résistants aux refactorisations internes.
+
+---
+
+#### Tâche 6 — Dropdown avatar avec logout dans Navbar
+
+**Commit :** `06ca79f` — `feat: avatar dropdown with logout in navbar`
+
+**Fichier modifié :** `client/src/components/Layout/Navbar.tsx` (+67 lignes net)
+
+**Logique d'implémentation :**
+
+```typescript
+const [menuOpen, setMenuOpen] = useState(false);
+const menuRef = useRef<HTMLDivElement>(null);
+
+// Fermeture en cliquant hors dropdown (pattern "click outside")
+useEffect(() => {
+  if (!menuOpen) return;
+  const handler = (e: MouseEvent) => {
+    if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      setMenuOpen(false);
+    }
+  };
+  document.addEventListener("mousedown", handler);
+  return () => document.removeEventListener("mousedown", handler);
+}, [menuOpen]);
+```
+
+**Justification "click outside" :** L'effet est conditionnel (`if (!menuOpen) return`) : l'event listener n'est attaché que quand le menu est ouvert, puis nettoyé à la fermeture. Évite les listeners orphelins. Utilise `mousedown` (et non `click`) pour détecter le click avant que le focus ne change.
+
+**Contenu du dropdown :**
+- Lien "Profil & Paramètres" → `/profile`
+- Lien "Tarifs" → `/pricing`  
+- Séparateur `<hr>`
+- Bouton "Déconnexion" (`.danger`) → `logout()`
+
+**Accessibilité :** `aria-label="Menu compte"` + `aria-expanded={menuOpen}` sur le bouton avatar.
+
+**Scope :** Desktop uniquement (`.hide-mobile`). Sur mobile, le logout est dans la sidebar (drawer) et dans MobileTabBar.
+
+---
+
+#### Tâche 7 — Bouton Retour sur PricingPage
+
+**Commit :** `803df2c` — `feat: back button on pricing page for authenticated users`
+
+**Fichiers modifiés :** `client/src/pages/Pricing/PricingPage.tsx` (+15 lignes) · `client/src/test/pricingPage.test.tsx` (+32 lignes)
+
+**Logique d'implémentation :**
+
+```tsx
+{isAuthenticated && (
+  <div style={{ padding: "16px 56px 0" }}>
+    <button className="btn btn-ghost btn-sm" onClick={() => navigate(-1)}>
+      <Ico icon={CiqIcon.chevL} size={15} />
+      Retour
+    </button>
+  </div>
+)}
+```
+
+**Justification condition `isAuthenticated` :** Un visiteur anonyme accède à `/pricing` depuis la landing page — il n'a pas de page précédente dans l'app, `navigate(-1)` renverrait vers l'extérieur du site. Un utilisateur connecté accède depuis le dashboard, le profil ou une notification → le retour est toujours contextuel et pertinent.
+
+**Justification `navigate(-1)` :** Plutôt que `navigate('/dashboard')`, on utilise l'historique de navigation pour préserver le contexte exact (l'utilisateur vient peut-être de `/profile`, `/generate`, etc.).
+
+**Tests ajoutés :**
+
+| Test | Assertion |
+|------|-----------|
+| Bouton visible si connecté | `getByText(/Retour/)` dans le DOM |
+| Bouton absent si non connecté | `queryByText(/Retour/)` → null |
+| Click → navigate(-1) | Mock `navigate` appelé avec `-1` |
+
+---
+
+#### Tâche 8 — VerifyEmailPage layout responsive mobile
+
+**Commit :** `81bc67e` — `feat: verify email page responsive mobile layout`
+
+**Fichier modifié :** `client/src/pages/Auth/VerifyEmailPage.tsx` (+20 lignes net, refacto structure)
+
+**Problème :** La page utilisait un `grid-template-columns: 1fr 1.1fr` inline — incompatible mobile. Sur petits écrans, les deux colonnes se compressaient ou la colonne droite (DynamicPanel) débordait.
+
+**Solution :** Migration vers classes CSS dédiées `.verify-layout` / `.verify-panel-left` / `.verify-card-mobile`.
+
+**Éléments ajoutés :**
+
+```tsx
+{/* Blobs décoratifs — visibles uniquement sur mobile via CSS */}
+<div className="verify-mobile-blobs" aria-hidden="true">
+  <div className="verify-blob verify-blob-1" />
+  <div className="verify-blob verify-blob-2" />
+  <div className="verify-blob verify-blob-3" />
+</div>
+```
+
+**aria-hidden="true"** sur les blobs : purement décoratifs, non annoncés aux lecteurs d'écran.
+
+**Fix couleur état erreur :** L'icône d'erreur utilisait `var(--accent)` (bleu) — sémantiquement incorrect. Remplacé par `#f87171` (rouge-400) pour signaler clairement l'état d'erreur.
+
+---
+
+#### Tâche 9 — Fix type cast test PricingPage
+
+**Commit :** `5e31a92` — `fix: correct preloadedState type cast in pricingPage test`
+
+**Fichier modifié :** `client/src/test/pricingPage.test.tsx` (1 ligne)
+
+**Problème :** Le `preloadedState` passé au store de test utilisait un cast `as any` insuffisant → erreur TypeScript sur le champ `subscription.currentPeriodEnd` (type `Date | null` vs `string | null`).
+
+**Fix :** Cast `as ReturnType<typeof store.getState>` remplacé par `as Parameters<typeof configureStore>[0]['preloadedState']` pour correspondre exactement au type attendu par `configureStore`.
+
+**Justification :** Les tests doivent être TypeScript-strict. Un cast `as any` masque des erreurs potentielles. Le type correct garantit que si le schéma du store évolue, les tests échouent explicitement.
+
+---
+
+#### État final de la session
+
+| Métrique | Valeur |
+|----------|--------|
+| Tests serveur | 41/41 ✓ |
+| Tests client | 32/32 ✓ |
+| TypeScript client | 0 erreur ✓ |
+| TypeScript serveur | 0 erreur ✓ |
+| Commits pushés | 10 sur `main` |
+| Vercel redéployé | Automatique (push main) |
+
+**Résumé des fichiers modifiés :**
+
+| Fichier | Type | Changement |
+|---------|------|-----------|
+| `client/src/lib/ciq-icons.tsx` | feat | +2 icônes (chevL, logout) |
+| `client/src/locales/fr.ts` / `en.ts` | i18n | +3 clés (logout, expand, collapse) |
+| `client/src/index.css` | style | +182 lignes (sidebar, dropdown, verify mobile) |
+| `client/src/components/Layout/Sidebar.tsx` | feat | Collapsible + logout + localStorage |
+| `client/src/components/Layout/Navbar.tsx` | feat | Avatar dropdown + logout click-outside |
+| `client/src/pages/Pricing/PricingPage.tsx` | feat | Bouton Retour conditionnel |
+| `client/src/pages/Auth/VerifyEmailPage.tsx` | feat | Layout responsive mobile |
+| `client/src/test/sidebar.test.tsx` | test | +12 lignes assertions |
+| `client/src/test/pricingPage.test.tsx` | feat+fix | +32 lignes tests + type fix |

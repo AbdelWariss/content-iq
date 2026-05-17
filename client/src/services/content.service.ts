@@ -68,6 +68,14 @@ export const contentService = {
     return res.data;
   },
 
+  async translate(
+    contentId: string,
+    targetLang: "fr" | "en",
+  ): Promise<{ success: boolean; data: { translated: string; targetLang: string } }> {
+    const res = await api.post("/content/translate", { contentId, targetLang });
+    return res.data;
+  },
+
   getGenerateUrl(): string {
     return `${import.meta.env.VITE_API_URL ?? "/api"}/content/generate`;
   },

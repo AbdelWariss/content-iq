@@ -83,8 +83,12 @@ export default function GeneratePage() {
   const [templateName, setTemplateName] = useState("");
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const { stream, stop } = useStreaming();
-  const { startListening, stopListening, status: voiceStatus } = useVoice();
+  const { startListening, stopListening, speak, stopSpeaking, status: voiceStatus } = useVoice();
+  const { isTtsSpeaking } = useAppSelector((s) => s.voice);
   const [copied, setCopied] = useState(false);
+  const [translatedContent, setTranslatedContent] = useState<string | null>(null);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [showTranslation, setShowTranslation] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [keywords, setKeywords] = useState<string[]>([]);
   const [suggestedKeywords, setSuggestedKeywords] = useState<string[]>([]);
@@ -191,6 +195,34 @@ export default function GeneratePage() {
     setTimeout(() => setCopied(false), 2000);
     toast({ title: t("generate.copied") });
   }, [displayContent]);
+
+  const handleSpeak = useCallback(() => {
+    if (isTtsSpeaking) {
+      stopSpeaking();
+      return;
+    }
+    const text = displayContent.replace(/<[^>]*>/g, "").trim();
+    if (!text) return;
+    speak(text);
+  }, [displayContent, isTtsSpeaking, speak, stopSpeaking]);
+
+  const handleTranslate = useCallback(async () => {
+    if (!savedContentId) {
+      toast({ title: t("generate.translateNeedSave"), variant: "destructive" });
+      return;
+    }
+    setIsTranslating(true);
+    try {
+      const { data } = await contentService.translate(savedContentId, "en");
+      setTranslatedContent(data.translated);
+      setShowTranslation(true);
+      toast({ title: t("generate.translateDone") });
+    } catch {
+      toast({ title: t("generate.translateError"), variant: "destructive" });
+    } finally {
+      setIsTranslating(false);
+    }
+  }, [savedContentId]);
 
   const addKeyword = useCallback(() => {
     if (keyword.trim() && keywords.length < 10) {
@@ -562,6 +594,37 @@ export default function GeneratePage() {
                 </div>
               </div>
 
+              {/* Output language toggle */}
+              <div
+                className="row"
+                style={{
+                  gap: 8,
+                  padding: "8px 12px",
+                  background: "var(--bg-elev)",
+                  borderRadius: 10,
+                  border: "1px solid var(--line-soft)",
+                  alignItems: "center",
+                }}
+              >
+                <Ico
+                  icon={CiqIcon.globe}
+                  size={15}
+                  style={{ color: "var(--ink-mute)", flexShrink: 0 }}
+                />
+                <span style={{ fontSize: 12.5, color: "var(--ink-soft)", flex: 1 }}>
+                  {t("generate.outputLanguageLabel")}
+                </span>
+                <select
+                  className="select"
+                  style={{ width: "auto", fontSize: 12.5, padding: "4px 8px" }}
+                  {...register("outputLanguage")}
+                >
+                  <option value="">{t("generate.outputLanguageAuto")}</option>
+                  <option value="fr">Français</option>
+                  <option value="en">English</option>
+                </select>
+              </div>
+
               {/* Keywords */}
               <div>
                 <label className="label">{t("generate.keywords")}</label>
@@ -812,6 +875,19 @@ export default function GeneratePage() {
                   {isSavingContent ? "Sauvegarde…" : "Sauvegarder"}
                 </button>
               )}
+              <button type="button" className="btn btn-outline btn-sm" onClick={handleSpeak}>
+                <Ico icon={isTtsSpeaking ? CiqIcon.stop : CiqIcon.play} />
+                {isTtsSpeaking ? t("generate.ttsStop") : t("generate.ttsRead")}
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={handleTranslate}
+                disabled={isTranslating || !savedContentId}
+              >
+                <Ico icon={CiqIcon.globe} />
+                {isTranslating ? t("generate.translating") : t("generate.translate")}
+              </button>
               <button
                 type="button"
                 className="btn btn-outline btn-sm"
@@ -883,6 +959,42 @@ export default function GeneratePage() {
           streaming={isGenerating}
           className="flex-1 rounded-2xl"
         />
+
+        {/* Translation panel */}
+        {showTranslation && translatedContent && (
+          <div
+            className="card"
+            style={{
+              margin: "12px 0 0",
+              padding: "16px 20px",
+              background: "var(--bg-sunk)",
+              border: "1px solid var(--line-soft)",
+              flexShrink: 0,
+            }}
+          >
+            <div className="row between" style={{ marginBottom: 10 }}>
+              <div className="row" style={{ gap: 8 }}>
+                <Ico icon={CiqIcon.globe} size={15} style={{ color: "var(--accent)" }} />
+                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--accent-ink)" }}>
+                  {t("generate.translationTitle")}
+                </span>
+              </div>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => setShowTranslation(false)}
+              >
+                <Ico icon={CiqIcon.x} size={14} />
+              </button>
+            </div>
+            <RichEditor
+              content={translatedContent}
+              onChange={() => {}}
+              streaming={false}
+              className="flex-1 rounded-xl"
+            />
+          </div>
+        )}
       </div>
     </div>
   );

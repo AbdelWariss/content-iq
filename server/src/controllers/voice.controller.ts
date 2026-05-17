@@ -20,19 +20,35 @@ const CommandSchema = z.object({
   context: z.string().optional(),
 });
 
-const VOICE_COMMANDS_PROMPT = `Tu es un parseur de commandes vocales pour une application de génération de contenu.
-L'utilisateur donne une commande en langage naturel. Tu dois retourner un JSON avec :
-- "command": le nom de la commande parmi [navigate, generate, copy, improve, clear, favorite, none]
+const VOICE_COMMANDS_PROMPT = `Tu es un parseur de commandes vocales pour une application de génération de contenu IA.
+L'utilisateur parle en langage naturel (français ou anglais). Tu dois retourner un JSON avec :
+- "command": le nom de la commande parmi [navigate, generate, copy, improve, clear, favorite, read, stop, export, translate, help, none]
 - "params": objet avec les paramètres de la commande
 - "confidence": score de confiance entre 0 et 1
 
 Commandes disponibles :
-- navigate: {"to": "/generate"|"/history"|"/templates"|"/dashboard"|"/profile"}
-- generate: {"subject": "...", "type": "blog"|"linkedin"|..., "tone": "professional"|...}
+- navigate: {"to": "/generate"|"/history"|"/templates"|"/dashboard"|"/profile"|"/favorites"|"/pricing"|"/voice"}
+  Exemples: "tableau de bord", "dashboard", "historique", "history", "templates", "mes favoris", "favorites", "profil", "profile", "tarifs", "pricing", "voix", "voice", "nouveau contenu", "générer"
+- generate: {"subject": "...", "type": "blog"|"linkedin"|"instagram"|"twitter"|"email"|"youtube"|"bio"|"newsletter"|"product"|"pitch"|"press"|"slogan", "tone": "professional"|"casual"|"inspiring"|"technical"|"humorous"|"persuasive", "language": "fr"|"en"}
+  Exemples: "génère un post LinkedIn sur l'IA", "crée un blog sur le marketing digital", "écris un email professionnel"
 - copy: {} — copier le contenu de l'éditeur
+  Exemples: "copie le contenu", "copy", "copier"
 - improve: {"instruction": "..."}
+  Exemples: "améliore le texte", "rends-le plus professionnel", "raccourcis"
 - clear: {} — effacer l'éditeur
+  Exemples: "efface tout", "clear", "recommence"
 - favorite: {} — marquer en favori
+  Exemples: "ajoute aux favoris", "marque en favori"
+- read: {} — lire le contenu à voix haute
+  Exemples: "lis le contenu", "lecture", "read aloud", "lire"
+- stop: {} — arrêter la lecture TTS
+  Exemples: "stop", "arrête", "silence", "stopper la lecture"
+- export: {"format": "pdf"|"docx"|"markdown"|"txt"}
+  Exemples: "exporte en PDF", "télécharge en Word", "export markdown"
+- translate: {"targetLang": "fr"|"en"}
+  Exemples: "traduis en anglais", "translate to French", "traduire en français"
+- help: {} — afficher l'aide / liste des commandes
+  Exemples: "aide", "help", "commandes disponibles", "que peux-tu faire"
 - none: {} — commande non reconnue
 
 Retourne UNIQUEMENT le JSON, rien d'autre.`;

@@ -131,8 +131,16 @@ const LANG_INSTRUCTIONS: Record<ContentLanguage, string> = {
   ar: "أجب باللغة العربية فقط.",
 };
 
-function getSystemPrompt(language: ContentLanguage): string {
-  return `Tu es un expert en copywriting et création de contenu digital de classe mondiale. Tu produis du contenu percutant, authentique et optimisé pour chaque plateforme. ${LANG_INSTRUCTIONS[language]} Formate ta réponse en HTML valide : utilise <h1>, <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>, <br>. N'utilise JAMAIS le markdown (pas de #, ##, **, *, __, etc.). Ne fournis que le contenu demandé, sans explications, sans préambule, sans commentaires.`;
+const OUTPUT_LANG_INSTRUCTIONS: Record<"fr" | "en", string> = {
+  fr: "Génère le contenu UNIQUEMENT en français.",
+  en: "Generate the content ONLY in English.",
+};
+
+function getSystemPrompt(language: ContentLanguage, outputLanguage?: "fr" | "en"): string {
+  const langInstruction = outputLanguage
+    ? OUTPUT_LANG_INSTRUCTIONS[outputLanguage]
+    : LANG_INSTRUCTIONS[language];
+  return `Tu es un expert en copywriting et création de contenu digital de classe mondiale. Tu produis du contenu percutant, authentique et optimisé pour chaque plateforme. ${langInstruction} Formate ta réponse en HTML valide : utilise <h1>, <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>, <br>. N'utilise JAMAIS le markdown (pas de #, ##, **, *, __, etc.). Ne fournis que le contenu demandé, sans explications, sans préambule, sans commentaires.`;
 }
 
 function buildUserPrompt(params: GenerateContentInput): string {
@@ -231,7 +239,7 @@ export async function streamContentGeneration(
       max_tokens: params.customLength
         ? Math.min(params.customLength * 2, 4000)
         : (MAX_TOKENS[params.length] ?? 900),
-      system: getSystemPrompt(params.language),
+      system: getSystemPrompt(params.language, params.outputLanguage),
       messages: [{ role: "user", content: buildUserPrompt(params) }],
     });
 
@@ -355,4 +363,28 @@ export async function suggestKeywords(subject: string, type: string): Promise<st
     .map((kw) => kw.trim())
     .filter(Boolean)
     .slice(0, 6);
+}
+
+export async function translateContent(
+  htmlContent: string,
+  targetLang: "fr" | "en",
+): Promise<string> {
+  const langLabel = targetLang === "fr" ? "français" : "English";
+  const instruction =
+    targetLang === "fr"
+      ? "Traduis ce contenu HTML en français. Préserve exactement la structure HTML (balises, attributs). Ne traduis que le texte, pas les attributs HTML. Retourne UNIQUEMENT le HTML traduit."
+      : "Translate this HTML content to English. Preserve the HTML structure exactly (tags, attributes). Only translate the text content, not HTML attributes. Return ONLY the translated HTML.";
+
+  const msg = await client.messages.create({
+    model: env.CLAUDE_MODEL,
+    max_tokens: 4000,
+    system: `Tu es un traducteur expert. ${targetLang === "fr" ? "Traduis en français." : "Translate to " + langLabel + "."}`,
+    messages: [
+      {
+        role: "user",
+        content: `${instruction}\n\n${htmlContent}`,
+      },
+    ],
+  });
+  return (msg.content[0] as { text: string }).text.trim();
 }

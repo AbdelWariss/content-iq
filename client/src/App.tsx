@@ -26,6 +26,7 @@ const PricingPage = lazy(() => import("@/pages/Pricing/PricingPage"));
 const ProfilePage = lazy(() => import("@/pages/Profile/ProfilePage"));
 const AdminPage = lazy(() => import("@/pages/Admin/AdminPage"));
 const FavoritesPage = lazy(() => import("@/pages/Favorites/FavoritesPage"));
+const VoicePage = lazy(() => import("@/pages/Voice/VoicePage"));
 
 function AuthInitializer() {
   useAuth();
@@ -72,6 +73,7 @@ export function App() {
               <Route path="/templates" element={<TemplatesPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/favorites" element={<FavoritesPage />} />
+              <Route path="/voice" element={<VoicePage />} />
             </Route>
           </Route>
 

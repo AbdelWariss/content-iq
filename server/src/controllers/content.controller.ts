@@ -11,6 +11,7 @@ import {
   improveContent,
   streamContentGeneration,
   suggestKeywords,
+  translateContent,
 } from "../services/claude.service.js";
 import { deductCredits } from "../services/credits.service.js";
 import { logger } from "../utils/logger.js";
@@ -194,4 +195,20 @@ export async function suggestKeywordsHandler(req: Request, res: Response): Promi
 
   const keywords = await suggestKeywords(subject.trim(), type ?? "content");
   res.json({ success: true, data: { keywords } });
+}
+
+export async function translateContentHandler(req: Request, res: Response): Promise<void> {
+  const { userId } = getAuthUser(req);
+  const { contentId, targetLang } = req.body as { contentId?: string; targetLang?: string };
+
+  if (!contentId) throw new AppError("contentId requis", 400);
+  if (targetLang !== "fr" && targetLang !== "en") {
+    throw new AppError("targetLang doit être 'fr' ou 'en'", 400);
+  }
+
+  const content = await Content.findOne({ _id: contentId, userId });
+  if (!content) throw new NotFoundError("Contenu introuvable");
+
+  const translated = await translateContent(content.body, targetLang);
+  res.json({ success: true, data: { translated, targetLang } });
 }

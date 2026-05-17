@@ -305,6 +305,12 @@ export const CiqIcon = {
       <path d="M13 2L3 14h7l-1 8 11-13h-7z" />
     </svg>
   ),
+  info: (
+    <svg viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4M12 8h.01" strokeLinecap="round" />
+    </svg>
+  ),
   shield: (
     <svg viewBox="0 0 24 24">
       <path d="M12 3l8 4v5c0 5-4 9-8 10-4-1-8-5-8-10V7z" />

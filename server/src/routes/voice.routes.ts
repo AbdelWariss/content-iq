@@ -16,5 +16,6 @@ router.post("/transcribe", voiceLimiter, transcribe);
 router.post("/synthesize", voiceLimiter, synthesize);
 router.get("/voices", getVoices);
 router.post("/command", voiceLimiter, executeCommand);
+router.post("/intent", voiceLimiter, executeCommand);
 
 export default router;

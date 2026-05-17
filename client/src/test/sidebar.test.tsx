@@ -24,9 +24,11 @@ const localStorageMock = (() => {
 })();
 Object.defineProperty(globalThis, "localStorage", { value: localStorageMock, writable: true });
 
+const mockLogout = vi.fn();
+
 // Mock useAuth
 vi.mock("@/hooks/useAuth", () => ({
-  useAuth: () => ({ logout: vi.fn() }),
+  useAuth: () => ({ logout: mockLogout }),
 }));
 
 // Mock i18next
@@ -68,9 +70,10 @@ function renderSidebar(props = {}) {
 describe("Sidebar", () => {
   beforeEach(() => {
     localStorageMock.clear();
+    mockLogout.mockClear();
   });
 
-  it("affiche le bouton logout", () => {
+  it("affiche le bouton toggle en état déplié", () => {
     renderSidebar();
     expect(screen.getByTitle("sidebar.collapse")).toBeInTheDocument();
   });
@@ -93,5 +96,12 @@ describe("Sidebar", () => {
   it("affiche le bouton Se déconnecter", () => {
     renderSidebar();
     expect(screen.getByText("sidebar.logout")).toBeInTheDocument();
+  });
+
+  it("appelle logout() au clic sur le bouton Se déconnecter", () => {
+    renderSidebar();
+    const logoutBtn = screen.getByText("sidebar.logout");
+    fireEvent.click(logoutBtn);
+    expect(mockLogout).toHaveBeenCalledOnce();
   });
 });

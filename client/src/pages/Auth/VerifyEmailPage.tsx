@@ -27,17 +27,17 @@ export default function VerifyEmailPage() {
   }, [token, dispatch]);
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1.1fr", height: "100%" }}>
-      {/* ── Left — status ── */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateRows: "auto 1fr auto",
-          padding: "44px 64px",
-          overflowY: "auto",
-        }}
-      >
-        <Link to="/" style={{ textDecoration: "none" }}>
+    <div className="verify-layout">
+      {/* ── Panneau gauche — statut ── */}
+      <div className="verify-panel-left">
+        {/* Blobs décoratifs — visibles uniquement sur mobile */}
+        <div className="verify-mobile-blobs" aria-hidden="true">
+          <div className="verify-blob verify-blob-1" />
+          <div className="verify-blob verify-blob-2" />
+          <div className="verify-blob verify-blob-3" />
+        </div>
+
+        <Link to="/" className="verify-logo" style={{ textDecoration: "none" }}>
           <div className="ciq-mark">
             <span className="dot">C</span>
             <span className="name">
@@ -49,7 +49,7 @@ export default function VerifyEmailPage() {
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div
-            className="auth-form"
+            className="auth-form verify-card-mobile"
             style={{
               width: "100%",
               maxWidth: 500,
@@ -123,14 +123,14 @@ export default function VerifyEmailPage() {
                     width: 72,
                     height: 72,
                     borderRadius: "50%",
-                    background: "rgba(59,130,246,0.1)",
-                    border: "2px solid rgba(59,130,246,0.3)",
+                    background: "rgba(248,113,113,0.1)",
+                    border: "2px solid rgba(248,113,113,0.4)",
                     display: "grid",
                     placeItems: "center",
                     margin: "0 auto 28px",
                   }}
                 >
-                  <Ico icon={CiqIcon.x} size={32} style={{ color: "var(--accent)" }} />
+                  <Ico icon={CiqIcon.x} size={32} style={{ color: "#f87171" }} />
                 </div>
                 <h1 className="t-display" style={{ fontSize: 48, margin: "0 0 12px" }}>
                   Lien invalide
@@ -151,13 +151,15 @@ export default function VerifyEmailPage() {
           </div>
         </div>
 
-        <div style={{ fontSize: 14, color: "var(--ink-mute)" }}>
+        <div className="verify-footer" style={{ fontSize: 14, color: "var(--ink-mute)" }}>
           © 2026 CODEXA · Document confidentiel
         </div>
       </div>
 
-      {/* ── Right — dynamic panel ── */}
-      <DynamicPanel />
+      {/* ── Panneau droit — dynamique ── */}
+      <div className="verify-panel-right">
+        <DynamicPanel />
+      </div>
     </div>
   );
 }

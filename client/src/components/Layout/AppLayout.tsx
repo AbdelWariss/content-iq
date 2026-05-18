@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import api from "@/services/axios";
 import { toggleOpen } from "@/store/assistantSlice";
 import { useAppDispatch, useAppSelector } from "@/store/index";
+import { PLAN_LIMITS } from "@contentiq/shared";
 import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { MobileTabBar } from "./MobileTabBar";
@@ -103,13 +104,17 @@ export function AppLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [voiceAssistantOpen, setVoiceAssistantOpen] = useState(false);
+  const user = useAppSelector((s) => s.auth.user);
+  const canUseVoice = user
+    ? PLAN_LIMITS[user.role as keyof typeof PLAN_LIMITS]?.voiceCommands
+    : false;
 
   const wakeWord =
     typeof localStorage !== "undefined"
       ? (localStorage.getItem("ciq_activation") ?? "CONTENT")
       : "CONTENT";
 
-  useWakeWord(wakeWord, () => setVoiceAssistantOpen(true), !voiceAssistantOpen);
+  useWakeWord(wakeWord, () => setVoiceAssistantOpen(true), !voiceAssistantOpen && canUseVoice);
 
   return (
     <div className="app flex h-screen overflow-hidden">

@@ -156,6 +156,15 @@ const en = {
     exExportDesc: "Starts export in desired format",
     exHelp: "Help",
     exHelpDesc: "Shows available commands list",
+    assistantTitle: "IQ Vocal",
+    assistantListen: "Listening…",
+    assistantProcessing: "Processing…",
+    assistantClose: "Close",
+    assistantContextNeeded: "Open a content first for this command.",
+    assistantUnknown: "Command not recognized",
+    wakeWordLabel: "Wake word",
+    wakeWordDesc: "Say this word to automatically activate the voice assistant.",
+    wakeWordCustom: "Custom word…",
   },
   // History page
   history: {

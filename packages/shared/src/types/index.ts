@@ -80,7 +80,7 @@ export const PLAN_LIMITS: Record<UserRole, PlanLimits> = {
   free: {
     credits: 10,
     contentTypes: ["blog", "linkedin", "instagram", "twitter", "email", "product"],
-    voiceCommands: false,
+    voiceCommands: true,
     assistantMessagesPerDay: 5,
     exports: ["pdf", "txt"],
     customTemplates: false,

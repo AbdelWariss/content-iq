@@ -1,4 +1,6 @@
 import { AssistantPanel } from "@/components/Assistant/AssistantPanel";
+import { GlobalVoiceAssistant } from "@/components/Voice/GlobalVoiceAssistant";
+import { useWakeWord } from "@/hooks/useWakeWord";
 import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import { cn } from "@/lib/utils";
 import api from "@/services/axios";
@@ -100,6 +102,14 @@ function AssistantToggle() {
 export function AppLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [voiceAssistantOpen, setVoiceAssistantOpen] = useState(false);
+
+  const wakeWord =
+    typeof localStorage !== "undefined"
+      ? (localStorage.getItem("ciq_activation") ?? "CONTENT")
+      : "CONTENT";
+
+  useWakeWord(wakeWord, () => setVoiceAssistantOpen(true), !voiceAssistantOpen);
 
   return (
     <div className="app flex h-screen overflow-hidden">
@@ -130,6 +140,12 @@ export function AppLayout() {
       <AssistantPanel />
       {/* AssistantToggle : masqué sur mobile (remplacé par tab bar) */}
       <AssistantToggle />
+      {/* Global voice assistant FAB + overlay */}
+      <GlobalVoiceAssistant
+        isOpen={voiceAssistantOpen}
+        onOpen={() => setVoiceAssistantOpen(true)}
+        onClose={() => setVoiceAssistantOpen(false)}
+      />
       {/* Bottom tab bar — mobile only (≤ 640px) */}
       <MobileTabBar />
     </div>

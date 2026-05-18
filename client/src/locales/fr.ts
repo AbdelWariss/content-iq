@@ -156,6 +156,15 @@ const fr = {
     exExportDesc: "Lance l'export dans le format voulu",
     exHelp: "Aide",
     exHelpDesc: "Affiche la liste des commandes disponibles",
+    assistantTitle: "IQ Vocal",
+    assistantListen: "Je vous écoute…",
+    assistantProcessing: "Traitement…",
+    assistantClose: "Fermer",
+    assistantContextNeeded: "Ouvrez d'abord un contenu pour cette commande.",
+    assistantUnknown: "Commande non reconnue",
+    wakeWordLabel: "Mot de déclenchement",
+    wakeWordDesc: "Dites ce mot pour activer l'assistant vocal automatiquement.",
+    wakeWordCustom: "Mot personnalisé…",
   },
   // History page
   history: {

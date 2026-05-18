@@ -833,6 +833,38 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
+
+            {/* Wake word — desktop */}
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label className="label">{t("voice.wakeWordLabel")}</label>
+              <p style={{ fontSize: 12, color: "var(--ink-mute)", margin: "0 0 10px" }}>
+                {t("voice.wakeWordDesc")}
+              </p>
+              <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+                {ACTIVATION_WORDS.map((w) => (
+                  <button
+                    key={w}
+                    type="button"
+                    className={`btn btn-sm${activationWord === w ? " btn-primary" : " btn-outline"}`}
+                    onClick={() => {
+                      handleActivationWordChange(w);
+                    }}
+                  >
+                    {w}
+                  </button>
+                ))}
+                <input
+                  className="input"
+                  style={{ width: 160, fontSize: 13 }}
+                  placeholder={t("voice.wakeWordCustom")}
+                  maxLength={20}
+                  value={ACTIVATION_WORDS.includes(activationWord) ? "" : activationWord}
+                  onChange={(e) => {
+                    if (e.target.value) handleActivationWordChange(e.target.value.toUpperCase());
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1069,10 +1101,28 @@ export default function ProfilePage() {
             onClick={() => setOpenSelector("mic")}
           />
           <SettingsRow
-            label="Mot d'activation"
+            label={t("voice.wakeWordLabel")}
             value={`« ${activationWord} »`}
             onClick={() => setOpenSelector("activation")}
           />
+          {/* Custom wake word text input — mobile */}
+          <div style={{ padding: "10px 0", borderBottom: "1px solid var(--line-soft)" }}>
+            <span
+              style={{ fontSize: 12, color: "var(--ink-mute)", display: "block", marginBottom: 6 }}
+            >
+              {t("voice.wakeWordDesc")}
+            </span>
+            <input
+              className="input"
+              style={{ fontSize: 13, width: "100%" }}
+              placeholder={t("voice.wakeWordCustom")}
+              maxLength={20}
+              value={ACTIVATION_WORDS.includes(activationWord) ? "" : activationWord}
+              onChange={(e) => {
+                if (e.target.value) handleActivationWordChange(e.target.value.toUpperCase());
+              }}
+            />
+          </div>
           <div className="row between" style={{ padding: "14px 0" }}>
             <div className="col" style={{ gap: 2 }}>
               <span style={{ fontSize: 15 }}>Lecture auto des réponses</span>

@@ -54,3 +54,6 @@ uploads/
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Superpowers tooling (brainstorms, plans, specs — local only)
+.superpowers/

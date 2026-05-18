@@ -160,8 +160,15 @@ const fr = {
   // History page
   history: {
     title: "Historique",
-    exportBulk: "Export bulk ZIP",
-    tag: "Tagger",
+    exportBulk: "Export ZIP",
+    exportZipDone: "ZIP téléchargé !",
+    exportZipEmpty: "Aucun contenu visible à exporter.",
+    tag: "Tags",
+    tagAdd: "Ajouter un tag…",
+    tagSaved: "Tags mis à jour",
+    tagFilterLabel: "Filtrer par tag",
+    tagFilterPlaceholder: "Tag…",
+    tagClearFilter: "Effacer le filtre tag",
     searchPlaceholder: "Rechercher dans tous mes contenus… ⌘K",
     allTypes: "Tous types",
     favorites: "Favoris",

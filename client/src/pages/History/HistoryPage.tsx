@@ -6,7 +6,8 @@ import { exportService } from "@/services/export.service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { enUS, fr } from "date-fns/locale";
-import { useState } from "react";
+import JSZip from "jszip";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -128,6 +129,128 @@ function ExportMenu({ item }: { item: ContentItem }) {
   );
 }
 
+/** Inline tag editor for a single content item */
+function TagEditor({
+  item,
+  onSaved,
+}: { item: ContentItem; onSaved: (id: string, tags: string[]) => void }) {
+  const { t } = useTranslation();
+  const [tags, setTags] = useState<string[]>(item.tags ?? []);
+  const [inputVal, setInputVal] = useState("");
+  const [editing, setEditing] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const commitInput = useCallback(() => {
+    const raw = inputVal.trim().replace(/,+$/, "");
+    if (raw && !tags.includes(raw) && raw.length <= 30) {
+      const next = [...tags, raw];
+      setTags(next);
+      setInputVal("");
+      onSaved(item._id, next);
+    } else {
+      setInputVal("");
+    }
+    setEditing(false);
+  }, [inputVal, tags, item._id, onSaved]);
+
+  const removeTag = useCallback(
+    (tag: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      const next = tags.filter((t) => t !== tag);
+      setTags(next);
+      onSaved(item._id, next);
+    },
+    [tags, item._id, onSaved],
+  );
+
+  return (
+    <div
+      className="row"
+      style={{ gap: 4, flexWrap: "wrap", alignItems: "center" }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {tags.map((tag) => (
+        <span
+          key={tag}
+          className="chip"
+          style={{
+            fontSize: 10,
+            padding: "1px 6px",
+            gap: 3,
+            display: "inline-flex",
+            alignItems: "center",
+          }}
+        >
+          {tag}
+          <button
+            type="button"
+            style={{
+              background: "none",
+              border: "none",
+              padding: 0,
+              cursor: "pointer",
+              lineHeight: 1,
+              color: "var(--ink-mute)",
+            }}
+            onClick={(e) => removeTag(tag, e)}
+            aria-label={`Retirer ${tag}`}
+          >
+            ×
+          </button>
+        </span>
+      ))}
+      {editing ? (
+        <input
+          ref={inputRef}
+          value={inputVal}
+          onChange={(e) => setInputVal(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === ",") {
+              e.preventDefault();
+              commitInput();
+            } else if (e.key === "Escape") {
+              setInputVal("");
+              setEditing(false);
+            }
+          }}
+          onBlur={commitInput}
+          placeholder={t("history.tagAdd")}
+          style={{
+            fontSize: 10,
+            border: "1px solid var(--accent)",
+            borderRadius: 20,
+            padding: "1px 7px",
+            outline: "none",
+            width: 90,
+            background: "var(--bg-elev)",
+            color: "var(--ink)",
+          }}
+        />
+      ) : (
+        <button
+          type="button"
+          style={{
+            fontSize: 10,
+            border: "1px dashed var(--line)",
+            borderRadius: 20,
+            padding: "1px 7px",
+            cursor: "pointer",
+            background: "transparent",
+            color: "var(--ink-mute)",
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setEditing(true);
+            setTimeout(() => inputRef.current?.focus(), 0);
+          }}
+        >
+          + tag
+        </button>
+      )}
+    </div>
+  );
+}
+
 /** Confirmation dialog for delete */
 function DeleteConfirmDialog({
   onConfirm,
@@ -186,19 +309,29 @@ export default function HistoryPage() {
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("");
   const [filterFavorite, setFilterFavorite] = useState(false);
+  const [filterTag, setFilterTag] = useState("");
+  const [tagFilterOpen, setTagFilterOpen] = useState(false);
+  const [tagFilterInput, setTagFilterInput] = useState("");
   const [page, setPage] = useState(1);
   const [copied, setCopied] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [isExportingZip, setIsExportingZip] = useState(false);
+  const tagFilterInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (tagFilterOpen) tagFilterInputRef.current?.focus();
+  }, [tagFilterOpen]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["contents", { page, type: filterType, favorite: filterFavorite }],
+    queryKey: ["contents", { page, type: filterType, favorite: filterFavorite, tag: filterTag }],
     queryFn: () =>
       contentService.list({
         page,
         limit: 20,
         type: filterType || undefined,
         favorite: filterFavorite || undefined,
+        tag: filterTag || undefined,
       }),
   });
 
@@ -211,6 +344,15 @@ export default function HistoryPage() {
   const toggleFavMutation = useMutation({
     mutationFn: (id: string) => contentService.toggleFavorite(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["contents"] }),
+  });
+
+  const updateTagsMutation = useMutation({
+    mutationFn: ({ id, tags }: { id: string; tags: string[] }) =>
+      contentService.update(id, { tags }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contents"] });
+      toast({ title: t("history.tagSaved") });
+    },
   });
 
   const deleteMutation = useMutation({
@@ -226,6 +368,13 @@ export default function HistoryPage() {
   const pagination = data?.data?.pagination;
   const loading = isLoading || isSearching;
 
+  const handleTagSaved = useCallback(
+    (id: string, tags: string[]) => {
+      updateTagsMutation.mutate({ id, tags });
+    },
+    [updateTagsMutation],
+  );
+
   const handleCopy = async (item: ContentItem, e?: React.MouseEvent) => {
     e?.stopPropagation();
     const text = (item.bodyPlain ?? item.title ?? "").replace(/<[^>]*>/g, "");
@@ -237,6 +386,46 @@ export default function HistoryPage() {
 
   const handleRowClick = (item: ContentItem) => {
     navigate(`/generate?view=${item._id}`);
+  };
+
+  const handleExportBulk = async () => {
+    if (items.length === 0) {
+      toast({ title: t("history.exportZipEmpty"), variant: "destructive" });
+      return;
+    }
+    setIsExportingZip(true);
+    try {
+      const zip = new JSZip();
+      for (const item of items) {
+        const plain = (item.bodyPlain ?? "").replace(/<[^>]*>/g, "");
+        const filename = `${item.title ?? item.prompt?.subject ?? item.type}`
+          .replace(/[/\\?%*:|"<>]/g, "-")
+          .slice(0, 80);
+        zip.file(`${filename}.txt`, plain);
+      }
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "contentiq-export.zip";
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: t("history.exportZipDone") });
+    } finally {
+      setIsExportingZip(false);
+    }
+  };
+
+  const applyTagFilter = () => {
+    setFilterTag(tagFilterInput.trim());
+    setPage(1);
+  };
+
+  const clearTagFilter = () => {
+    setFilterTag("");
+    setTagFilterInput("");
+    setTagFilterOpen(false);
+    setPage(1);
   };
 
   return (
@@ -292,31 +481,76 @@ export default function HistoryPage() {
           <button
             type="button"
             className="btn btn-outline btn-sm"
-            onClick={() =>
-              toast({
-                title: "Feature en développement",
-                description: "Export bulk ZIP arrive bientôt.",
-              })
-            }
+            disabled={isExportingZip}
+            onClick={handleExportBulk}
           >
             <Ico icon={CiqIcon.download} />
-            {t("history.exportBulk")}
+            {isExportingZip ? "…" : t("history.exportBulk")}
           </button>
           <button
             type="button"
-            className="btn btn-outline btn-sm"
-            onClick={() =>
-              toast({
-                title: "Feature en développement",
-                description: "Le tag system arrive bientôt.",
-              })
-            }
+            className={`btn btn-outline btn-sm${filterTag ? " btn-accent" : ""}`}
+            onClick={() => setTagFilterOpen((o) => !o)}
           >
             <Ico icon={CiqIcon.tag} />
-            {t("history.tag")}
+            {filterTag ? filterTag : t("history.tag")}
           </button>
         </div>
       </div>
+
+      {/* Tag filter panel */}
+      {tagFilterOpen && (
+        <div
+          className="row"
+          style={{
+            gap: 8,
+            marginBottom: 10,
+            padding: "8px 12px",
+            background: "var(--bg-sunk)",
+            borderRadius: 10,
+            border: "1px solid var(--line)",
+          }}
+        >
+          <Ico icon={CiqIcon.tag} size={14} style={{ color: "var(--ink-mute)" }} />
+          <input
+            ref={tagFilterInputRef}
+            className="input"
+            style={{ border: "none", padding: 0, background: "transparent", flex: 1 }}
+            placeholder={t("history.tagFilterPlaceholder")}
+            value={tagFilterInput}
+            onChange={(e) => setTagFilterInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") applyTagFilter();
+              if (e.key === "Escape") clearTagFilter();
+            }}
+          />
+          <button type="button" className="btn btn-primary btn-sm" onClick={applyTagFilter}>
+            OK
+          </button>
+          {filterTag && (
+            <button type="button" className="btn btn-ghost btn-sm" onClick={clearTagFilter}>
+              <Ico icon={CiqIcon.x} size={14} />
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Active tag filter chip */}
+      {filterTag && !tagFilterOpen && (
+        <div className="row" style={{ gap: 6, marginBottom: 10 }}>
+          <span className="chip" style={{ fontSize: 12 }}>
+            {t("history.tagFilterLabel")}: <strong>{filterTag}</strong>
+          </span>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            style={{ padding: "2px 6px" }}
+            onClick={clearTagFilter}
+          >
+            <Ico icon={CiqIcon.x} size={12} />
+          </button>
+        </div>
+      )}
 
       {/* Filters */}
       <div
@@ -497,13 +731,14 @@ export default function HistoryPage() {
               {t("history.generateFirst")}
             </Link>
           )}
-          {(search || filterFavorite) && (
+          {(search || filterFavorite || filterTag) && (
             <button
               type="button"
               className="btn btn-outline"
               onClick={() => {
                 setSearch("");
                 setFilterFavorite(false);
+                clearTagFilter();
               }}
             >
               {t("history.resetFilters")}
@@ -585,6 +820,12 @@ export default function HistoryPage() {
               >
                 {(item.bodyPlain ?? "").replace(/<[^>]*>/g, "").slice(0, 120) || "—"}
               </p>
+
+              {/* Tags */}
+              <div onClick={(e) => e.stopPropagation()}>
+                <TagEditor item={item} onSaved={handleTagSaved} />
+              </div>
+
               <div
                 className="row between"
                 style={{
@@ -659,130 +900,146 @@ export default function HistoryPage() {
             <div key={item._id}>
               {/* Desktop row */}
               <div
-                className="history-desktop-row row"
+                className="history-desktop-row"
                 style={{
-                  padding: "11px 16px",
-                  gap: 12,
                   borderBottom: i < items.length - 1 ? "1px solid var(--line-soft)" : "none",
-                  cursor: "pointer",
-                  transition: "background 0.1s",
-                }}
-                onClick={() => handleRowClick(item)}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.background = "var(--bg-sunk)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.background = "";
                 }}
               >
-                {/* Type icon */}
-                <div style={{ width: 22, flexShrink: 0, display: "flex", alignItems: "center" }}>
-                  <Ico
-                    icon={TYPE_ICON[item.type] ?? CiqIcon.blog}
-                    size={20}
-                    style={{ color: "var(--ink-mute)" }}
-                  />
-                </div>
-
-                {/* Title */}
-                <span
-                  style={{
-                    flex: 1,
-                    fontSize: 13.5,
-                    fontWeight: 500,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    minWidth: 0,
-                  }}
-                >
-                  {item.title ?? item.prompt?.subject ?? `Contenu ${item.type}`}
-                </span>
-
-                {/* Type label */}
-                <span style={{ width: 90, flexShrink: 0, fontSize: 12, color: "var(--ink-soft)" }}>
-                  {TYPE_LABELS[item.type] ?? item.type}
-                </span>
-
-                {/* Tone */}
-                <span style={{ width: 80, flexShrink: 0 }}>
-                  <span className="chip" style={{ fontSize: 11 }}>
-                    {TON_LABELS[item.prompt?.tone ?? ""] ?? item.prompt?.tone ?? "—"}
-                  </span>
-                </span>
-
-                {/* Lang */}
-                <span
-                  style={{
-                    width: 40,
-                    flexShrink: 0,
-                    fontSize: 12,
-                    fontFamily: "var(--font-mono)",
-                    color: "var(--ink-soft)",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {item.prompt?.language ?? "FR"}
-                </span>
-
-                {/* Tokens */}
-                <span
-                  style={{
-                    width: 70,
-                    flexShrink: 0,
-                    fontSize: 12,
-                    fontFamily: "var(--font-mono)",
-                    color: "var(--ink-mute)",
-                  }}
-                >
-                  {item.tokensUsed ?? "—"}
-                </span>
-
-                {/* Date */}
-                <span style={{ width: 85, flexShrink: 0, fontSize: 12, color: "var(--ink-mute)" }}>
-                  {formatDistanceToNow(new Date(item.createdAt), {
-                    addSuffix: false,
-                    locale: dateLocale,
-                  })}
-                </span>
-
-                {/* Actions */}
+                {/* Main row */}
                 <div
                   className="row"
-                  style={{ width: 100, flexShrink: 0, gap: 2, justifyContent: "flex-end" }}
-                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    padding: "11px 16px",
+                    gap: 12,
+                    cursor: "pointer",
+                    transition: "background 0.1s",
+                  }}
+                  onClick={() => handleRowClick(item)}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.background = "var(--bg-sunk)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.background = "";
+                  }}
                 >
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    style={ICON_BTN}
-                    onClick={(e) => handleCopy(item, e)}
-                    title="Copier"
-                  >
-                    <Ico icon={copied === item._id ? CiqIcon.check : CiqIcon.copy} size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
+                  {/* Type icon */}
+                  <div style={{ width: 22, flexShrink: 0, display: "flex", alignItems: "center" }}>
+                    <Ico
+                      icon={TYPE_ICON[item.type] ?? CiqIcon.blog}
+                      size={20}
+                      style={{ color: "var(--ink-mute)" }}
+                    />
+                  </div>
+
+                  {/* Title */}
+                  <span
                     style={{
-                      ...ICON_BTN,
-                      color: item.isFavorite ? "var(--accent)" : "var(--ink-mute)",
+                      flex: 1,
+                      fontSize: 13.5,
+                      fontWeight: 500,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      minWidth: 0,
                     }}
-                    onClick={() => toggleFavMutation.mutate(item._id)}
-                    title="Favori"
                   >
-                    <Ico icon={CiqIcon.star} size={16} />
-                  </button>
-                  <ExportMenu item={item} />
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    style={{ ...ICON_BTN, color: "var(--ink-mute)" }}
-                    onClick={() => setDeleteConfirmId(item._id)}
-                    title="Supprimer"
+                    {item.title ?? item.prompt?.subject ?? `Contenu ${item.type}`}
+                  </span>
+
+                  {/* Type label */}
+                  <span
+                    style={{ width: 90, flexShrink: 0, fontSize: 12, color: "var(--ink-soft)" }}
                   >
-                    <Ico icon={CiqIcon.trash} size={16} />
-                  </button>
+                    {TYPE_LABELS[item.type] ?? item.type}
+                  </span>
+
+                  {/* Tone */}
+                  <span style={{ width: 80, flexShrink: 0 }}>
+                    <span className="chip" style={{ fontSize: 11 }}>
+                      {TON_LABELS[item.prompt?.tone ?? ""] ?? item.prompt?.tone ?? "—"}
+                    </span>
+                  </span>
+
+                  {/* Lang */}
+                  <span
+                    style={{
+                      width: 40,
+                      flexShrink: 0,
+                      fontSize: 12,
+                      fontFamily: "var(--font-mono)",
+                      color: "var(--ink-soft)",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {item.prompt?.language ?? "FR"}
+                  </span>
+
+                  {/* Tokens */}
+                  <span
+                    style={{
+                      width: 70,
+                      flexShrink: 0,
+                      fontSize: 12,
+                      fontFamily: "var(--font-mono)",
+                      color: "var(--ink-mute)",
+                    }}
+                  >
+                    {item.tokensUsed ?? "—"}
+                  </span>
+
+                  {/* Date */}
+                  <span
+                    style={{ width: 85, flexShrink: 0, fontSize: 12, color: "var(--ink-mute)" }}
+                  >
+                    {formatDistanceToNow(new Date(item.createdAt), {
+                      addSuffix: false,
+                      locale: dateLocale,
+                    })}
+                  </span>
+
+                  {/* Actions */}
+                  <div
+                    className="row"
+                    style={{ width: 100, flexShrink: 0, gap: 2, justifyContent: "flex-end" }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      style={ICON_BTN}
+                      onClick={(e) => handleCopy(item, e)}
+                      title="Copier"
+                    >
+                      <Ico icon={copied === item._id ? CiqIcon.check : CiqIcon.copy} size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      style={{
+                        ...ICON_BTN,
+                        color: item.isFavorite ? "var(--accent)" : "var(--ink-mute)",
+                      }}
+                      onClick={() => toggleFavMutation.mutate(item._id)}
+                      title="Favori"
+                    >
+                      <Ico icon={CiqIcon.star} size={16} />
+                    </button>
+                    <ExportMenu item={item} />
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      style={{ ...ICON_BTN, color: "var(--ink-mute)" }}
+                      onClick={() => setDeleteConfirmId(item._id)}
+                      title="Supprimer"
+                    >
+                      <Ico icon={CiqIcon.trash} size={16} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Tags sub-row */}
+                <div style={{ padding: "0 16px 8px 50px" }} onClick={(e) => e.stopPropagation()}>
+                  <TagEditor item={item} onSaved={handleTagSaved} />
                 </div>
               </div>
 
@@ -822,6 +1079,10 @@ export default function HistoryPage() {
                       addSuffix: false,
                       locale: dateLocale,
                     })}
+                  </div>
+                  {/* Tags on mobile */}
+                  <div style={{ marginTop: 4 }} onClick={(e) => e.stopPropagation()}>
+                    <TagEditor item={item} onSaved={handleTagSaved} />
                   </div>
                 </div>
                 <div

@@ -408,6 +408,86 @@ const en = {
     delete: "Delete",
     edit: "Edit",
     close: "Close",
+    back: "Back",
+  },
+  // Landing page
+  landing: {
+    // Nav
+    navProduct: "Product",
+    navVoice: "Voice",
+    navTemplates: "Templates",
+    navPricing: "Pricing",
+    navUseCases: "Use cases",
+    navLogin: "Sign in",
+    navCta: "Free trial",
+    // Hero
+    heroPill: "New · IQ Voice Assistant",
+    heroTitle: "Write out loud.",
+    heroTitleAccent: "Not on a keyboard.",
+    heroDesc:
+      "CONTENT.IQ generates articles, posts, emails and more — in real-time streaming via Claude. Dictate your brief, navigate by voice, chat with the IQ Assistant. Without touching the keyboard.",
+    heroCtaPrimary: "Get started · 10 free credits",
+    heroCtaDemo: "Voice demo · 0:42",
+    trustReviews: "★★★★★ 4.9 · 82 Product Hunt reviews",
+    trustNoCc: "No CC required",
+    // Built for
+    builtForTitle: "Built for",
+    builtForCreators: "Content creators",
+    builtForAgencies: "Agencies",
+    builtForSME: "SMEs",
+    builtForNGOs: "NGOs",
+    builtForFreelance: "Freelancers",
+    builtForMicro: "Microfinance",
+    // Pillars
+    pillarsTitle: "Three ways to produce.",
+    pillarsTitleAccent: "One app.",
+    p0tag: "01 · GENERATE",
+    p0title: "Streaming generation",
+    p0body: "Token by token via SSE. You see the content appear live, like a real conversation.",
+    p0meta: "Claude · 12 formats",
+    p1tag: "02 · ASSIST",
+    p1title: "Context-aware IQ Assistant",
+    p1body:
+      "It knows your page, your credits, your draft. It improves, suggests, brainstorms with you.",
+    p1meta: "20 context turns",
+    p2tag: "03 · VOICE",
+    p2title: "All by voice",
+    p2body:
+      "Dictate your brief, navigate by voice, listen to responses. ElevenLabs + Whisper + Web Speech.",
+    p2meta: "25 native commands",
+    // Voice section
+    voiceTag: "03 · VOICE",
+    voiceTitle: "Your voice.",
+    voiceTitleAccent: "Your tool.",
+    voiceDesc:
+      "Dictate your brief, navigate between pages, trigger generations — without ever touching the keyboard. ElevenLabs for synthesis, Whisper for transcription, Web Speech for instant reactivity.",
+    voiceFeat0label: "Whisper + Web Speech transcription",
+    voiceFeat0desc: "Professional accuracy · zero latency",
+    voiceFeat1label: "ElevenLabs voice synthesis",
+    voiceFeat1desc: "Listen to IQ Assistant responses in audio",
+    voiceFeat2label: "25 native commands",
+    voiceFeat2desc: "Generate, navigate, export — all by voice",
+    voiceCmdsTitle: "Live voice commands",
+    // CTA band
+    ctaTitle: "Start for free.",
+    ctaTitleAccent: "Today.",
+    ctaDesc: "10 free credits · No credit card · Cancel anytime",
+    ctaBtn: "Create my free account",
+    // Footer
+    footerLogin: "Sign in",
+    // Demo modal
+    demoPaused: "Paused",
+    demoPlaying: "Playing",
+    demoCta: "Try for free",
+  },
+  // 404 page
+  notFound: {
+    title: "Page not found",
+    desc: "This page doesn't exist or has been moved. Return to your workspace.",
+    backDashboard: "Back to Dashboard",
+    generate: "Generate content",
+    backHome: "Back to home",
+    login: "Sign in",
   },
 } as const;
 

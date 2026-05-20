@@ -1,8 +1,10 @@
 import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import { useAppSelector } from "@/store/index";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 export default function NotFoundPage() {
+  const { t } = useTranslation();
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
 
   return (
@@ -46,7 +48,7 @@ export default function NotFoundPage() {
       </div>
 
       <h1 className="t-display" style={{ fontSize: 52, margin: "0 0 14px" }}>
-        Page introuvable
+        {t("notFound.title")}
       </h1>
       <p
         style={{
@@ -57,29 +59,29 @@ export default function NotFoundPage() {
           marginBottom: 40,
         }}
       >
-        Cette page n'existe pas ou a été déplacée. Retournez à votre espace de travail.
+        {t("notFound.desc")}
       </p>
 
       <div className="row" style={{ gap: 10 }}>
         {isAuthenticated ? (
           <>
             <Link to="/dashboard" className="btn btn-primary btn-lg">
-              Retour au Dashboard
+              {t("notFound.backDashboard")}
               <Ico icon={CiqIcon.arrow} size={18} />
             </Link>
             <Link to="/generate" className="btn btn-outline btn-lg">
               <Ico icon={CiqIcon.sparkle} />
-              Générer du contenu
+              {t("notFound.generate")}
             </Link>
           </>
         ) : (
           <>
             <Link to="/" className="btn btn-primary btn-lg">
-              Retour à l'accueil
+              {t("notFound.backHome")}
               <Ico icon={CiqIcon.arrow} size={18} />
             </Link>
             <Link to="/login" className="btn btn-outline btn-lg">
-              Se connecter
+              {t("notFound.login")}
             </Link>
           </>
         )}

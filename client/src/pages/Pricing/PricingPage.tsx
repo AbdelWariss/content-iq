@@ -160,7 +160,7 @@ export default function PricingPage() {
             style={{ display: "flex", alignItems: "center", gap: 6 }}
           >
             <Ico icon={CiqIcon.chevL} size={15} />
-            Retour
+            {t("common.back")}
           </button>
         </div>
       )}

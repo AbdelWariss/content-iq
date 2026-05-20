@@ -1,30 +1,7 @@
 import { CiqIcon, Ico, MicWave } from "@/lib/ciq-icons";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
-
-const PILLARS = [
-  {
-    tag: "01 · GENERATE",
-    icon: CiqIcon.sparkle,
-    title: "Génération streaming",
-    body: "Token par token via SSE. Vous voyez le contenu apparaître en direct, comme une vraie conversation.",
-    meta: "Claude · 12 formats",
-  },
-  {
-    tag: "02 · ASSIST",
-    icon: CiqIcon.brain,
-    title: "IQ Assistant context-aware",
-    body: "Il connaît votre page, vos crédits, votre brouillon. Il améliore, suggère, brainstorme avec vous.",
-    meta: "20 tours de contexte",
-  },
-  {
-    tag: "03 · VOICE",
-    icon: CiqIcon.mic,
-    title: "Tout à la voix",
-    body: "Dictez vos consignes, naviguez à la voix, écoutez les réponses. ElevenLabs + Whisper + Web Speech.",
-    meta: "25 commandes natives",
-  },
-];
 
 const DEMO_SCENES = [
   {
@@ -95,6 +72,7 @@ function pickBestFrenchVoice(): SpeechSynthesisVoice | null {
 }
 
 function DemoModal({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation();
   const [scene, setScene] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -301,7 +279,7 @@ function DemoModal({ onClose }: { onClose: () => void }) {
             }}
           >
             <MicWave size="sm" listening={!isPaused} />
-            {isPaused ? "En pause" : "En lecture"}
+            {isPaused ? t("landing.demoPaused") : t("landing.demoPlaying")}
           </span>
 
           {/* Progress bar */}
@@ -453,7 +431,7 @@ function DemoModal({ onClose }: { onClose: () => void }) {
           </span>
           <div style={{ display: "flex", gap: 8 }}>
             <button type="button" className="btn btn-outline btn-sm" onClick={onClose}>
-              Fermer
+              {t("common.close")}
             </button>
             <button
               type="button"
@@ -464,7 +442,7 @@ function DemoModal({ onClose }: { onClose: () => void }) {
                 window.location.href = "/register";
               }}
             >
-              Essayer gratuitement
+              {t("landing.demoCta")}
               <Ico icon={CiqIcon.arrow} size={13} />
             </button>
           </div>
@@ -475,8 +453,43 @@ function DemoModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function LandingPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [showDemo, setShowDemo] = useState(false);
+
+  const PILLARS = [
+    {
+      tag: t("landing.p0tag"),
+      icon: CiqIcon.sparkle,
+      title: t("landing.p0title"),
+      body: t("landing.p0body"),
+      meta: t("landing.p0meta"),
+    },
+    {
+      tag: t("landing.p1tag"),
+      icon: CiqIcon.brain,
+      title: t("landing.p1title"),
+      body: t("landing.p1body"),
+      meta: t("landing.p1meta"),
+    },
+    {
+      tag: t("landing.p2tag"),
+      icon: CiqIcon.mic,
+      title: t("landing.p2title"),
+      body: t("landing.p2body"),
+      meta: t("landing.p2meta"),
+    },
+  ];
+
+  const VOICE_FEATS = [
+    { icon: CiqIcon.mic, label: t("landing.voiceFeat0label"), desc: t("landing.voiceFeat0desc") },
+    {
+      icon: CiqIcon.speaker,
+      label: t("landing.voiceFeat1label"),
+      desc: t("landing.voiceFeat1desc"),
+    },
+    { icon: CiqIcon.bolt, label: t("landing.voiceFeat2label"), desc: t("landing.voiceFeat2desc") },
+  ];
 
   return (
     <div
@@ -614,27 +627,27 @@ export default function LandingPage() {
           style={{ gap: 28, fontSize: 13.5, color: "var(--ink-soft)" }}
         >
           <a href="#product" className="landing-nav-link">
-            Produit
+            {t("landing.navProduct")}
           </a>
           <a href="#voice" className="landing-nav-link">
-            Voix
+            {t("landing.navVoice")}
           </a>
           <Link to="/templates" className="landing-nav-link">
-            Templates
+            {t("landing.navTemplates")}
           </Link>
           <Link to="/pricing" className="landing-nav-link">
-            Tarifs
+            {t("landing.navPricing")}
           </Link>
           <a href="#usecases" className="landing-nav-link">
-            Cas d'usage
+            {t("landing.navUseCases")}
           </a>
         </div>
         <div className="row landing-nav-actions" style={{ gap: 8 }}>
           <Link to="/login" className="btn btn-ghost btn-sm">
-            Connexion
+            {t("landing.navLogin")}
           </Link>
           <button className="btn btn-primary btn-sm" onClick={() => navigate("/register")}>
-            Essai gratuit
+            {t("landing.navCta")}
             <Ico icon={CiqIcon.arrow} size={14} />
           </button>
         </div>
@@ -644,7 +657,7 @@ export default function LandingPage() {
           onClick={() => navigate("/register")}
           style={{ color: "white" }}
         >
-          Essai gratuit
+          {t("landing.navCta")}
           <Ico icon={CiqIcon.arrow} size={14} />
         </button>
       </div>
@@ -668,15 +681,17 @@ export default function LandingPage() {
             style={{ marginBottom: 22, display: "inline-flex", alignItems: "center", gap: 8 }}
           >
             <MicWave size="sm" />
-            Nouveau · IQ Assistant à la voix
+            {t("landing.heroPill")}
           </span>
           <h1
             className="t-display"
             style={{ fontSize: 84, margin: "10px 0 18px", lineHeight: 1.0 }}
           >
-            Écrivez à voix
+            {t("landing.heroTitle")}
             <br />
-            haute. <em style={{ color: "var(--accent)", fontStyle: "italic" }}>Pas au clavier.</em>
+            <em style={{ color: "var(--accent)", fontStyle: "italic" }}>
+              {t("landing.heroTitleAccent")}
+            </em>
           </h1>
           <p
             style={{
@@ -687,31 +702,31 @@ export default function LandingPage() {
               margin: "0 0 28px",
             }}
           >
-            CONTENT.IQ génère articles, posts, emails et bien plus — en streaming temps réel via
-            Claude. Dictez vos consignes, naviguez à la voix, conversez avec l'IQ Assistant. Sans
-            toucher au clavier.
+            {t("landing.heroDesc")}
           </p>
           <div className="row landing-hero-btns" style={{ gap: 10 }}>
             <button className="btn btn-primary btn-lg" onClick={() => navigate("/register")}>
-              Démarrer · 10 cr. offerts
+              {t("landing.heroCtaPrimary")}
               <Ico icon={CiqIcon.arrow} size={16} />
             </button>
             <button className="btn btn-outline btn-lg" onClick={() => setShowDemo(true)}>
               <Ico icon={CiqIcon.play} />
-              Démo vocale · 0:42
+              {t("landing.heroCtaDemo")}
             </button>
           </div>
           <div
             className="row landing-trust-row"
             style={{ gap: 24, marginTop: 36, color: "var(--ink-mute)", fontSize: 12.5 }}
           >
-            <span>★★★★★ 4.9 · 82 avis Product Hunt</span>
+            <span>{t("landing.trustReviews")}</span>
             <span>·</span>
-            <span>Sans CB</span>
+            <span>{t("landing.trustNoCc")}</span>
             <span>·</span>
             <span>FR · EN · ES · AR</span>
           </div>
-          <div className="landing-trust-mobile">★★★★★ 4.9 · Sans CB · FR EN ES AR</div>
+          <div className="landing-trust-mobile">
+            {t("landing.trustReviews")} · {t("landing.trustNoCc")} · FR EN ES AR
+          </div>
         </div>
 
         {/* App mockup */}
@@ -918,7 +933,7 @@ export default function LandingPage() {
         style={{ padding: "64px 56px 0", maxWidth: 1320, margin: "0 auto" }}
       >
         <div className="t-eyebrow" style={{ textAlign: "center", marginBottom: 22 }}>
-          Pensé pour
+          {t("landing.builtForTitle")}
         </div>
         <div
           className="row"
@@ -929,16 +944,21 @@ export default function LandingPage() {
             flexWrap: "wrap",
           }}
         >
-          {["Créateurs de contenu", "Agences", "PME", "NGOs", "Freelances", "Microfinances"].map(
-            (t) => (
-              <div
-                key={t}
-                style={{ fontFamily: "var(--font-serif)", fontSize: 22, fontStyle: "italic" }}
-              >
-                {t}
-              </div>
-            ),
-          )}
+          {[
+            t("landing.builtForCreators"),
+            t("landing.builtForAgencies"),
+            t("landing.builtForSME"),
+            t("landing.builtForNGOs"),
+            t("landing.builtForFreelance"),
+            t("landing.builtForMicro"),
+          ].map((item) => (
+            <div
+              key={item}
+              style={{ fontFamily: "var(--font-serif)", fontSize: 22, fontStyle: "italic" }}
+            >
+              {item}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -952,7 +972,8 @@ export default function LandingPage() {
           className="t-display landing-pillars-title"
           style={{ fontSize: 56, margin: "0 0 14px", maxWidth: 720 }}
         >
-          Trois manières de produire. <em style={{ color: "var(--ink-mute)" }}>Une seule app.</em>
+          {t("landing.pillarsTitle")}{" "}
+          <em style={{ color: "var(--ink-mute)" }}>{t("landing.pillarsTitleAccent")}</em>
         </h2>
         <div
           className="landing-pillars-grid"
@@ -1013,14 +1034,16 @@ export default function LandingPage() {
               style={{ marginBottom: 22, display: "inline-flex", alignItems: "center", gap: 8 }}
             >
               <MicWave size="sm" />
-              03 · VOICE
+              {t("landing.voiceTag")}
             </span>
             <h2
               className="t-display"
               style={{ fontSize: 64, margin: "10px 0 18px", lineHeight: 1.0 }}
             >
-              Votre voix.{" "}
-              <em style={{ color: "var(--accent)", fontStyle: "italic" }}>Votre outil.</em>
+              {t("landing.voiceTitle")}{" "}
+              <em style={{ color: "var(--accent)", fontStyle: "italic" }}>
+                {t("landing.voiceTitleAccent")}
+              </em>
             </h2>
             <p
               style={{
@@ -1031,28 +1054,10 @@ export default function LandingPage() {
                 marginBottom: 36,
               }}
             >
-              Dictez vos briefs, naviguez entre les pages, déclenchez des générations — sans jamais
-              toucher au clavier. ElevenLabs pour la synthèse, Whisper pour la transcription, Web
-              Speech pour la réactivité instantanée.
+              {t("landing.voiceDesc")}
             </p>
             <div className="col" style={{ gap: 16 }}>
-              {[
-                {
-                  icon: CiqIcon.mic,
-                  label: "Transcription Whisper + Web Speech",
-                  desc: "Précision professionnelle · latence zéro",
-                },
-                {
-                  icon: CiqIcon.speaker,
-                  label: "Synthèse vocale ElevenLabs",
-                  desc: "Écoutez les réponses de l'IQ Assistant en audio",
-                },
-                {
-                  icon: CiqIcon.bolt,
-                  label: "25 commandes natives",
-                  desc: "Générer, naviguer, exporter — tout à la voix",
-                },
-              ].map(({ icon, label, desc }) => (
+              {VOICE_FEATS.map(({ icon, label, desc }) => (
                 <div key={label} className="row" style={{ gap: 14, alignItems: "flex-start" }}>
                   <div
                     style={{
@@ -1081,7 +1086,7 @@ export default function LandingPage() {
           {/* Right — command demos */}
           <div id="usecases" className="col" style={{ gap: 10 }}>
             <div className="t-eyebrow" style={{ marginBottom: 10 }}>
-              Commandes vocales en direct
+              {t("landing.voiceCmdsTitle")}
             </div>
             {[
               {
@@ -1156,18 +1161,17 @@ export default function LandingPage() {
             className="t-display"
             style={{ fontSize: 48, color: "var(--bg)", margin: "0 0 10px" }}
           >
-            Commencez gratuitement. <em style={{ color: "var(--accent)" }}>Aujourd'hui.</em>
+            {t("landing.ctaTitle")}{" "}
+            <em style={{ color: "var(--accent)" }}>{t("landing.ctaTitleAccent")}</em>
           </h2>
-          <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15 }}>
-            10 crédits offerts · Sans carte bancaire · Annulable à tout moment
-          </p>
+          <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15 }}>{t("landing.ctaDesc")}</p>
         </div>
         <button
           className="btn btn-lg btn-accent"
           style={{ whiteSpace: "nowrap" }}
           onClick={() => navigate("/register")}
         >
-          Créer mon compte gratuit
+          {t("landing.ctaBtn")}
           <Ico icon={CiqIcon.arrow} size={16} />
         </button>
       </div>
@@ -1191,7 +1195,7 @@ export default function LandingPage() {
             <span style={{ cursor: "pointer" }}>Terms</span>
             <span style={{ cursor: "pointer" }}>API</span>
             <Link to="/login" style={{ color: "inherit" }}>
-              Connexion
+              {t("landing.footerLogin")}
             </Link>
           </span>
         </div>

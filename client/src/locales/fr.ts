@@ -411,6 +411,87 @@ const fr = {
     delete: "Supprimer",
     edit: "Modifier",
     close: "Fermer",
+    back: "Retour",
+  },
+  // Landing page
+  landing: {
+    // Nav
+    navProduct: "Produit",
+    navVoice: "Voix",
+    navTemplates: "Templates",
+    navPricing: "Tarifs",
+    navUseCases: "Cas d'usage",
+    navLogin: "Connexion",
+    navCta: "Essai gratuit",
+    // Hero
+    heroPill: "Nouveau · IQ Assistant à la voix",
+    heroTitle: "Écrivez à voix haute.",
+    heroTitleAccent: "Pas au clavier.",
+    heroDesc:
+      "CONTENT.IQ génère articles, posts, emails et bien plus — en streaming temps réel via Claude. Dictez vos consignes, naviguez à la voix, conversez avec l'IQ Assistant. Sans toucher au clavier.",
+    heroCtaPrimary: "Démarrer · 10 cr. offerts",
+    heroCtaDemo: "Démo vocale · 0:42",
+    trustReviews: "★★★★★ 4.9 · 82 avis Product Hunt",
+    trustNoCc: "Sans CB",
+    // Built for
+    builtForTitle: "Pensé pour",
+    builtForCreators: "Créateurs de contenu",
+    builtForAgencies: "Agences",
+    builtForSME: "PME",
+    builtForNGOs: "NGOs",
+    builtForFreelance: "Freelances",
+    builtForMicro: "Microfinances",
+    // Pillars
+    pillarsTitle: "Trois manières de produire.",
+    pillarsTitleAccent: "Une seule app.",
+    p0tag: "01 · GENERATE",
+    p0title: "Génération streaming",
+    p0body:
+      "Token par token via SSE. Vous voyez le contenu apparaître en direct, comme une vraie conversation.",
+    p0meta: "Claude · 12 formats",
+    p1tag: "02 · ASSIST",
+    p1title: "IQ Assistant context-aware",
+    p1body:
+      "Il connaît votre page, vos crédits, votre brouillon. Il améliore, suggère, brainstorme avec vous.",
+    p1meta: "20 tours de contexte",
+    p2tag: "03 · VOICE",
+    p2title: "Tout à la voix",
+    p2body:
+      "Dictez vos consignes, naviguez à la voix, écoutez les réponses. ElevenLabs + Whisper + Web Speech.",
+    p2meta: "25 commandes natives",
+    // Voice section
+    voiceTag: "03 · VOICE",
+    voiceTitle: "Votre voix.",
+    voiceTitleAccent: "Votre outil.",
+    voiceDesc:
+      "Dictez vos briefs, naviguez entre les pages, déclenchez des générations — sans jamais toucher au clavier. ElevenLabs pour la synthèse, Whisper pour la transcription, Web Speech pour la réactivité instantanée.",
+    voiceFeat0label: "Transcription Whisper + Web Speech",
+    voiceFeat0desc: "Précision professionnelle · latence zéro",
+    voiceFeat1label: "Synthèse vocale ElevenLabs",
+    voiceFeat1desc: "Écoutez les réponses de l'IQ Assistant en audio",
+    voiceFeat2label: "25 commandes natives",
+    voiceFeat2desc: "Générer, naviguer, exporter — tout à la voix",
+    voiceCmdsTitle: "Commandes vocales en direct",
+    // CTA band
+    ctaTitle: "Commencez gratuitement.",
+    ctaTitleAccent: "Aujourd'hui.",
+    ctaDesc: "10 crédits offerts · Sans carte bancaire · Annulable à tout moment",
+    ctaBtn: "Créer mon compte gratuit",
+    // Footer
+    footerLogin: "Connexion",
+    // Demo modal
+    demoPaused: "En pause",
+    demoPlaying: "En lecture",
+    demoCta: "Essayer gratuitement",
+  },
+  // 404 page
+  notFound: {
+    title: "Page introuvable",
+    desc: "Cette page n'existe pas ou a été déplacée. Retournez à votre espace de travail.",
+    backDashboard: "Retour au Dashboard",
+    generate: "Générer du contenu",
+    backHome: "Retour à l'accueil",
+    login: "Se connecter",
   },
 } as const;
 

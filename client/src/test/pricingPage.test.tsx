@@ -54,11 +54,11 @@ describe("PricingPage", () => {
       credits: { total: 50, remaining: 50, resetDate: null },
       language: "fr",
     });
-    expect(screen.getByRole("button", { name: /retour/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /common\.back/i })).toBeInTheDocument();
   });
 
   it("masque le bouton Retour quand l'utilisateur n'est pas connecté", () => {
     renderWithStore(null);
-    expect(screen.queryByRole("button", { name: /retour/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /common\.back/i })).not.toBeInTheDocument();
   });
 });

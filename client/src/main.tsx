@@ -3,6 +3,7 @@ import { queryClient } from "@/lib/queryClient";
 import { store } from "@/store/index";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { Analytics } from "@vercel/analytics/react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
@@ -21,6 +22,7 @@ createRoot(root).render(
         <BrowserRouter>
           <App />
           <Toaster />
+          <Analytics />
         </BrowserRouter>
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>

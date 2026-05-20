@@ -8,6 +8,632 @@ Répertoire détaillé de toutes les tâches effectuées au cours des sessions d
 
 ---
 
+### [2026-05-20] — Session 16 : i18n complète (toutes pages) + Vercel Analytics — COMPLÉTÉ ✅
+- **Session :** 16
+- **Statut :** Complété
+- **Commits :** `5685ff0` · `79aecbd` · `3bdf3fc` · `5cb703b` · `160107e`
+- **Tests :** 32 client / 41 serveur — tous verts · TypeScript 0 erreur
+
+---
+
+#### Tâche 1 — Fix synchronisation du toggle de langue (Navbar ↔ Profile settings)
+
+**Commit :** `5685ff0` — `fix: sync language toggle state between Navbar and Profile settings`
+
+**Fichiers modifiés :** `client/src/components/Layout/Navbar.tsx` · `client/src/pages/Profile/ProfilePage.tsx`
+
+**Problème diagnostiqué :** Deux bugs indépendants combinés causaient la désynchronisation :
+
+1. **`PAGE_TITLES` au niveau module** (`Navbar.tsx`) — La constante était définie hors du composant React, donc appelée une seule fois au chargement du module, avant que i18next soit initialisé. `t()` retournait les clés brutes au lieu des traductions. Le titre de page ne se mettait jamais à jour lors d'un changement de langue.
+
+2. **Redux non mis à jour dans `ProfilePage`** — `handleUiLangChange` appelait `i18n.changeLanguage(lang)` (qui change l'état i18next global) mais n'appelait pas `dispatch(updateUser({ language: lang }))`. Le toggle de langue dans la Navbar lit `user.language` depuis Redux — il restait donc figé sur la valeur précédente.
+
+**Solution Navbar :**
+```typescript
+// AVANT (module-level, ne se traduit qu'au boot)
+const PAGE_TITLES: Record<string, string> = { "/dashboard": "Dashboard", ... };
+
+// APRÈS (inside component, réactif aux changements de langue)
+export function Navbar() {
+  const { t } = useTranslation();
+  const pageTitles: Record<string, string> = {
+    "/dashboard": t("sidebar.dashboard"),
+    "/generate": t("sidebar.generate"),
+    // ...
+  };
+}
+```
+
+**Justification :** Les constantes calculées avec `t()` doivent être à l'intérieur du composant pour être recalculées à chaque re-render déclenché par le changement de langue. Au niveau module, `t` est appelé une fois à l'import — avant que la langue soit résolue depuis l'état utilisateur.
+
+**Solution ProfilePage :**
+```typescript
+async function handleUiLangChange(lang: "fr" | "en") {
+  setUiLang(lang);
+  i18n.changeLanguage(lang);         // change i18next immédiatement (UI)
+  dispatch(updateUser({ language: lang }));  // ← clé manquante : synchro Redux
+  try {
+    await api.put("/users/me", { language: lang });
+  } catch {
+    // Rollback atomique : Redux + i18n ensemble
+    dispatch(updateUser({ language: uiLang }));
+    i18n.changeLanguage(uiLang);
+    toast({ title: t("profile.saveError"), variant: "destructive" });
+  }
+}
+```
+
+**Justification rollback atomique :** Si l'API échoue (réseau, serveur), on revient à l'état précédent sur les deux couches (Redux + i18next) pour que l'UI soit cohérente. Sans rollback, l'interface afficherait EN mais la BDD stockerait FR, causant une désynchronisation à la prochaine session.
+
+---
+
+#### Tâche 2 — i18n complète : ProfilePage (toutes chaînes FR hardcodées)
+
+**Commit :** `79aecbd` — `fix(i18n): translate all hardcoded French strings and error toasts`
+
+**Fichiers modifiés :** `client/src/locales/fr.ts` · `client/src/locales/en.ts` · `client/src/pages/Profile/ProfilePage.tsx`
+
+**Problème :** Screenshot prod montrait "Mettre à niveau", "Lecture auto des réponses", "Langue de l'interface" toujours en français malgré la sélection EN — ces strings étaient hardcodées dans le JSX.
+
+**Clés ajoutées aux locales (namespace `profile`) :**
+
+| Clé | FR | EN |
+|-----|----|----|
+| `upgradeBtn` | "Mettre à niveau" | "Upgrade" |
+| `manageSub` | "Gérer" | "Manage" |
+| `autoPlayLabel` | "Lecture auto des réponses" | "Auto-play responses" |
+| `labelLang` | "Langue de l'interface" | "Interface language" |
+| `micSensLabel` | "Sensibilité micro" | "Mic sensitivity" |
+| `voiceSectionMobile` | "Préférences vocales" | "Voice preferences" |
+| `voiceAssistantLabel` | "Voix de l'assistant" | "Assistant voice" |
+| `listenBtn` | "Écouter" | "Listen" |
+| `speedLabel` | "Vitesse TTS" | "TTS speed" |
+| `testMicTitle` | "Tester votre micro" | "Test your mic" |
+| `subSection` | "Plan actuel" | "Current plan" |
+| `subFree` | "Gratuit" | "Free" |
+| `topupCredits` | "Recharger crédits" | "Top up credits" |
+| `sensAuto/High/Normal/Low` | "Auto"/"Haute"/"Normale"/"Basse" | "Auto"/"High"/"Normal"/"Low" |
+| `voiceSaved` | `"Voix \"{{name}}\" enregistrée"` | `"Voice \"{{name}}\" saved"` |
+
+**Problème spécifique `MIC_SENS_LABELS` :** Les valeurs internes ("Auto", "Haute", "Normale", "Basse") servent de clés localStorage et de comparaison (`micSensitivity === s`). On ne peut pas les traduire directement sans casser la persistance.
+
+**Solution : map de display séparé à l'intérieur du composant :**
+```typescript
+// Valeurs internes (stockage) — ne changent pas
+const MIC_SENSITIVITIES = ["Auto", "Haute", "Normale", "Basse"];
+
+// Labels d'affichage — traduits via t()
+const MIC_SENS_LABELS: Record<string, string> = {
+  Auto: t("profile.sensAuto"),
+  Haute: t("profile.sensHigh"),
+  Normale: t("profile.sensNormal"),
+  Basse: t("profile.sensLow"),
+};
+
+// Usage : MIC_SENS_LABELS[s] pour afficher, s pour comparer/stocker
+```
+
+**Justification :** Séparer "valeur de stockage" et "label d'affichage" est le pattern standard pour les données persistées et traduites simultanément. Le `MIC_SENS_LABELS` doit être défini dans le composant (et non au niveau module) pour accéder à `t()`.
+
+**Toasts traduits :**
+```typescript
+// AVANT
+toast({ title: "Erreur de sauvegarde", variant: "destructive" });
+toast({ title: `Voix "${name}" enregistrée` });
+
+// APRÈS
+toast({ title: t("profile.saveError"), variant: "destructive" });
+toast({ title: t("profile.voiceSaved", { name }) });
+```
+
+---
+
+#### Tâche 3 — i18n toasts GeneratePage, HistoryPage, FavoritesPage, VoicePage
+
+**Commit :** `79aecbd` (suite)
+
+**Fichiers modifiés :** `client/src/pages/Generate/GeneratePage.tsx` · `client/src/pages/History/HistoryPage.tsx` · `client/src/pages/Favorites/FavoritesPage.tsx` · `client/src/pages/Voice/VoicePage.tsx`
+
+**Clés ajoutées (namespace `generate`) :**
+```
+contentGenerated, contentNotFound, genSaveError,
+templateSaved ("Template \"{{name}}\" enregistré" / saved),
+templateSaveError, streamingError
+```
+
+**Clés ajoutées (namespace `history`) :**
+```
+exportFormatDone ("Export {{format}} téléchargé!" / "{{format}} export downloaded!"),
+exportFormatError
+```
+
+**Problème ExportMenu :** `ExportMenu` est un sous-composant interne à `HistoryPage.tsx` et `FavoritesPage.tsx`. Il n'héritait pas du `useTranslation()` du parent — les hooks React ne peuvent pas être passés comme props.
+
+**Solution :** Chaque sous-composant appelle son propre `useTranslation()` :
+```typescript
+function ExportMenu({ content }: { content: ContentItem }) {
+  const { t } = useTranslation(); // ← hook indépendant dans chaque sous-composant
+  // ...
+}
+```
+
+**Justification :** `useTranslation()` est un hook React standard — appelable dans n'importe quel composant fonctionnel sans coût de performance significatif (le contexte i18n est singleton).
+
+---
+
+#### Tâche 4 — i18n dans les contextes non-React (useStreaming, pages Auth)
+
+**Commit :** `79aecbd` (suite)
+
+**Fichiers modifiés :** `client/src/hooks/useStreaming.ts` · `client/src/pages/Auth/LoginPage.tsx` · `RegisterPage.tsx` · `ForgotPasswordPage.tsx` · `ResetPasswordPage.tsx`
+
+**Problème :** `useTranslation()` est un hook React — il ne peut pas être appelé dans des hooks personnalisés qui s'exécutent hors d'un composant React, ni dans des fonctions utilitaires simples.
+
+**Solution : import du singleton i18n :**
+```typescript
+// Dans useStreaming.ts, LoginPage.tsx, etc.
+import i18n from "@/lib/i18n";
+
+// Usage (hors composant React)
+toast({ title: i18n.t("generate.streamingError") });
+toast({ title: i18n.t("common.error") });
+```
+
+**Justification :** `@/lib/i18n` exporte l'instance i18next initialisée. `i18n.t()` est synchrone et thread-safe — il lit la langue courante depuis l'instance globale, qui est toujours synchronisée avec `i18n.changeLanguage()`. C'est le pattern officiel i18next pour les contextes non-React.
+
+---
+
+#### Tâche 5 — i18n GlobalVoiceAssistant
+
+**Commit :** `79aecbd` (suite)
+
+**Fichier modifié :** `client/src/components/Voice/GlobalVoiceAssistant.tsx`
+
+**Strings traduits :**
+- `setActionFeedback("Erreur réseau...")` → `setActionFeedback(t("voice.processingError"))`
+- `toast({ title: "Erreur de traitement" })` → `toast({ title: t("voice.processingError") })`
+
+**Clé ajoutée :** `voice.processingError` · `voice.transcriptionCopied`
+
+---
+
+#### Tâche 6 — i18n pages publiques : LandingPage, NotFoundPage, PricingPage
+
+**Commit :** `3bdf3fc` — `feat: complete i18n for public pages`
+
+**Fichiers modifiés :** `client/src/pages/Landing/LandingPage.tsx` · `client/src/pages/NotFoundPage.tsx` · `client/src/pages/Pricing/PricingPage.tsx` · `client/src/locales/fr.ts` · `client/src/locales/en.ts` · `client/src/test/pricingPage.test.tsx`
+
+**6.1 — LandingPage (~60 chaînes, refactor PILLARS)**
+
+**Problème :** `PILLARS` était une constante au niveau module — ses strings étaient figées en français. Impossible d'utiliser `t()` hors du composant React.
+
+**Solution :** Suppression de `const PILLARS` au niveau module. Recréation à l'intérieur de `LandingPage()` avec `t()` :
+```typescript
+export default function LandingPage() {
+  const { t } = useTranslation();
+
+  const PILLARS = [
+    { tag: t("landing.p0tag"), icon: CiqIcon.sparkle, title: t("landing.p0title"), body: t("landing.p0body"), meta: t("landing.p0meta") },
+    { tag: t("landing.p1tag"), icon: CiqIcon.brain,   title: t("landing.p1title"), body: t("landing.p1body"), meta: t("landing.p1meta") },
+    { tag: t("landing.p2tag"), icon: CiqIcon.mic,     title: t("landing.p2title"), body: t("landing.p2body"), meta: t("landing.p2meta") },
+  ];
+
+  const VOICE_FEATS = [
+    { icon: CiqIcon.mic,     label: t("landing.voiceFeat0label"), desc: t("landing.voiceFeat0desc") },
+    { icon: CiqIcon.speaker, label: t("landing.voiceFeat1label"), desc: t("landing.voiceFeat1desc") },
+    { icon: CiqIcon.bolt,    label: t("landing.voiceFeat2label"), desc: t("landing.voiceFeat2desc") },
+  ];
+  // ...
+```
+
+**Justification :** Les tableaux de données contenant du texte UI doivent toujours être calculés à l'intérieur du composant pour être réactifs aux changements de langue. Les données demo (DEMO_SCENES, DEMO_NARRATION) restent au niveau module car elles sont des données de démo, pas du texte UI traduit.
+
+**DemoModal** : Reçoit son propre `const { t } = useTranslation()` (composant séparé).
+
+**Conflit de variable :** Le `.map((t) => ...)` dans la section "Pensé pour" utilisait `t` comme paramètre, shadowing le hook. Renommé en `(item) => ...`.
+
+**Clés ajoutées (namespace `landing`) :** ~65 clés — nav (7), hero (7), builtFor (7), pillars (15), voice section (10), CTA (4), footer (1), demo modal (3).
+
+**6.2 — NotFoundPage (6 chaînes)**
+```typescript
+// AVANT
+"Page introuvable" → t("notFound.title")
+"Retour au Dashboard" → t("notFound.backDashboard")
+"Générer du contenu" → t("notFound.generate")
+"Retour à l'accueil" → t("notFound.backHome")
+"Se connecter" → t("notFound.login")
+```
+
+**6.3 — PricingPage (bouton Retour)**
+```typescript
+// AVANT : "Retour" hardcodé
+// APRÈS : {t("common.back")}
+```
+
+**6.4 — Fix test PricingPage**
+
+Le test mockait `useTranslation` avec `t: (k: string) => k` (passthrough retournant la clé). Après l'i18n du bouton, le texte rendu devenait `"common.back"` et non `"Retour"`.
+
+```typescript
+// AVANT
+expect(screen.getByRole("button", { name: /retour/i }))
+// APRÈS
+expect(screen.getByRole("button", { name: /common\.back/i }))
+```
+
+**Justification :** Dans un environnement de test avec mock i18n passthrough, les assertions doivent utiliser les clés et non les traductions — ce qui garantit que le bon composant est utilisé, indépendamment de la langue.
+
+**Clés communes ajoutées :** `common.back: "Retour" / "Back"` · `common.close: "Fermer" / "Close"`
+
+---
+
+#### Tâche 7 — Vercel Analytics
+
+**Commits :** `5cb703b` · `160107e`
+
+**Fichiers modifiés :** `client/package.json` · `client/src/main.tsx` · `package.json` (racine)
+
+**Installation :**
+```bash
+pnpm --filter client add @vercel/analytics
+```
+
+**Intégration dans `main.tsx` :**
+```tsx
+import { Analytics } from "@vercel/analytics/react";
+
+createRoot(root).render(
+  <Provider store={store}>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <App />
+        <Toaster />
+        <Analytics />   {/* ← tracker page views automatique */}
+      </BrowserRouter>
+    </QueryClientProvider>
+  </Provider>
+);
+```
+
+**Justification placement :** `<Analytics />` à l'intérieur du `<BrowserRouter>` permet au tracker de détecter les changements de route React Router et d'enregistrer les page views SPA (Single Page Application) correctement — sans rechargement de page.
+
+**Bug corrigé (`160107e`) :** Le package avait été installé accidentellement dans le `package.json` racine du workspace (commande `pnpm i` exécutée dans le mauvais répertoire) en plus de `client/package.json`. La dépendance n'appartient qu'au client (Vite/React) — retirée du workspace root.
+
+**Justification architecture monorepo :** Dans un pnpm workspace, les dépendances doivent être déclarées dans le package qui les utilise. Installer au niveau racine rend la dépendance disponible partout (serveur, packages/shared) alors qu'elle n'est utilisée que par le client.
+
+---
+
+#### État final de la session
+
+| Métrique | Valeur |
+|----------|--------|
+| Tests serveur | 41/41 ✓ |
+| Tests client | 32/32 ✓ |
+| TypeScript | 0 erreur ✓ |
+| Commits pushés | 5 sur `main` |
+| i18n coverage | 100% — toutes pages, tous toasts, tous hooks |
+
+**Résumé des fichiers modifiés :**
+
+| Fichier | Type | Changement principal |
+|---------|------|---------------------|
+| `client/src/components/Layout/Navbar.tsx` | fix | PAGE_TITLES inside component |
+| `client/src/pages/Profile/ProfilePage.tsx` | fix | dispatch updateUser + MIC_SENS_LABELS |
+| `client/src/pages/Generate/GeneratePage.tsx` | i18n | 5 toasts traduits |
+| `client/src/pages/History/HistoryPage.tsx` | i18n | ExportMenu useTranslation |
+| `client/src/pages/Favorites/FavoritesPage.tsx` | i18n | ExportMenu useTranslation |
+| `client/src/hooks/useStreaming.ts` | i18n | i18n singleton pour toast |
+| `client/src/pages/Auth/*.tsx` (4 fichiers) | i18n | i18n.t() remplace strings FR |
+| `client/src/components/Voice/GlobalVoiceAssistant.tsx` | i18n | 2 strings traduits |
+| `client/src/pages/Landing/LandingPage.tsx` | i18n | PILLARS inside component + ~60 strings |
+| `client/src/pages/NotFoundPage.tsx` | i18n | 6 strings → t("notFound.*") |
+| `client/src/pages/Pricing/PricingPage.tsx` | i18n | "Retour" → t("common.back") |
+| `client/src/locales/fr.ts` / `en.ts` | i18n | +~95 clés (profile, generate, history, landing, notFound, common) |
+| `client/src/test/pricingPage.test.tsx` | test | Assertion i18n key |
+| `client/src/main.tsx` | feat | Analytics component |
+| `client/package.json` | feat | @vercel/analytics |
+
+---
+
+### [2026-05-18] — Session 15 : Export ZIP · Tag System · GlobalVoiceAssistant FAB · Wake Word · Orb Redesign — COMPLÉTÉ ✅
+- **Session :** 15
+- **Statut :** Complété
+- **Commits :** `2e3834b` · `2ea155b` · `b7223cd`
+- **Tests :** 73 total (41 serveur + 32 client) — tous verts · TypeScript 0 erreur
+
+---
+
+#### Tâche 1 — Export ZIP (JSZip, client-side)
+
+**Commit :** `2e3834b` — `feat: Export ZIP + Tag system in HistoryPage`
+
+**Fichiers modifiés :** `client/src/pages/History/HistoryPage.tsx` · `client/package.json`
+
+**Dépendance ajoutée :** `jszip` (client uniquement)
+
+**Logique d'implémentation :**
+```typescript
+import JSZip from "jszip";
+
+async function exportZip() {
+  const visible = items.filter(i => i.status !== "archived");
+  if (!visible.length) {
+    toast({ title: t("history.exportZipEmpty"), variant: "destructive" });
+    return;
+  }
+  const zip = new JSZip();
+  visible.forEach(item => {
+    const filename = `${item.type}-${item._id}.txt`;
+    zip.file(filename, stripHtml(item.body));  // stripHtml : utilitaire existant
+  });
+  const blob = await zip.generateAsync({ type: "blob" });
+  // Déclenchement téléchargement natif via <a> programmatique
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `contentiq-export-${Date.now()}.zip`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast({ title: t("history.exportZipDone") });
+}
+```
+
+**Justification client-side :** Pour des volumes normaux (<100 items), le ZIP côté client évite un round-trip réseau et une charge serveur. JSZip est purement JavaScript, compatible navigateur, et génère un Blob directement téléchargeable via `URL.createObjectURL`. L'URL est révoquée immédiatement après le click pour libérer la mémoire.
+
+**Justification `stripHtml` :** Les contenus sont stockés en HTML (`body`). Le ZIP exporte en `.txt` pour un usage universel — `stripHtml` enlève les balises sans dépendance supplémentaire.
+
+**État désactivé :** Le bouton est en `disabled` pendant la génération (état `isZipping`) pour éviter les doubles clics.
+
+---
+
+#### Tâche 2 — Tag system UI (TagEditor inline)
+
+**Commit :** `2e3834b` (suite)
+
+**Fichier modifié :** `client/src/pages/History/HistoryPage.tsx` (+TagEditor composant interne)
+
+**Architecture `TagEditor` :**
+- Composant inline dans `HistoryPage.tsx` (pas de fichier séparé — usage unique)
+- Rendu sur chaque ligne (list) et carte (grid) de contenu
+- Chips de tags existants avec bouton `×` (remove)
+- Bouton `+ tag` dashed → input inline avec gestion clavier
+
+```typescript
+function TagEditor({ content }: { content: ContentItem }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  async function addTag(tag: string) {
+    const clean = tag.trim().toLowerCase();
+    if (!clean || content.tags.includes(clean)) return;
+    const updated = [...content.tags, clean];
+    await contentService.update(content._id, { tags: updated });
+    queryClient.invalidateQueries({ queryKey: ["history"] });
+  }
+
+  // Confirmation sur Enter ou virgule, annulation sur Escape
+  function handleKey(e: React.KeyboardEvent) {
+    if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(draft); setDraft(""); }
+    if (e.key === "Escape") setEditing(false);
+  }
+}
+```
+
+**Justification Enter/virgule :** Double délimiteur (Enter = confirmer, virgule = ajouter plusieurs tags rapidement) — pattern UX standard (GitHub issues, Notion tags). La virgule est supprimée du draft avant ajout.
+
+**Justification `invalidateQueries` :** Plutôt que de mettre à jour le state local manuellement, on invalide la query TanStack — elle refetch les données fraîches depuis le serveur. Garantit la cohérence avec d'autres onglets ou sessions.
+
+**Backend déjà prêt :** Le modèle `Content` avait `tags: string[]` depuis la Phase 0, et `PUT /api/content/:id` acceptait déjà `tags` dans le body. Zéro modification serveur nécessaire.
+
+---
+
+#### Tâche 3 — Filtre par tag
+
+**Commit :** `2e3834b` (suite)
+
+```typescript
+const [filterTag, setFilterTag] = useState<string | null>(null);
+
+// Inclus dans la query TanStack
+const { data } = useQuery({
+  queryKey: ["history", page, search, typeFilter, filterTag],
+  queryFn: () => contentService.list({ tag: filterTag ?? undefined, ... })
+});
+
+// Reset inclus dans resetFilters()
+function resetFilters() {
+  setSearch(""); setTypeFilter("all"); setFilterTag(null); setPage(1);
+}
+```
+
+**Justification query key avec `filterTag` :** TanStack Query cache par clé — inclure `filterTag` dans la queryKey garantit un cache séparé par tag actif, sans conflits.
+
+---
+
+#### Tâche 4 — GlobalVoiceAssistant FAB (version initiale)
+
+**Commit :** `2ea155b` — `feat: fix history layout, voice commands for free plan, global voice FAB + wake word`
+
+**Fichiers créés/modifiés :** `client/src/components/Voice/GlobalVoiceAssistant.tsx` (créé) · `client/src/hooks/useWakeWord.ts` (créé) · `client/src/components/Layout/AppLayout.tsx`
+
+**Architecture GlobalVoiceAssistant (v1) :**
+- Bouton FAB (Floating Action Button) fixe en bas à droite : orb micro animé
+- Click → overlay drawer avec micro central, transcript, résultat commande
+- Accessible depuis toutes les pages via `AppLayout`
+
+**Flux de traitement vocal :**
+```
+User parle → Web Speech API (transcription) → POST /api/voice/command 
+→ Claude analyse intent → action locale (navigate/generate/export...)
+→ setActionFeedback (chip résultat)
+```
+
+---
+
+#### Tâche 5 — Hook `useWakeWord`
+
+**Commit :** `2ea155b` (suite)
+
+**Fichier créé :** `client/src/hooks/useWakeWord.ts`
+
+```typescript
+export function useWakeWord(
+  wakeWord: string,
+  onDetected: () => void,
+  enabled: boolean
+): void {
+  useEffect(() => {
+    if (!enabled || !wakeWord) return;
+    const recognition = new (window.SpeechRecognition ?? window.webkitSpeechRecognition)();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map(r => r[0].transcript.toLowerCase())
+        .join(" ");
+      if (transcript.includes(wakeWord.toLowerCase())) {
+        onDetected();
+        recognition.stop();
+      }
+    };
+    recognition.start();
+    return () => recognition.stop();
+  }, [wakeWord, onDetected, enabled]);
+}
+```
+
+**Justification `continuous: true`** : Pour la détection de wake word, on ne veut pas un enregistrement ponctuel mais un flux continu en arrière-plan. `interimResults: true` permet de détecter le mot avant la fin de la phrase (latence réduite).
+
+**Justification `enabled` flag :** Le hook reçoit `enabled` pour être désactivé proprement (plan free, overlay déjà ouvert). L'effet se nettoie et relance selon la valeur — évite les duplications.
+
+---
+
+#### Tâche 6 — Intégration AppLayout
+
+**Commit :** `2ea155b` (suite)
+
+**Fichier modifié :** `client/src/components/Layout/AppLayout.tsx`
+
+```typescript
+const [voiceAssistantOpen, setVoiceAssistantOpen] = useState(false);
+const wakeWord = user?.voicePreferences?.wakeWord ?? "hey iq";
+
+useWakeWord(wakeWord, () => setVoiceAssistantOpen(true), !voiceAssistantOpen);
+```
+
+**Justification `!voiceAssistantOpen`** : On désactive la détection wake word quand l'overlay est déjà ouvert — évite de déclencher une réouverture pendant l'écoute.
+
+---
+
+#### Tâche 7 — Redesign GlobalVoiceAssistant : overlay teal + orb animé
+
+**Commit :** `b7223cd` — `feat: global voice assistant orb redesign + plan gate`
+
+**Fichier modifié :** `client/src/components/Voice/GlobalVoiceAssistant.tsx` (+340 lignes net, refactor complet)
+
+**Design final :**
+- **Overlay plein écran** semi-transparent sombre (`rgba(0,0,0,0.85)` + `backdropFilter: blur(8px)`)
+- **Orb teal animé** (80px, `border-radius: 50%`, glow radial gradient teal, pulsation CSS)
+- **MicWave** en cours d'écoute (animations barres)
+- **Transcript** en temps réel sous l'orb
+- **Chips résultat** de commande en bas (action détectée + statut)
+
+**Justification blur overlay :** `backdropFilter: blur(8px)` donne la sensation que l'assistant "prend le dessus" sur l'interface sans l'effacer. Le fond noir semi-transparent isole visuellement l'assistant du reste du contenu.
+
+---
+
+#### Tâche 8 — Plan gate voix (voiceCommands free → false)
+
+**Commit :** `b7223cd` (suite)
+
+**Fichier modifié :** `packages/shared/src/types/index.ts`
+
+```typescript
+// PLAN_LIMITS
+free: {
+  voiceCommands: false,  // ← gating voix pour plan gratuit
+  // ...
+}
+```
+
+**Logique dans AppLayout :**
+```typescript
+const canUseVoice = user
+  ? PLAN_LIMITS[user.role as keyof typeof PLAN_LIMITS]?.voiceCommands ?? false
+  : false;
+
+useWakeWord(wakeWord, () => setVoiceAssistantOpen(true), !voiceAssistantOpen && canUseVoice);
+```
+
+**Justification double gate :** Le wake word ET l'overlay sont conditionnés par `canUseVoice`. Même si un utilisateur free contourne l'UI, le wake word en arrière-plan ne se déclenche pas.
+
+**UpgradeCard pour free users :**
+```tsx
+{!canUseVoice && (
+  <UpgradeCard
+    title={t("voice.upgradeTitle")}
+    description={t("voice.upgradeDesc")}
+  />
+)}
+```
+
+Affiché à la place du micro si `!canUseVoice` — guide l'utilisateur vers le plan payant.
+
+---
+
+#### Tâche 9 — Fix parsing réponse API + seuil confiance
+
+**Commit :** `b7223cd` (suite)
+
+**Problème 1 — Parsing réponse :**
+```typescript
+// AVANT (incorrect) — accédait à .command
+const result = res.data.command;
+
+// APRÈS (correct) — l'API renvoie { success, data: ParsedCommand }
+const result = res.data.data as ParsedCommand;
+```
+
+**Justification :** Toutes les réponses API suivent la convention `{ success: true, data: {...} }` (CLAUDE.md). Le code original accédait à `.command` — propriété inexistante au bon niveau.
+
+**Problème 2 — Commandes spurieuses :**
+```typescript
+if (parsed.confidence < 0.5) {
+  setActionFeedback(t("voice.assistantUnknown"));
+  return;
+}
+```
+
+**Justification seuil 0.5 :** Claude retourne un score de confiance (0–1) sur chaque intent détecté. En dessous de 0.5, l'intent est ambigu — exécuter la commande causerait des actions non voulues (naviguer vers une mauvaise page, déclencher une génération involontaire). Le seuil 0.5 est conservateur mais sûr pour un MVP.
+
+---
+
+#### État final de la session
+
+| Métrique | Valeur |
+|----------|--------|
+| Tests serveur | 41/41 ✓ |
+| Tests client | 32/32 ✓ |
+| TypeScript | 0 erreur ✓ |
+| Commits pushés | 3 sur `main` |
+
+**Résumé des fichiers modifiés :**
+
+| Fichier | Type | Changement |
+|---------|------|-----------|
+| `client/src/pages/History/HistoryPage.tsx` | feat | Export ZIP + TagEditor + filtre tag |
+| `client/src/components/Voice/GlobalVoiceAssistant.tsx` | feat | Créé v1 → redesign orb complet |
+| `client/src/hooks/useWakeWord.ts` | feat | Créé — détection wake word continue |
+| `client/src/components/Layout/AppLayout.tsx` | feat | Intégration FAB + wake word + plan gate |
+| `client/src/pages/Profile/ProfilePage.tsx` | feat | Champ wake word custom |
+| `packages/shared/src/types/index.ts` | feat | voiceCommands: false pour free |
+| `client/package.json` | feat | +jszip |
+| `client/src/locales/fr.ts` / `en.ts` | i18n | +voice.assistant* + voice.wakeWord* |
+
+---
+
 ### [2026-05-17] — Session 14 : P2 + P3 — Voice TTS, Traduction, Génération multilingue, Page Voice — COMPLÉTÉ ✅
 - **Session :** 14
 - **Statut :** Complété

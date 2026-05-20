@@ -477,9 +477,12 @@ export default function ProfilePage() {
   async function handleUiLangChange(lang: "fr" | "en") {
     setUiLang(lang);
     i18n.changeLanguage(lang).catch(() => {});
+    dispatch(updateUser({ language: lang }));
     try {
       await api.put("/users/me", { language: lang });
     } catch {
+      dispatch(updateUser({ language: uiLang }));
+      i18n.changeLanguage(uiLang).catch(() => {});
       toast({ title: "Erreur de sauvegarde", variant: "destructive" });
     }
   }

@@ -7,17 +7,6 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 
-const PAGE_TITLES: Record<string, string> = {
-  "/dashboard": "Tableau de bord",
-  "/generate": "Créer",
-  "/history": "Historique",
-  "/templates": "Templates",
-  "/favorites": "Favoris",
-  "/profile": "Profil",
-  "/pricing": "Tarifs",
-  "/admin": "Admin",
-};
-
 interface NavbarProps {
   onMenuOpen?: () => void;
 }
@@ -44,7 +33,19 @@ export function Navbar({ onMenuOpen }: NavbarProps) {
   }, [menuOpen]);
   const lang = user?.language ?? "fr";
 
-  const pageTitle = PAGE_TITLES[location.pathname] ?? "CONTENT.IQ";
+  const pageTitles: Record<string, string> = {
+    "/dashboard": t("sidebar.dashboard"),
+    "/generate": t("sidebar.generate"),
+    "/history": t("sidebar.history"),
+    "/templates": t("sidebar.templates"),
+    "/favorites": t("sidebar.favorites"),
+    "/profile": t("sidebar.profile"),
+    "/pricing": t("sidebar.billing"),
+    "/voice": t("sidebar.voice"),
+    "/admin": "Admin",
+  };
+
+  const pageTitle = pageTitles[location.pathname] ?? "CONTENT.IQ";
 
   async function setLanguage(newLang: "fr" | "en") {
     if (newLang === lang) return;

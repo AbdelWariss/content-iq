@@ -1,4 +1,5 @@
 import { toast } from "@/hooks/use-toast";
+import i18n from "@/lib/i18n";
 import { markdownToHTML } from "@/lib/markdownToHtml";
 import { updateCredits } from "@/store/authSlice";
 import {
@@ -115,7 +116,11 @@ export function useStreaming() {
         const message = error instanceof Error ? error.message : "Erreur inconnue";
         dispatch(stopGeneration());
         options.onError?.(message);
-        toast({ title: "Erreur de génération", description: message, variant: "destructive" });
+        toast({
+          title: i18n.t("generate.streamingError"),
+          description: message,
+          variant: "destructive",
+        });
       }
     },
     [dispatch, accessToken],

@@ -131,7 +131,7 @@ export default function VoicePage() {
   const handleCopyTranscript = useCallback(() => {
     if (!transcript) return;
     navigator.clipboard.writeText(transcript).then(() => {
-      toast({ title: "Transcription copiée !" });
+      toast({ title: t("voice.transcriptionCopied") });
     });
   }, [transcript]);
 

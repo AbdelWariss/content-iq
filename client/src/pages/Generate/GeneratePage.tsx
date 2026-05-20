@@ -143,7 +143,7 @@ export default function GeneratePage() {
         if (c.prompt?.keywords) setKeywords(c.prompt.keywords);
         dispatch(setEditorContent(markdownToHTML(c.body ?? "")));
       })
-      .catch(() => toast({ title: "Contenu introuvable", variant: "destructive" }));
+      .catch(() => toast({ title: t("generate.contentNotFound"), variant: "destructive" }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewContentId]);
 
@@ -178,7 +178,7 @@ export default function GeneratePage() {
         { ...data, keywords },
         {
           onDone: () => {
-            toast({ title: "Contenu généré !", variant: "default" });
+            toast({ title: t("generate.contentGenerated"), variant: "default" });
             queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
             queryClient.invalidateQueries({ queryKey: ["contents"] });
           },
@@ -286,7 +286,7 @@ export default function GeneratePage() {
       queryClient.invalidateQueries({ queryKey: ["contents"] });
       toast({ title: t("generate.contentSaved") });
     } catch {
-      toast({ title: "Erreur de sauvegarde", variant: "destructive" });
+      toast({ title: t("generate.genSaveError"), variant: "destructive" });
     } finally {
       setIsSavingContent(false);
     }
@@ -305,15 +305,15 @@ export default function GeneratePage() {
         variables: [],
         isPublic: false,
       });
-      toast({ title: `Template "${templateName.trim()}" enregistré` });
+      toast({ title: t("generate.templateSaved", { name: templateName.trim() }) });
       setShowSaveTemplate(false);
       setTemplateName("");
     } catch {
-      toast({ title: "Erreur lors de l'enregistrement du template", variant: "destructive" });
+      toast({ title: t("generate.templateSaveError"), variant: "destructive" });
     } finally {
       setIsSavingTemplate(false);
     }
-  }, [templateName, watch]);
+  }, [templateName, watch, t]);
 
   useEffect(() => {
     if (!displayContent) return;

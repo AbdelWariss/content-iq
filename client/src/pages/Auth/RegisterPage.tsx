@@ -1,6 +1,7 @@
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { CiqIcon, Ico } from "@/lib/ciq-icons";
+import i18n from "@/lib/i18n";
 import { type RegisterInput, RegisterSchema } from "@contentiq/shared";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
@@ -48,7 +49,7 @@ export default function RegisterPage() {
       const message =
         (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
           ?.message ?? "Erreur lors de l'inscription";
-      toast({ title: "Inscription échouée", description: message, variant: "destructive" });
+      toast({ title: i18n.t("auth.registerFailed"), description: message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }

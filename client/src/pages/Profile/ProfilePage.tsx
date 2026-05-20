@@ -230,6 +230,13 @@ export default function ProfilePage() {
   const user = useAppSelector((s) => s.auth.user);
   const { t, i18n } = useTranslation();
 
+  const MIC_SENS_LABELS: Record<string, string> = {
+    Auto: t("profile.sensAuto"),
+    Haute: t("profile.sensHigh"),
+    Normale: t("profile.sensNormal"),
+    Basse: t("profile.sensLow"),
+  };
+
   /* Form */
   const [isSaving, setIsSaving] = useState(false);
   const {
@@ -441,9 +448,9 @@ export default function ProfilePage() {
     if (!v) return;
     try {
       await saveVoicePrefs({ ttsVoice: v.voiceId });
-      toast({ title: `Voix "${name}" enregistrée` });
+      toast({ title: t("profile.voiceSaved", { name }) });
     } catch {
-      toast({ title: "Erreur de sauvegarde", variant: "destructive" });
+      toast({ title: t("profile.saveError"), variant: "destructive" });
     }
   }
 
@@ -452,7 +459,7 @@ export default function ProfilePage() {
     try {
       await saveVoicePrefs({ speed: speedV });
     } catch {
-      toast({ title: "Erreur de sauvegarde", variant: "destructive" });
+      toast({ title: t("profile.saveError"), variant: "destructive" });
     }
   }
 
@@ -461,7 +468,7 @@ export default function ProfilePage() {
     try {
       await saveVoicePrefs({ autoTts: val });
     } catch {
-      toast({ title: "Erreur de sauvegarde", variant: "destructive" });
+      toast({ title: t("profile.saveError"), variant: "destructive" });
     }
   }
 
@@ -470,7 +477,7 @@ export default function ProfilePage() {
     try {
       await saveVoicePrefs({ language: lang });
     } catch {
-      toast({ title: "Erreur de sauvegarde", variant: "destructive" });
+      toast({ title: t("profile.saveError"), variant: "destructive" });
     }
   }
 
@@ -483,7 +490,7 @@ export default function ProfilePage() {
     } catch {
       dispatch(updateUser({ language: uiLang }));
       i18n.changeLanguage(uiLang).catch(() => {});
-      toast({ title: "Erreur de sauvegarde", variant: "destructive" });
+      toast({ title: t("profile.saveError"), variant: "destructive" });
     }
   }
 
@@ -611,7 +618,7 @@ export default function ProfilePage() {
                         .catch(() => {})
                     }
                   >
-                    Mettre à niveau
+                    {t("profile.upgradeBtn")}
                   </button>
                 )}
               </div>
@@ -716,7 +723,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <div>
-              <label className="label">Lecture auto des réponses</label>
+              <label className="label">{t("profile.autoPlayLabel")}</label>
               <div
                 className="row between"
                 style={{
@@ -734,7 +741,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <div>
-              <label className="label">Langue de l'interface</label>
+              <label className="label">{t("profile.labelLang")}</label>
               <select
                 className="select"
                 value={uiLang}
@@ -795,7 +802,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <div>
-              <label className="label">Sensibilité micro</label>
+              <label className="label">{t("profile.micSensLabel")}</label>
               <div className="seg" style={{ width: "100%" }}>
                 {MIC_SENSITIVITIES.map((s) => (
                   <button
@@ -805,7 +812,7 @@ export default function ProfilePage() {
                     style={{ flex: 1 }}
                     onClick={() => handleMicSensChange(s)}
                   >
-                    {s}
+                    {MIC_SENS_LABELS[s] ?? s}
                   </button>
                 ))}
               </div>
@@ -898,7 +905,7 @@ export default function ProfilePage() {
         )}
         {openSelector === "speed" && (
           <InlineSelector
-            label="Vitesse TTS"
+            label={t("profile.speedLabel")}
             options={SPEED_OPTIONS.map((s) => s.l)}
             value={speedLabel}
             onChange={(l) => {
@@ -991,7 +998,9 @@ export default function ProfilePage() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="row between" style={{ marginBottom: 18 }}>
-                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>Modifier le profil</h3>
+                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>
+                  {t("profile.editProfileTitle")}
+                </h3>
                 <button
                   type="button"
                   className="btn btn-ghost btn-sm"
@@ -1035,7 +1044,7 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div>
-                    <label className="label">Langue de l'interface</label>
+                    <label className="label">{t("profile.labelLang")}</label>
                     <select
                       className="select"
                       value={uiLang}
@@ -1053,7 +1062,7 @@ export default function ProfilePage() {
                     style={{ flex: 1 }}
                     onClick={() => setEditingProfile(false)}
                   >
-                    Annuler
+                    {t("common.cancel")}
                   </button>
                   <button
                     type="submit"
@@ -1070,10 +1079,10 @@ export default function ProfilePage() {
         )}
 
         {/* Préférences vocales */}
-        <SectionHeader label="Préférences vocales" />
+        <SectionHeader label={t("profile.voiceSectionMobile")} />
         <div className="card" style={{ padding: "0 20px" }}>
           <SettingsRow
-            label="Voix de l'assistant"
+            label={t("profile.voiceAssistantLabel")}
             value={`${currentVoiceObj.name} · ElevenLabs`}
             onClick={() => setOpenSelector("voice")}
           />
@@ -1090,11 +1099,11 @@ export default function ProfilePage() {
               }
             >
               <Ico icon={previewing === selectedVoice ? CiqIcon.stop : CiqIcon.play} />
-              {previewing === selectedVoice ? "Arrêter" : "Écouter"}
+              {previewing === selectedVoice ? t("profile.stopPreview") : t("profile.listenBtn")}
             </button>
           </div>
           <SettingsRow
-            label="Vitesse TTS"
+            label={t("profile.speedLabel")}
             value={speedLabel}
             onClick={() => setOpenSelector("speed")}
           />
@@ -1128,9 +1137,9 @@ export default function ProfilePage() {
           </div>
           <div className="row between" style={{ padding: "14px 0" }}>
             <div className="col" style={{ gap: 2 }}>
-              <span style={{ fontSize: 15 }}>Lecture auto des réponses</span>
+              <span style={{ fontSize: 15 }}>{t("profile.autoPlayLabel")}</span>
               <span style={{ fontSize: 12, color: "var(--ink-mute)" }}>
-                L'assistant lit ses réponses à voix haute.
+                {t("profile.autoPlayDesc")}
               </span>
             </div>
             <Toggle
@@ -1155,12 +1164,12 @@ export default function ProfilePage() {
           <div className="row between" style={{ marginBottom: 12 }}>
             <div className="col" style={{ gap: 2 }}>
               <span style={{ fontSize: 16, fontWeight: 700, color: "var(--ink)" }}>
-                Tester votre micro
+                {t("profile.testMicTitle")}
               </span>
               <span
                 style={{ fontSize: 13, color: isMicTesting ? "var(--voice)" : "var(--ink-mute)" }}
               >
-                {isMicTesting ? "Niveau d'entrée détecté · OK" : "Cliquez pour tester"}
+                {isMicTesting ? t("profile.micTestingStatus") : t("profile.micTestIdle")}
               </span>
             </div>
             <button
@@ -1187,16 +1196,16 @@ export default function ProfilePage() {
         </div>
 
         {/* Compte & abonnement */}
-        <SectionHeader label="Compte & abonnement" />
+        <SectionHeader label={t("profile.subAccountSection")} />
         <div className="card" style={{ padding: "0 20px" }}>
           <div
             className="row between"
             style={{ padding: "14px 0", borderBottom: "1px solid var(--line-soft)" }}
           >
             <div className="col" style={{ gap: 2 }}>
-              <span style={{ fontSize: 15 }}>Plan actuel</span>
+              <span style={{ fontSize: 15 }}>{t("profile.subSection")}</span>
               <span style={{ fontSize: 12, color: "var(--ink-mute)" }}>
-                {planPrice[user.role] ?? "Gratuit"}
+                {planPrice[user.role] ?? t("profile.subFree")}
               </span>
             </div>
             {user.role !== "free" ? (
@@ -1205,7 +1214,7 @@ export default function ProfilePage() {
                 className="btn btn-outline btn-sm"
                 onClick={() => stripeService.openPortal().catch(() => {})}
               >
-                Gérer
+                {t("profile.manageSub")}
               </button>
             ) : (
               <button
@@ -1213,7 +1222,7 @@ export default function ProfilePage() {
                 className="btn btn-primary"
                 onClick={() => stripeService.createCheckout("pro").catch(() => {})}
               >
-                Mettre à niveau
+                {t("profile.upgradeBtn")}
               </button>
             )}
           </div>
@@ -1223,9 +1232,9 @@ export default function ProfilePage() {
               style={{ padding: "14px 0", borderBottom: "1px solid var(--line-soft)" }}
             >
               <div className="col" style={{ gap: 2 }}>
-                <span style={{ fontSize: 15 }}>Recharger crédits</span>
+                <span style={{ fontSize: 15 }}>{t("profile.topupCredits")}</span>
                 <span style={{ fontSize: 12, color: "var(--ink-mute)" }}>
-                  $10 / 100 cr. · {remaining} restants
+                  {t("profile.topupDesc", { remaining })}
                 </span>
               </div>
               <button
@@ -1257,7 +1266,7 @@ export default function ProfilePage() {
             className="row between"
             style={{ padding: "14px 0", borderBottom: "1px solid var(--line-soft)" }}
           >
-            <span style={{ fontSize: 15 }}>Langue de l'interface</span>
+            <span style={{ fontSize: 15 }}>{t("profile.labelLang")}</span>
             <div className="row" style={{ gap: 5 }}>
               <span style={{ fontSize: 15, color: "var(--ink-mute)" }}>
                 {uiLang === "fr" ? "Français" : "English"}
@@ -1266,7 +1275,7 @@ export default function ProfilePage() {
             </div>
           </div>
           <div className="row between" style={{ padding: "14px 0" }}>
-            <span style={{ fontSize: 15 }}>Langue micro</span>
+            <span style={{ fontSize: 15 }}>{t("profile.micLangSetting")}</span>
             <div className="row" style={{ gap: 5 }}>
               <span style={{ fontSize: 15, color: "var(--ink-mute)" }}>
                 {MIC_LANGS.find((l) => l.v === micLang)?.l ?? micLang}

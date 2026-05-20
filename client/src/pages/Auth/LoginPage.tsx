@@ -1,6 +1,7 @@
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { CiqIcon, Ico } from "@/lib/ciq-icons";
+import i18n from "@/lib/i18n";
 import { type LoginInput, LoginSchema } from "@contentiq/shared";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
@@ -29,7 +30,7 @@ export default function LoginPage() {
       const message =
         (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
           ?.message ?? "Erreur de connexion";
-      toast({ title: "Connexion échouée", description: message, variant: "destructive" });
+      toast({ title: i18n.t("auth.loginFailed"), description: message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }

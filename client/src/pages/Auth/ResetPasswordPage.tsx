@@ -1,5 +1,6 @@
 import { toast } from "@/hooks/use-toast";
 import { CiqIcon, Ico } from "@/lib/ciq-icons";
+import i18n from "@/lib/i18n";
 import { authService } from "@/services/auth.service";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
@@ -52,8 +53,8 @@ export default function ResetPasswordPage() {
   async function onSubmit({ password }: FormData) {
     if (!token) {
       toast({
-        title: "Lien invalide",
-        description: "Ce lien de réinitialisation est invalide.",
+        title: i18n.t("common.error"),
+        description: i18n.t("auth.resendError"),
         variant: "destructive",
       });
       return;
@@ -67,7 +68,7 @@ export default function ResetPasswordPage() {
       const message =
         (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
           ?.message ?? "Lien invalide ou expiré";
-      toast({ title: "Erreur", description: message, variant: "destructive" });
+      toast({ title: i18n.t("common.error"), description: message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }

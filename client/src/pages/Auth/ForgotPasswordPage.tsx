@@ -1,5 +1,6 @@
 import { toast } from "@/hooks/use-toast";
 import { CiqIcon, Ico } from "@/lib/ciq-icons";
+import i18n from "@/lib/i18n";
 import { authService } from "@/services/auth.service";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
@@ -39,8 +40,8 @@ export default function ForgotPasswordPage() {
       setResendTimer(60);
     } catch {
       toast({
-        title: "Erreur",
-        description: "Impossible d'envoyer l'email.",
+        title: i18n.t("common.error"),
+        description: i18n.t("auth.sendError"),
         variant: "destructive",
       });
     } finally {
@@ -54,9 +55,9 @@ export default function ForgotPasswordPage() {
     try {
       await authService.forgotPassword(sentEmail);
       setResendTimer(60);
-      toast({ title: "Email renvoyé !" });
+      toast({ title: i18n.t("auth.emailResent") });
     } catch {
-      toast({ title: "Erreur", variant: "destructive" });
+      toast({ title: i18n.t("common.error"), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }

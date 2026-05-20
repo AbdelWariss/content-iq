@@ -130,6 +130,13 @@ const fr = {
     // Output language
     outputLanguageLabel: "Langue de sortie",
     outputLanguageAuto: "— Même langue —",
+    // Toasts
+    contentGenerated: "Contenu généré !",
+    contentNotFound: "Contenu introuvable",
+    genSaveError: "Erreur de sauvegarde",
+    templateSaved: 'Template "{{name}}" enregistré',
+    templateSaveError: "Erreur lors de l'enregistrement du template",
+    streamingError: "Erreur de génération",
   },
   // Voice page
   voice: {
@@ -165,6 +172,8 @@ const fr = {
     wakeWordLabel: "Mot de déclenchement",
     wakeWordDesc: "Dites ce mot pour activer l'assistant vocal automatiquement.",
     wakeWordCustom: "Mot personnalisé…",
+    transcriptionCopied: "Transcription copiée !",
+    processingError: "Erreur de traitement",
   },
   // History page
   history: {
@@ -201,6 +210,8 @@ const fr = {
     totalContents: "{{n}} contenus au total",
     deleteSuccess: "Contenu archivé",
     copied: "Copié !",
+    exportFormatDone: "Export {{format}} téléchargé !",
+    exportFormatError: "Erreur export",
   },
   // Profile page
   profile: {
@@ -241,6 +252,24 @@ const fr = {
     stripePortal: "Portail Stripe",
     upgradePro: "Passer Pro",
     upgradeBusiness: "Passer Business",
+    upgradeBtn: "Mettre à niveau",
+    manageSub: "Gérer",
+    editProfileTitle: "Modifier le profil",
+    voiceSectionMobile: "Préférences vocales",
+    voiceAssistantLabel: "Voix de l'assistant",
+    listenBtn: "Écouter",
+    testMicTitle: "Tester votre micro",
+    micTestingStatus: "Niveau d'entrée détecté · OK",
+    micTestIdle: "Cliquez pour tester",
+    subAccountSection: "Compte & abonnement",
+    topupCredits: "Recharger crédits",
+    topupDesc: "$10 / 100 cr. · {{remaining}} restants",
+    micLangSetting: "Langue micro",
+    sensAuto: "Auto",
+    sensHigh: "Haute",
+    sensNormal: "Normale",
+    sensLow: "Basse",
+    voiceSaved: 'Voix "{{name}}" enregistrée',
   },
   // Templates page
   templates: {

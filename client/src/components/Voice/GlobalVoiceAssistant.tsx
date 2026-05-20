@@ -208,8 +208,8 @@ export function GlobalVoiceAssistant({ isOpen, onOpen, onClose }: GlobalVoiceAss
           }
         }
       } catch {
-        setActionFeedback("Erreur réseau. Vérifiez votre connexion.");
-        toast({ title: "Erreur de traitement", variant: "destructive" });
+        setActionFeedback(t("voice.processingError"));
+        toast({ title: t("voice.processingError"), variant: "destructive" });
       } finally {
         setIsProcessing(false);
       }

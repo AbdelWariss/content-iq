@@ -49,14 +49,15 @@ const EXPORT_FORMATS = [
 
 function ExportMenu({ item }: { item: ContentItem }) {
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
 
   const handle = async (format: "pdf" | "txt" | "docx" | "markdown") => {
     setOpen(false);
     try {
       await exportService.download(item._id, format, item.title);
-      toast({ title: `Export ${format.toUpperCase()} téléchargé !` });
+      toast({ title: t("history.exportFormatDone", { format: format.toUpperCase() }) });
     } catch {
-      toast({ title: "Erreur export", variant: "destructive" });
+      toast({ title: t("history.exportFormatError"), variant: "destructive" });
     }
   };
 

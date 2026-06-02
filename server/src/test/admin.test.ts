@@ -81,6 +81,7 @@ describe("GET /api/admin/stats", () => {
       { _id: "pro", count: 3 },
     ]);
     vi.mocked(Content.countDocuments).mockResolvedValue(42);
+    vi.mocked(Content.aggregate).mockResolvedValue([{ avg: 0.92, count: 30 }]);
     vi.mocked(CreditTransaction.aggregate).mockResolvedValue([{ total: 500 }]);
     vi.mocked(User.countDocuments).mockResolvedValue(2);
 
@@ -90,6 +91,8 @@ describe("GET /api/admin/stats", () => {
     expect(res.body.data.users.total).toBe(13);
     expect(res.body.data.contents).toBe(42);
     expect(res.body.data.creditsConsumed).toBe(500);
+    expect(res.body.data.quality.avgScore).toBe(92);
+    expect(res.body.data.quality.scoredContents).toBe(30);
   });
 });
 

@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
+  Gauge,
   ScrollText,
   Search,
   ShieldCheck,
@@ -192,12 +193,12 @@ export default function AdminPage() {
           {/* Stats */}
           {statsLoading ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {(["s1", "s2", "s3", "s4"] as const).map((k) => (
+              {(["s1", "s2", "s3", "s4", "s5"] as const).map((k) => (
                 <Skeleton key={k} className="h-24 rounded-xl" />
               ))}
             </div>
           ) : stats ? (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
               <StatCard
                 icon={Users}
                 label="Utilisateurs totaux"
@@ -224,6 +225,13 @@ export default function AdminPage() {
                 value={`${stats.users.byRole.pro ?? 0} Pro · ${stats.users.byRole.business ?? 0} Biz`}
                 sub={`${stats.users.byRole.free ?? 0} Free · ${stats.users.byRole.admin ?? 0} Admin`}
                 color="text-green-500 bg-green-500/10"
+              />
+              <StatCard
+                icon={Gauge}
+                label="Score qualité moyen"
+                value={stats.quality.avgScore !== null ? `${stats.quality.avgScore}%` : "—"}
+                sub={`${stats.quality.scoredContents} contenus évalués`}
+                color="text-purple-500 bg-purple-500/10"
               />
             </div>
           ) : null}

@@ -27,6 +27,14 @@ export async function generate(req: Request, res: Response): Promise<void> {
       const title = await generateTitle(content, params.language as ContentLanguage);
       const plainText = content.replace(/<[^>]*>/g, "").trim();
 
+      // Eval qualité (LLMOps) — calculée avant la sauvegarde pour persister le
+      // score, puis loggée (observabilité) ; ne bloque jamais l'utilisateur.
+      const quality = evaluateContent(content, {
+        length: params.length,
+        language: params.language as ContentLanguage,
+        customLength: params.customLength,
+      });
+
       const saved = await Content.create({
         userId,
         type: params.type,
@@ -36,6 +44,7 @@ export async function generate(req: Request, res: Response): Promise<void> {
         prompt: params,
         tokensUsed,
         generationTime,
+        qualityScore: quality.score,
         status: "complete",
       });
 
@@ -47,13 +56,6 @@ export async function generate(req: Request, res: Response): Promise<void> {
       );
       logger.debug(`Contenu généré : ${saved._id} — ${tokensUsed} tokens`);
 
-      // Eval qualité (LLMOps) — observabilité non bloquante : on logge les
-      // dérives du modèle sans jamais interrompre l'utilisateur.
-      const quality = evaluateContent(content, {
-        length: params.length,
-        language: params.language as ContentLanguage,
-        customLength: params.customLength,
-      });
       if (!quality.passed) {
         void appLog({
           level: "warn",

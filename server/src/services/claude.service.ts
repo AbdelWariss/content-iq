@@ -338,6 +338,26 @@ export async function improveContent(
   return { content: fullContent, tokensUsed, generationTime: Date.now() - startTime };
 }
 
+/**
+ * Génération non-streamée utilisée par le runner d'eval offline
+ * (scripts/eval-content.ts). Réutilise exactement les mêmes prompts et bornes
+ * de tokens que la génération de production, afin que l'eval teste la vraie chaîne.
+ */
+export async function generateForEval(
+  params: GenerateContentInput,
+): Promise<{ content: string; tokensUsed: number }> {
+  const msg = await client.messages.create({
+    model: env.CLAUDE_MODEL,
+    max_tokens: params.customLength
+      ? Math.min(params.customLength * 2, 4000)
+      : (MAX_TOKENS[params.length] ?? 900),
+    system: getSystemPrompt(params.language, params.outputLanguage),
+    messages: [{ role: "user", content: buildUserPrompt(params) }],
+  });
+  const content = msg.content.map((b) => (b.type === "text" ? b.text : "")).join("");
+  return { content, tokensUsed: msg.usage.output_tokens };
+}
+
 export async function generateTitle(content: string, _language: ContentLanguage): Promise<string> {
   const msg = await client.messages.create({
     model: env.CLAUDE_MODEL,

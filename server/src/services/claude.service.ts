@@ -219,6 +219,7 @@ export async function streamContentGeneration(
   onComplete?: (
     content: string,
     tokensUsed: number,
+    generationTime: number,
   ) => Promise<{ contentId?: string; creditsRemaining?: number }>,
 ): Promise<StreamResult> {
   const startTime = Date.now();
@@ -258,7 +259,12 @@ export async function streamContentGeneration(
     tokensUsed = finalMsg.usage.output_tokens;
 
     if (onComplete) {
-      const { contentId, creditsRemaining } = await onComplete(fullContent, tokensUsed);
+      const generationTime = Date.now() - startTime;
+      const { contentId, creditsRemaining } = await onComplete(
+        fullContent,
+        tokensUsed,
+        generationTime,
+      );
       res.write(
         `data: ${JSON.stringify({ done: true, tokensUsed, contentId, creditsRemaining })}\n\n`,
       );

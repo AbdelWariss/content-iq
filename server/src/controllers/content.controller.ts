@@ -1,7 +1,6 @@
 import { GenerateContentSchema, PaginationSchema } from "@contentiq/shared";
 import type { ContentLanguage } from "@contentiq/shared";
 import type { Request, Response } from "express";
-import { CREDITS_PER_GENERATION } from "../middleware/checkCredits.js";
 import { AppError, ForbiddenError, NotFoundError } from "../middleware/errorHandler.js";
 import { Content } from "../models/Content.model.js";
 import { Template } from "../models/Template.model.js";
@@ -13,7 +12,7 @@ import {
   suggestKeywords,
   translateContent,
 } from "../services/claude.service.js";
-import { deductCredits } from "../services/credits.service.js";
+import { creditsForTokens, deductCredits } from "../services/credits.service.js";
 import { logger } from "../utils/logger.js";
 import { getAuthUser } from "../utils/requestHelpers.js";
 
@@ -21,9 +20,8 @@ export async function generate(req: Request, res: Response): Promise<void> {
   const { userId } = getAuthUser(req);
   const params = GenerateContentSchema.parse(req.body);
 
-  await streamContentGeneration(params, res, async (content, tokensUsed) => {
+  await streamContentGeneration(params, res, async (content, tokensUsed, generationTime) => {
     try {
-      const generationTime = 0;
       const title = await generateTitle(content, params.language as ContentLanguage);
       const plainText = content.replace(/<[^>]*>/g, "").trim();
 
@@ -39,7 +37,12 @@ export async function generate(req: Request, res: Response): Promise<void> {
         status: "complete",
       });
 
-      await deductCredits(userId, CREDITS_PER_GENERATION, `Génération ${params.type}`, saved._id);
+      await deductCredits(
+        userId,
+        creditsForTokens(tokensUsed),
+        `Génération ${params.type}`,
+        saved._id,
+      );
       logger.debug(`Contenu généré : ${saved._id} — ${tokensUsed} tokens`);
       const updatedUser = await User.findById(userId).select("credits").lean();
       return {
@@ -178,7 +181,7 @@ export async function improveContentHandler(req: Request, res: Response): Promis
     content.bodyPlain = improved;
     content.tokensUsed += tokensUsed;
     await content.save();
-    await deductCredits(userId, CREDITS_PER_GENERATION, "Amélioration contenu", content._id);
+    await deductCredits(userId, creditsForTokens(tokensUsed), "Amélioration contenu", content._id);
   }
 }
 

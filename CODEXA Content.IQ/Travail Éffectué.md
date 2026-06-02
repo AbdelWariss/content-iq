@@ -8,6 +8,217 @@ Répertoire détaillé de toutes les tâches effectuées au cours des sessions d
 
 ---
 
+### [2026-06-02] — Session 17 : Durcissement chaîne IA — correctness, prompt caching, evals LLMOps — COMPLÉTÉ ✅
+- **Session :** 17
+- **Statut :** Complété
+- **Branche :** `feat/llm-hardening` — PR #1 ouverte vers `main` (https://github.com/AbdelWariss/content-iq/pull/1)
+- **Commits :** `abaa14d` · `5566725` · `469d59c` · `c24ea9d` · `b64c9dc`
+- **Tests :** 32 client / 61 serveur (44 → 61, +17) — tous verts · TypeScript 0 erreur · Biome exit 0
+
+> Contexte : session démarrée par une analyse approfondie du projet pour préparer un entretien technique (CESI Bordeaux), puis exécution de 3 chantiers de durcissement de la chaîne IA identifiés lors de l'analyse + 2 pistes d'outillage.
+
+---
+
+#### Tâche 1 — Correctness : facturation, race condition crédits, generationTime, validation NLU
+
+**Commit :** `abaa14d` — `fix(credits/voice): corrige facturation, race condition et validation NLU`
+
+**Fichiers modifiés :** `server/src/services/credits.service.ts` · `server/src/services/claude.service.ts` · `server/src/controllers/content.controller.ts` · `server/src/controllers/voice.controller.ts` · `server/src/test/credits.test.ts`
+
+**Problème :** Quatre défauts de correctness repérés à l'analyse :
+1. **Facturation forfaitaire** — `CREDITS_PER_GENERATION = 1` quelle que soit la taille générée, alors que le modèle économique annonce « 1 crédit ≈ 500 tokens ». Un blog long (2200 tokens) coûtait autant qu'un slogan.
+2. **Race condition** — `checkCredits` (lecture) et `deductCredits` (écriture `$inc`) non atomiques : deux générations concurrentes avec 1 crédit pouvaient toutes deux passer et rendre le solde négatif (les validateurs `min: 0` de Mongoose ne s'appliquent pas sur `$inc`).
+3. **`generationTime = 0` codé en dur** dans le controller — la vraie durée calculée par le service n'était jamais persistée.
+4. **JSON NLU non validé** — la sortie du LLM parseur de commandes vocales était `JSON.parse` sans validation : un JSON malformé ou un champ inattendu passait tel quel au client.
+
+**Solution :**
+```ts
+// credits.service.ts — facturation proportionnelle + déduction atomique
+export function creditsForTokens(tokens: number): number {
+  if (!Number.isFinite(tokens) || tokens <= 0) return 1;
+  return Math.max(1, Math.ceil(tokens / TOKENS_PER_CREDIT)); // 500 tokens/crédit
+}
+
+const atomicFilter: FilterQuery<IUser> = { _id: userId, "credits.remaining": { $gte: amount } };
+let user = await User.findOneAndUpdate(atomicFilter, { $inc: { "credits.remaining": -amount } }, { new: true })
+  .select("credits email name role");
+if (!user) {
+  // solde insuffisant (course concurrente) : on déduit ce qui reste, borné à 0
+  const current = await User.findById(userId).select("credits email name role");
+  if (!current) throw new Error("Utilisateur non trouvé");
+  deducted = Math.min(amount, Math.max(0, current.credits.remaining));
+  current.credits.remaining -= deducted;
+  await current.save();
+  user = current;
+}
+```
+```ts
+// claude.service.ts — generationTime réel propagé au callback
+if (onComplete) {
+  const generationTime = Date.now() - startTime;
+  const { contentId, creditsRemaining } = await onComplete(fullContent, tokensUsed, generationTime);
+}
+```
+```ts
+// voice.controller.ts — validation Zod du JSON NLU
+const VoiceCommandResultSchema = z.object({
+  command: z.enum([/* navigate, generate, … none */]),
+  params: z.record(z.string(), z.unknown()).default({}),
+  confidence: z.number().min(0).max(1).default(0),
+});
+const jsonMatch = text.match(/\{[\s\S]*\}/);            // isole l'objet JSON
+const validated = VoiceCommandResultSchema.safeParse(JSON.parse(jsonMatch ? jsonMatch[0] : text));
+if (validated.success) parsedCommand = validated.data;   // sinon → "none"
+```
+
+**Justification :** Le décrément **conditionnel atomique** (`findOneAndUpdate` avec `$gte`) est la seule façon de garantir l'invariant solde ≥ 0 sans transaction MongoDB complète (overkill ici, et coûteuse). Le fallback `save()` au lieu d'un second `findOneAndUpdate` a été choisi après que TypeScript ait refusé la réassignation de la variable (incohérence d'inférence d'overload entre deux appels Mongoose) — `save()` sur le document déjà chargé est typé strictement et évite un aller-retour réseau. La validation Zod du NLU réutilise le pattern déjà standard du projet (schémas partagés) plutôt qu'un garde manuel ; l'extraction par regex `\{[\s\S]*\}` gère le cas réel où le LLM entoure le JSON de texte ou de balises markdown.
+
+---
+
+#### Tâche 2 — Prompt caching sur l'historique de l'assistant
+
+**Commit :** `5566725` — `perf(assistant): active le prompt caching sur l'historique de conversation`
+
+**Fichiers modifiés :** `server/src/services/assistant.service.ts`
+
+**Problème :** Aucun prompt caching Anthropic. Sur l'assistant multi-tours, le préfixe (system + jusqu'à 20 messages d'historique) était renvoyé et facturé plein tarif à chaque tour. Pire : le contexte dynamique (page courante, snapshot éditeur) était **injecté dans le system prompt**, donc le préfixe changeait à chaque tour → aucun cache n'aurait pu fonctionner même si activé.
+
+**Solution :**
+```ts
+// Contexte dynamique déplacé du system prompt vers le message courant
+const contextualMessage = contextParts.length ? `${contextParts.join("\n")}\n\n${userMessage}` : userMessage;
+
+// Breakpoint cache_control sur le dernier message de l'historique :
+// tout le préfixe (system + historique) est mis en cache et réutilisé au tour suivant
+const trimmedHistory = history.slice(-20);
+const messages: Anthropic.MessageParam[] = trimmedHistory.map((m, i) => ({
+  role: m.role,
+  content: i === trimmedHistory.length - 1
+    ? [{ type: "text", text: m.content, cache_control: { type: "ephemeral" } }]
+    : m.content,
+}));
+messages.push({ role: "user", content: contextualMessage });
+```
+
+**Justification :** Analyse honnête des tailles : les system prompts de génération (~100 tok), assistant (~150 tok) et NLU (~230 tok) sont **tous sous le seuil minimum de ~1024 tokens** d'Anthropic — y poser un `cache_control` serait du **code mort** (le bloc est ignoré). Le **seul** endroit à vraie valeur est l'historique assistant, qui grossit avec la conversation. Condition sine qua non : stabiliser le préfixe → d'où le déplacement du contexte dynamique vers le message courant (placé *après* le breakpoint). Le caching incrémental Anthropic fait le reste : chaque tour écrit un cache plus long et lit le précédent (input tokens à 0.1×).
+
+---
+
+#### Tâche 3 — Evals LLMOps non bloquants sur les générations
+
+**Commit :** `469d59c` — `feat(llmops): evals de qualité non bloquants sur les générations`
+
+**Fichiers modifiés :** `server/src/utils/contentQuality.ts` (nouveau) · `server/src/controllers/content.controller.ts` · `server/src/test/contentQuality.test.ts` (nouveau)
+
+**Problème :** Aucune mesure de la qualité de sortie du LLM. Aucun moyen de détecter une dérive du modèle (markdown qui fuit malgré la consigne HTML, contenu hors longueur, mauvaise langue, contenu vide).
+
+**Solution :** Module `contentQuality` de fonctions pures + branchement en observabilité :
+```ts
+export function evaluateContent(html: string, params: QualityParams): QualityResult {
+  // 4 checks : markdown qui fuit · structure HTML · bornes de longueur · cohérence langue (fr/en)
+  const score = Math.max(0, (TOTAL_CHECKS - warnings.length) / TOTAL_CHECKS);
+  return { passed: warnings.length === 0, score, warnings, metrics };
+}
+```
+```ts
+// content.controller.ts — loggé via appLog, JAMAIS bloquant
+const quality = evaluateContent(content, { length, language, customLength });
+if (!quality.passed) {
+  void appLog({ level: "warn", category: "generation", action: "quality_warning",
+    message: `Qualité génération ${params.type} : ${quality.warnings.length} avertissement(s) (score ${quality.score.toFixed(2)})`,
+    userId, details: { contentId, type, warnings, metrics, score } });
+}
+```
+
+**Justification :** Choix de garde-fous **runtime non bloquants** plutôt que des gates : le contenu est déjà streamé à l'utilisateur, bloquer a posteriori serait absurde et frustrant. L'observabilité (`appLog` fire-and-forget, déjà persisté avec TTL 90j) permet de suivre les tendances sans risque sur le chemin critique. La détection de langue reste une **heuristique de stopwords fr/en uniquement** (silencieuse pour es/ar et textes < 20 mots) : assumer une heuristique conservatrice plutôt qu'une dépendance de détection de langue lourde et faillible. 17 tests déterministes (aucun appel API) garantissent la CI.
+
+---
+
+#### Tâche 4 — Score qualité persisté et exposé dans l'admin
+
+**Commit :** `c24ea9d` — `feat(admin): persiste et expose le score qualité moyen des générations`
+
+**Fichiers modifiés :** `server/src/models/Content.model.ts` · `server/src/controllers/content.controller.ts` · `server/src/controllers/admin.controller.ts` · `server/src/test/admin.test.ts` · `client/src/services/admin.service.ts` · `client/src/pages/Admin/AdminPage.tsx`
+
+**Problème :** Le score qualité (Tâche 3) n'était que loggé. Pas de persistance par contenu ni de vue agrégée pour piloter la qualité dans le temps.
+
+**Solution :**
+```ts
+// Content.model.ts
+qualityScore: { type: Number, min: 0, max: 1 },
+```
+```ts
+// admin.controller.ts — agrégation du score moyen
+Content.aggregate([
+  { $match: { status: { $ne: "archived" }, qualityScore: { $ne: null } } },
+  { $group: { _id: null, avg: { $avg: "$qualityScore" }, count: { $sum: 1 } } },
+]),
+// ...
+const qualityRow = (qualityAgg as Array<{ avg: number; count: number }> | undefined)?.[0];
+quality: { avgScore: qualityRow ? Math.round(qualityRow.avg * 100) : null, scoredContents: qualityRow?.count ?? 0 }
+```
+Carte « Score qualité moyen » ajoutée au dashboard admin (grille passée à `lg:grid-cols-5`).
+
+**Justification :** L'eval (Tâche 3) calcule le score **avant** la sauvegarde du `Content` pour le persister en un seul `create` (pas d'update supplémentaire). L'accès défensif `(qualityAgg ... | undefined)?.[0]` a été ajouté après qu'un test admin existant (qui ne mockait pas `Content.aggregate`) ait révélé un crash potentiel si l'agrégat est vide — robustesse gratuite, et le test a été complété avec le mock + assertions.
+
+---
+
+#### Tâche 5 — Runner d'eval offline sur golden dataset
+
+**Commit :** `b64c9dc` — `feat(eval): runner d'eval offline sur golden dataset`
+
+**Fichiers modifiés :** `server/src/services/claude.service.ts` · `scripts/eval-content.ts` (nouveau) · `server/package.json`
+
+**Problème :** Pas d'outil pour mesurer la qualité réelle du modèle sur des cas représentatifs (les evals de Tâche 3 ne s'exécutent que sur le trafic réel).
+
+**Solution :**
+```ts
+// claude.service.ts — génération non-streamée réutilisant les prompts de prod
+export async function generateForEval(params: GenerateContentInput): Promise<{ content: string; tokensUsed: number }> {
+  const msg = await client.messages.create({ model: env.CLAUDE_MODEL, max_tokens: /* idem prod */,
+    system: getSystemPrompt(params.language, params.outputLanguage),
+    messages: [{ role: "user", content: buildUserPrompt(params) }] });
+  return { content: msg.content.map((b) => (b.type === "text" ? b.text : "")).join(""), tokensUsed: msg.usage.output_tokens };
+}
+```
+`scripts/eval-content.ts` : 6 cas (types/langues/longueurs variés) scorés via `evaluateContent`, scorecard détaillé + résumé (score moyen, taux de pass), `exit 1` si moyenne < 75 %. Script `pnpm --filter server run eval:content`.
+
+**Justification :** `generateForEval` réutilise **exactement** `getSystemPrompt` + `buildUserPrompt` de la prod pour que l'eval teste la vraie chaîne (pas une copie qui dériverait). Le runner suit le pattern du script `seed` (`tsx --env-file=../.env`). **Non exécuté en CI** ni durant la session : il appelle l'API Anthropic (coût réel), c'est un outil manuel. Validé sans coût par un smoke-test d'import (graphe de modules + exports) plutôt qu'une vraie exécution.
+
+---
+
+#### État final de la session
+
+| Métrique | Valeur |
+|----------|--------|
+| Tests serveur | 61/61 ✓ (44 → 61, +17) |
+| Tests client | 32/32 ✓ |
+| TypeScript | 0 erreur ✓ |
+| Biome | exit 0 ✓ |
+| Commits | 5 sur `feat/llm-hardening` — PR #1 ouverte |
+
+**Résumé des fichiers modifiés :**
+| Fichier | Type | Changement |
+|---------|------|-----------|
+| `server/src/services/credits.service.ts` | modifié | `creditsForTokens()` + déduction atomique conditionnelle |
+| `server/src/services/claude.service.ts` | modifié | `generationTime` propagé + `generateForEval()` |
+| `server/src/services/assistant.service.ts` | modifié | prompt caching historique + contexte hors system prompt |
+| `server/src/controllers/content.controller.ts` | modifié | crédits proportionnels + eval qualité + persistance score |
+| `server/src/controllers/voice.controller.ts` | modifié | validation Zod du JSON NLU |
+| `server/src/controllers/admin.controller.ts` | modifié | agrégation score qualité moyen |
+| `server/src/models/Content.model.ts` | modifié | champ `qualityScore` |
+| `server/src/utils/contentQuality.ts` | **nouveau** | module d'eval qualité (fonctions pures) |
+| `server/src/test/credits.test.ts` | **nouveau** | tests `creditsForTokens` |
+| `server/src/test/contentQuality.test.ts` | **nouveau** | 17 tests d'eval |
+| `server/src/test/admin.test.ts` | modifié | mock + assertions score qualité |
+| `client/src/services/admin.service.ts` | modifié | type `AdminStats.quality` |
+| `client/src/pages/Admin/AdminPage.tsx` | modifié | carte « Score qualité moyen » |
+| `scripts/eval-content.ts` | **nouveau** | runner d'eval offline (golden dataset) |
+| `server/package.json` | modifié | script `eval:content` |
+| `docs/Revision-Entretien-CESI.md` | **nouveau** (non commité) | doc de révision entretien technique |
+
+---
+
 ### [2026-05-20] — Session 16 : i18n complète (toutes pages) + Vercel Analytics — COMPLÉTÉ ✅
 - **Session :** 16
 - **Statut :** Complété

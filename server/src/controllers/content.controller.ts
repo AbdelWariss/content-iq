@@ -13,6 +13,8 @@ import {
   translateContent,
 } from "../services/claude.service.js";
 import { creditsForTokens, deductCredits } from "../services/credits.service.js";
+import { appLog } from "../utils/appLog.js";
+import { evaluateContent } from "../utils/contentQuality.js";
 import { logger } from "../utils/logger.js";
 import { getAuthUser } from "../utils/requestHelpers.js";
 
@@ -44,6 +46,31 @@ export async function generate(req: Request, res: Response): Promise<void> {
         saved._id,
       );
       logger.debug(`Contenu généré : ${saved._id} — ${tokensUsed} tokens`);
+
+      // Eval qualité (LLMOps) — observabilité non bloquante : on logge les
+      // dérives du modèle sans jamais interrompre l'utilisateur.
+      const quality = evaluateContent(content, {
+        length: params.length,
+        language: params.language as ContentLanguage,
+        customLength: params.customLength,
+      });
+      if (!quality.passed) {
+        void appLog({
+          level: "warn",
+          category: "generation",
+          action: "quality_warning",
+          message: `Qualité génération ${params.type} : ${quality.warnings.length} avertissement(s) (score ${quality.score.toFixed(2)})`,
+          userId,
+          details: {
+            contentId: String(saved._id),
+            type: params.type,
+            warnings: quality.warnings,
+            metrics: quality.metrics,
+            score: quality.score,
+          },
+        });
+      }
+
       const updatedUser = await User.findById(userId).select("credits").lean();
       return {
         contentId: String(saved._id),

@@ -20,6 +20,28 @@ const CommandSchema = z.object({
   context: z.string().optional(),
 });
 
+// Valide la sortie JSON produite par le LLM (NLU) avant de la renvoyer au client.
+const VoiceCommandResultSchema = z.object({
+  command: z.enum([
+    "navigate",
+    "generate",
+    "copy",
+    "improve",
+    "clear",
+    "favorite",
+    "read",
+    "stop",
+    "export",
+    "translate",
+    "help",
+    "none",
+  ]),
+  params: z.record(z.string(), z.unknown()).default({}),
+  confidence: z.number().min(0).max(1).default(0),
+});
+
+type VoiceCommandResult = z.infer<typeof VoiceCommandResultSchema>;
+
 const VOICE_COMMANDS_PROMPT = `Tu es un parseur de commandes vocales pour une application de génération de contenu IA.
 L'utilisateur parle en langage naturel (français ou anglais). Tu dois retourner un JSON avec :
 - "command": le nom de la commande parmi [navigate, generate, copy, improve, clear, favorite, read, stop, export, translate, help, none]
@@ -138,7 +160,7 @@ export async function executeCommand(req: Request, res: Response): Promise<void>
   const { transcript, context } = parsed.data;
   const startTime = Date.now();
 
-  let parsedCommand = { command: "none", params: {}, confidence: 0 };
+  let parsedCommand: VoiceCommandResult = { command: "none", params: {}, confidence: 0 };
 
   try {
     const msg = await client.messages.create({
@@ -156,9 +178,17 @@ export async function executeCommand(req: Request, res: Response): Promise<void>
     });
 
     const text = (msg.content[0] as { text: string }).text.trim();
-    parsedCommand = JSON.parse(text) as typeof parsedCommand;
+    // Le LLM peut renvoyer du JSON entouré de texte ou de balises markdown ;
+    // on isole le premier objet JSON avant de valider via Zod.
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const validated = VoiceCommandResultSchema.safeParse(
+      JSON.parse(jsonMatch ? jsonMatch[0] : text),
+    );
+    if (validated.success) {
+      parsedCommand = validated.data;
+    }
   } catch {
-    // Si parsing échoue, retourner none
+    // Parsing/validation échoué → on conserve la commande "none" par défaut
   }
 
   await VoiceCommand.create({

@@ -35,6 +35,7 @@ export interface IContent extends Document {
   templateId?: mongoose.Types.ObjectId;
   tokensUsed: number;
   generationTime: number;
+  qualityScore?: number;
   tags: string[];
   isFavorite: boolean;
   status: ContentStatus;
@@ -80,6 +81,7 @@ const ContentSchema = new Schema<IContent>(
     templateId: { type: Schema.Types.ObjectId, ref: "Template" },
     tokensUsed: { type: Number, default: 0 },
     generationTime: { type: Number, default: 0 },
+    qualityScore: { type: Number, min: 0, max: 1 },
     tags: [{ type: String, maxlength: 30 }],
     isFavorite: { type: Boolean, default: false, index: true },
     status: {

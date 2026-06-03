@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "seed": "tsx --env-file=../.env ../scripts/seed.ts"
+    "seed": "tsx --env-file=../.env ../scripts/seed.ts",
+    "eval:content": "tsx --env-file=../.env ../scripts/eval-content.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

@@ -33,21 +33,39 @@ export async function streamAssistantChat(
   res.setHeader("X-Accel-Buffering", "no");
   res.flushHeaders();
 
-  let systemPrompt = SYSTEM_PROMPT;
+  // Le contexte dynamique (page courante, snapshot éditeur) est injecté dans le
+  // message courant et NON dans le system prompt : on garde ainsi le préfixe
+  // (system + historique) parfaitement stable d'un tour à l'autre, condition
+  // indispensable pour que le prompt caching Anthropic fasse des cache hits.
+  const contextParts: string[] = [];
   if (context.pageContext) {
-    systemPrompt += `\n\nContexte : L'utilisateur est actuellement sur la page "${context.pageContext}".`;
+    contextParts.push(`[Contexte : l'utilisateur est sur la page "${context.pageContext}".]`);
   }
   if (context.editorSnapshot) {
-    systemPrompt += `\n\nContenu en cours d'édition :\n"${context.editorSnapshot}"`;
+    contextParts.push(`[Contenu en cours d'édition :\n"${context.editorSnapshot}"]`);
   }
+  const contextualMessage = contextParts.length
+    ? `${contextParts.join("\n")}\n\n${userMessage}`
+    : userMessage;
 
-  const messages: Anthropic.MessageParam[] = [
-    ...history.slice(-20).map((m) => ({
-      role: m.role as "user" | "assistant",
-      content: m.content,
-    })),
-    { role: "user" as const, content: userMessage },
-  ];
+  // Breakpoint de cache sur le dernier message de l'historique : tout le préfixe
+  // (system prompt + historique) est mis en cache et réutilisé au tour suivant.
+  // Anthropic ignore automatiquement le cache si le préfixe est < ~1024 tokens.
+  const trimmedHistory = history.slice(-20);
+  const messages: Anthropic.MessageParam[] = trimmedHistory.map((m, i) => ({
+    role: m.role,
+    content:
+      i === trimmedHistory.length - 1
+        ? [
+            {
+              type: "text" as const,
+              text: m.content,
+              cache_control: { type: "ephemeral" as const },
+            },
+          ]
+        : m.content,
+  }));
+  messages.push({ role: "user", content: contextualMessage });
 
   let fullResponse = "";
 
@@ -55,7 +73,7 @@ export async function streamAssistantChat(
     const stream = client.messages.stream({
       model: env.CLAUDE_MODEL,
       max_tokens: 1000,
-      system: systemPrompt,
+      system: SYSTEM_PROMPT,
       messages,
     });
 

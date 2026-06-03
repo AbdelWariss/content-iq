@@ -9,7 +9,7 @@ import { getAuthUser } from "../utils/requestHelpers.js";
 const VALID_ROLES = ["free", "pro", "business", "admin"];
 
 export async function getAdminStats(_req: Request, res: Response): Promise<void> {
-  const [usersByRole, totalContents, creditsAgg, newUsersThisWeek] = await Promise.all([
+  const [usersByRole, totalContents, creditsAgg, newUsersThisWeek, qualityAgg] = await Promise.all([
     User.aggregate([{ $group: { _id: "$role", count: { $sum: 1 } } }]),
     Content.countDocuments({ status: { $ne: "archived" } }),
     CreditTransaction.aggregate([
@@ -19,6 +19,11 @@ export async function getAdminStats(_req: Request, res: Response): Promise<void>
     User.countDocuments({
       createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
     }),
+    // Score qualité moyen (LLMOps) — sur les contenus ayant un score enregistré
+    Content.aggregate([
+      { $match: { status: { $ne: "archived" }, qualityScore: { $ne: null } } },
+      { $group: { _id: null, avg: { $avg: "$qualityScore" }, count: { $sum: 1 } } },
+    ]),
   ]);
 
   const byRole = Object.fromEntries(
@@ -26,12 +31,18 @@ export async function getAdminStats(_req: Request, res: Response): Promise<void>
   );
   const totalUsers = Object.values(byRole).reduce((a, b) => a + b, 0);
 
+  const qualityRow = (qualityAgg as Array<{ avg: number; count: number }> | undefined)?.[0];
+
   res.json({
     success: true,
     data: {
       users: { total: totalUsers, byRole, newThisWeek: newUsersThisWeek },
       contents: totalContents,
       creditsConsumed: (creditsAgg[0]?.total as number) ?? 0,
+      quality: {
+        avgScore: qualityRow ? Math.round(qualityRow.avg * 100) : null,
+        scoredContents: qualityRow?.count ?? 0,
+      },
     },
   });
 }

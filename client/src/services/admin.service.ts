@@ -16,6 +16,7 @@ export interface AdminStats {
   users: { total: number; byRole: Record<string, number>; newThisWeek: number };
   contents: number;
   creditsConsumed: number;
+  quality: { avgScore: number | null; scoredContents: number };
 }
 
 export interface AppLogEntry {

@@ -8,14 +8,15 @@ Répertoire détaillé de toutes les tâches effectuées au cours des sessions d
 
 ---
 
-### [2026-06-02] — Session 17 : Durcissement chaîne IA — correctness, prompt caching, evals LLMOps — COMPLÉTÉ ✅
+### [2026-06-02 → 06-03] — Session 17 : Durcissement chaîne IA — correctness, prompt caching, evals LLMOps + observabilité déploiement — COMPLÉTÉ ✅ (mergé en prod)
 - **Session :** 17
-- **Statut :** Complété
-- **Branche :** `feat/llm-hardening` — PR #1 ouverte vers `main` (https://github.com/AbdelWariss/content-iq/pull/1)
-- **Commits :** `abaa14d` · `5566725` · `469d59c` · `c24ea9d` · `b64c9dc`
-- **Tests :** 32 client / 61 serveur (44 → 61, +17) — tous verts · TypeScript 0 erreur · Biome exit 0
+- **Statut :** Complété — **mergé dans `main` et déployé**
+- **PR #1** : `feat/llm-hardening` → `main` — **MERGÉE** (`b39d0a2`), CI verte, 7 commits
+- **PR #2** : `feat/health-commit-sha` → `main` — **MERGÉE** (`efa4e54`), CI verte
+- **Commits :** `abaa14d` · `5566725` · `469d59c` · `c24ea9d` · `b64c9dc` · `0c72cf3` (+ commits docs + 2 merge commits)
+- **Tests :** 32 client / 63 serveur (44 → 63, +19) — tous verts · TypeScript 0 erreur · Biome exit 0
 
-> Contexte : session démarrée par une analyse approfondie du projet pour préparer un entretien technique (CESI Bordeaux), puis exécution de 3 chantiers de durcissement de la chaîne IA identifiés lors de l'analyse + 2 pistes d'outillage.
+> Contexte : session démarrée par une analyse approfondie du projet pour préparer un entretien technique (CESI Bordeaux), puis exécution de 3 chantiers de durcissement de la chaîne IA + 2 pistes d'outillage, mergés en production via PR #1. Une 6e tâche (observabilité déploiement via `/health`) a suivi pour pouvoir confirmer quel commit tourne en prod, mergée via PR #2. Workflow : branche dédiée → PR → CI verte → merge → déploiement auto Vercel/Render.
 
 ---
 
@@ -318,6 +319,45 @@ process.exit(avg >= 0.75 ? 0 : 1); // exit non-zero si qualité moyenne < 75 %
 
 ---
 
+#### Tâche 6 — Observabilité du déploiement : SHA du commit dans `/health`
+
+**Commit :** `0c72cf3` — `feat(health): expose le SHA du commit déployé dans /health` (PR #2)
+
+**Fichiers modifiés :** `server/src/config/env.ts` · `server/src/app.ts` · `server/src/test/health.test.ts` (nouveau)
+
+**Objectif :** Rendre les déploiements **vérifiables de l'extérieur**. Après le merge de la PR #1, le seul moyen de confirmer que la prod tournait avec le nouveau code était indirect (CI verte + temps écoulé). Le endpoint `/health` ne révélait rien d'utile car `version` est lue depuis `npm_package_version` (toujours `"1.0.0"`). L'objectif : exposer le SHA du commit déployé pour qu'un simple `curl /health` confirme exactement quel commit tourne en production.
+
+**Problème :** Impossible de prouver depuis l'extérieur quel commit est réellement déployé. `/health` renvoyait `{ status, timestamp, version: "1.0.0", env }` — `version` constante, aucune trace du commit. Diagnostic de déploiement aveugle.
+
+**Solution :**
+```ts
+// config/env.ts — RENDER_GIT_COMMIT injecté automatiquement par Render au build
+RENDER_GIT_COMMIT: z.string().optional(),
+```
+```ts
+// app.ts — /health expose les 7 premiers chars du SHA (ou "dev" en local)
+app.get("/health", (_req, res) => {
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    version: process.env.npm_package_version ?? "1.0.0",
+    commit: env.RENDER_GIT_COMMIT?.slice(0, 7) ?? "dev",
+    env: env.NODE_ENV,
+  });
+});
+```
+Résultat attendu en prod : `{ "status":"ok", "commit":"0c72cf3", "env":"production", ... }`.
+
+**Justification :** Passage par le schéma Zod (`env.RENDER_GIT_COMMIT`) plutôt que `process.env` direct, pour respecter la convention projet (toutes les variables serveur validées dans `config/env.ts`). Variable rendue **optionnelle** car absente en local/CI → fallback `"dev"` qui distingue clairement un build non déployé. `RENDER_GIT_COMMIT` est fourni nativement par Render (zéro config supplémentaire). Tâche isolée dans une **PR dédiée** (#2) plutôt que glissée dans la PR #1 : changement orthogonal au durcissement IA, méritant son propre cycle review/CI.
+
+**Avantages :**
+- **Diagnostic de déploiement fiable** : `curl /health` confirme désormais le commit exact en prod — fin du diagnostic aveugle.
+- **Boucle d'observabilité bouclée** : cohérent avec le thème de la session (mesurer/observer) — on observe maintenant aussi *l'infrastructure*, pas seulement le LLM.
+- **Coût et risque nuls** : variable optionnelle, fallback propre, aucun secret exposé (un SHA de commit n'est pas sensible).
+- **Testé** : 2 tests d'intégration vérifient la présence du champ et le fallback `"dev"`.
+
+---
+
 #### Fil rouge — philosophie d'ingénierie IA de la session
 
 Toutes les tâches partagent une même ligne directrice : faire passer la chaîne IA d'un MVP fonctionnel à un système exploitable en production. Les principes appliqués, transposables et défendables à l'oral :
@@ -345,11 +385,12 @@ Toutes les tâches partagent une même ligne directrice : faire passer la chaîn
 
 | Métrique | Valeur |
 |----------|--------|
-| Tests serveur | 61/61 ✓ (44 → 61, +17) |
+| Tests serveur | 63/63 ✓ (44 → 63, +19) |
 | Tests client | 32/32 ✓ |
 | TypeScript | 0 erreur ✓ |
 | Biome | exit 0 ✓ |
-| Commits | 5 commits de code + commits docs sur `feat/llm-hardening` — PR #1 ouverte |
+| Commits | 6 commits de code + docs, mergés dans `main` via **PR #1** (`b39d0a2`) et **PR #2** (`efa4e54`) |
+| Déploiement | déclenché auto sur `main` — Vercel (front) + Render (back) |
 
 **Résumé des fichiers modifiés :**
 | Fichier | Type | Changement |
@@ -361,9 +402,12 @@ Toutes les tâches partagent une même ligne directrice : faire passer la chaîn
 | `server/src/controllers/voice.controller.ts` | modifié | validation Zod du JSON NLU |
 | `server/src/controllers/admin.controller.ts` | modifié | agrégation score qualité moyen |
 | `server/src/models/Content.model.ts` | modifié | champ `qualityScore` |
+| `server/src/config/env.ts` | modifié | `RENDER_GIT_COMMIT` (Zod, optionnel) |
+| `server/src/app.ts` | modifié | `/health` expose `commit` (SHA déployé) |
 | `server/src/utils/contentQuality.ts` | **nouveau** | module d'eval qualité (fonctions pures) |
 | `server/src/test/credits.test.ts` | **nouveau** | tests `creditsForTokens` |
 | `server/src/test/contentQuality.test.ts` | **nouveau** | 17 tests d'eval |
+| `server/src/test/health.test.ts` | **nouveau** | 2 tests `/health` |
 | `server/src/test/admin.test.ts` | modifié | mock + assertions score qualité |
 | `client/src/services/admin.service.ts` | modifié | type `AdminStats.quality` |
 | `client/src/pages/Admin/AdminPage.tsx` | modifié | carte « Score qualité moyen » |

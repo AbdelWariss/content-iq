@@ -85,6 +85,7 @@ export function createApp(): import("express").Express {
       status: "ok",
       timestamp: new Date().toISOString(),
       version: process.env.npm_package_version ?? "1.0.0",
+      commit: env.RENDER_GIT_COMMIT?.slice(0, 7) ?? "dev",
       env: env.NODE_ENV,
     });
   });

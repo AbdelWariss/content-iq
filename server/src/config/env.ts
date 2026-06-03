@@ -38,6 +38,9 @@ const EnvSchema = z.object({
   EMAIL_FROM: z.string().email().default("noreply@contentiq.app"),
 
   SENTRY_DSN: z.string().optional(),
+
+  // Injecté automatiquement par Render au build — expose le SHA du commit déployé
+  RENDER_GIT_COMMIT: z.string().optional(),
 });
 
 const parsed = EnvSchema.safeParse(process.env);

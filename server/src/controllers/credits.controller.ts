@@ -2,6 +2,7 @@ import { PaginationSchema } from "@contentiq/shared";
 import type { Request, Response } from "express";
 import { CreditTransaction } from "../models/CreditTransaction.model.js";
 import { User } from "../models/User.model.js";
+import { reconcileUserBilling } from "../services/credits.service.js";
 import { getAuthUser } from "../utils/requestHelpers.js";
 
 export async function getCredits(req: Request, res: Response): Promise<void> {
@@ -11,6 +12,10 @@ export async function getCredits(req: Request, res: Response): Promise<void> {
     res.status(404).json({ success: false, error: { message: "Utilisateur introuvable" } });
     return;
   }
+
+  // Réconciliation lazy (reset mensuel + grace period) avant restitution.
+  await reconcileUserBilling(user);
+
   res.json({
     success: true,
     data: { credits: user.credits, subscription: user.subscription, role: user.role },

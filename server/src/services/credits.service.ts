@@ -1,5 +1,6 @@
+import { PLAN_LIMITS, type UserRole } from "@contentiq/shared";
 import type { CreditTransactionType } from "@contentiq/shared";
-import type { FilterQuery } from "mongoose";
+import type { FilterQuery, HydratedDocument } from "mongoose";
 import type mongoose from "mongoose";
 import { CreditTransaction } from "../models/CreditTransaction.model.js";
 import { type IUser, User } from "../models/User.model.js";
@@ -67,6 +68,74 @@ export async function deductCredits(
   }
 
   return user.credits.remaining;
+}
+
+// ── Réconciliation de facturation (reset mensuel + grace period) ──────────────
+
+/** Le quota mensuel est-il échu ? (resetDate atteinte ou dépassée) */
+export function isMonthlyResetDue(now: Date, resetDate?: Date | null): boolean {
+  return !!resetDate && now.getTime() >= new Date(resetDate).getTime();
+}
+
+/** Avance la date de reset mois par mois jusqu'à dépasser `now` (gère les absences longues). */
+export function advanceResetDate(now: Date, resetDate: Date): Date {
+  const next = new Date(resetDate);
+  while (next.getTime() <= now.getTime()) next.setMonth(next.getMonth() + 1);
+  return next;
+}
+
+/** La période de grâce (3j après échec de paiement) est-elle dépassée ? */
+export function isGracePeriodExpired(
+  now: Date,
+  status?: string,
+  gracePeriodEnd?: Date | null,
+): boolean {
+  return (
+    status === "past_due" && !!gracePeriodEnd && now.getTime() > new Date(gracePeriodEnd).getTime()
+  );
+}
+
+/**
+ * Réconcilie l'état de facturation d'un utilisateur à la lecture (lazy reconciliation) :
+ *   1. downgrade vers Free si la grace period (3j) après échec de paiement est dépassée
+ *   2. reset mensuel des crédits si l'échéance `resetDate` est atteinte
+ *
+ * Approche on-read plutôt qu'un worker BullMQ : robuste sur un déploiement
+ * web mono-service (Render), sans process worker séparé. Sauvegarde le document
+ * uniquement si un changement a eu lieu.
+ */
+export async function reconcileUserBilling(user: HydratedDocument<IUser>): Promise<void> {
+  const now = new Date();
+  let changed = false;
+
+  // 1. Grace period dépassée → downgrade Free
+  if (isGracePeriodExpired(now, user.subscription?.status, user.subscription?.gracePeriodEnd)) {
+    user.role = "free";
+    user.subscription.status = "canceled";
+    user.subscription.gracePeriodEnd = undefined;
+    const freeQuota = PLAN_LIMITS.free.credits;
+    user.credits.total = freeQuota;
+    user.credits.remaining = Math.min(user.credits.remaining, freeQuota);
+    changed = true;
+  }
+
+  // 2. Reset mensuel des crédits si échéance atteinte (selon le plan courant)
+  if (isMonthlyResetDue(now, user.credits?.resetDate)) {
+    const quota = PLAN_LIMITS[user.role as UserRole]?.credits ?? user.credits.total;
+    user.credits.remaining = quota;
+    user.credits.total = quota;
+    user.credits.resetDate = advanceResetDate(now, new Date(user.credits.resetDate));
+    changed = true;
+    await CreditTransaction.create({
+      userId: user._id,
+      amount: quota,
+      type: "monthly_reset" as CreditTransactionType,
+      description: "Réinitialisation mensuelle des crédits",
+      balanceAfter: quota,
+    });
+  }
+
+  if (changed) await user.save();
 }
 
 export async function addCredits(

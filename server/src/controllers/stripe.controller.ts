@@ -3,9 +3,12 @@ import type Stripe from "stripe";
 import { env } from "../config/env.js";
 import { getStripe } from "../config/stripe.js";
 import { AppError } from "../middleware/errorHandler.js";
+import { ProcessedWebhookEvent } from "../models/ProcessedWebhookEvent.model.js";
 import { User } from "../models/User.model.js";
 import { logger } from "../utils/logger.js";
 import { getAuthUser } from "../utils/requestHelpers.js";
+
+const GRACE_PERIOD_MS = 3 * 24 * 60 * 60 * 1000;
 
 const PLAN_PRICE_IDS: Record<string, string | undefined> = {
   pro: env.STRIPE_PRO_PRICE_ID,
@@ -94,6 +97,19 @@ export async function handleWebhook(req: Request, res: Response): Promise<void> 
     return;
   }
 
+  // Idempotence : Stripe peut rejouer un événement. On enregistre son id ;
+  // si déjà présent (erreur clé dupliquée 11000), on acquitte sans retraiter.
+  try {
+    await ProcessedWebhookEvent.create({ eventId: event.id, type: event.type });
+  } catch (err) {
+    if ((err as { code?: number }).code === 11000) {
+      logger.debug(`Webhook Stripe déjà traité : ${event.id}`);
+      res.json({ received: true, duplicate: true });
+      return;
+    }
+    throw err;
+  }
+
   const CREDIT_MAP: Record<string, number> = { pro: 500, business: 2000 };
   const ROLE_MAP: Record<string, string> = { pro: "pro", business: "business" };
 
@@ -108,6 +124,7 @@ export async function handleWebhook(req: Request, res: Response): Promise<void> 
           role: ROLE_MAP[plan] ?? "free",
           "subscription.status": "active",
           "subscription.stripeCustomerId": session.customer as string,
+          "subscription.gracePeriodEnd": null,
           "credits.total": CREDIT_MAP[plan] ?? 50,
           "credits.remaining": CREDIT_MAP[plan] ?? 50,
         });
@@ -124,6 +141,8 @@ export async function handleWebhook(req: Request, res: Response): Promise<void> 
           "subscription.currentPeriodEnd": new Date(
             (sub as unknown as { current_period_end: number }).current_period_end * 1000,
           ),
+          // Paiement régularisé → on lève la période de grâce éventuelle
+          ...(sub.status === "active" ? { "subscription.gracePeriodEnd": null } : {}),
         });
         break;
       }
@@ -145,9 +164,15 @@ export async function handleWebhook(req: Request, res: Response): Promise<void> 
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
         const customerId = invoice.customer as string;
+        // Échec de paiement → past_due + période de grâce de 3 jours.
+        // Le downgrade effectif vers Free se fait ensuite à la lecture
+        // (reconcileUserBilling) une fois la grace period dépassée.
         await User.findOneAndUpdate(
           { "subscription.stripeCustomerId": customerId },
-          { "subscription.status": "past_due" },
+          {
+            "subscription.status": "past_due",
+            "subscription.gracePeriodEnd": new Date(Date.now() + GRACE_PERIOD_MS),
+          },
         );
         break;
       }

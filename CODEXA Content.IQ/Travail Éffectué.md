@@ -8,6 +8,132 @@ Répertoire détaillé de toutes les tâches effectuées au cours des sessions d
 
 ---
 
+### [2026-06-04 → 06-05] — Session 18 : Analyse conformité PRD + logique métier critique (reset crédits, grace period, idempotence webhooks) — COMPLÉTÉ ✅ (mergé en prod)
+- **Session :** 18
+- **Statut :** Complété — **mergé dans `main` et déployé** (PR #3, `426298e`)
+- **Commits :** `b2974ee` (docs analyse PRD) · `23335e7` (logique billing)
+- **Tests :** 32 client / 72 serveur (63 → 72, +9) — tous verts · TypeScript 0 erreur · Biome exit 0
+
+> Contexte : session démarrée par une **analyse complète de conformité au PRD** (`CONTENTIQ_Plan_Developpement.docx`), produisant 2 documents de référence, puis exécution de la première vague de combles (« Session 18 ») ciblant les 3 faiblesses 🔴 de logique métier. Workflow : branche dédiée → PR #3 → CI verte → merge → déploiement auto.
+
+---
+
+#### Tâche 1 — Analyse de conformité au PRD + rapport de comparaison prod vs prévu
+
+**Commit :** `b2974ee` — `docs: analyse conformité PRD + rapport comparaison prod vs prévu`
+
+**Fichiers créés :** `docs/Analyse-Conformite-PRD.md` · `docs/Rapport-Comparaison-Prod-vs-PRD.md`
+
+**Problème :** Aucune vue consolidée de l'écart entre ce qui est livré en production et ce que prévoit le PRD. Impossible de prioriser le travail restant sans cartographie.
+
+**Solution :** Extraction du PRD (`.docx` → texte via `unzip word/document.xml`), confrontation module par module au code réel, puis production de :
+- `Analyse-Conformite-PRD.md` : conformité par module, faiblesses (critique/important/secondaire), faiblesses techniques, déviations assumées, backlog priorisé **Session 18-21**.
+- `Rapport-Comparaison-Prod-vs-PRD.md` : matrice de parité feature par feature (scorecard **52/73 ≈ 71 % en prod**, 7 partielles, 14 manquantes, 7 bonus hors PRD).
+
+**Justification :** L'extraction docx en CLI évite toute dépendance lourde. La numérotation du backlog a été **alignée sur la chronologie réelle** (Sessions 18-21) après qu'un premier jet « Sprint 1-4 » ait prêté à confusion avec les Phases PRD et les Sessions existantes. **Correction d'honnêteté importante** : le gating de plan des exports, d'abord noté « absent », est en réalité implémenté via `checkExportPlan` dans `export.controller.ts` (l'erreur venait de n'avoir lu que le fichier de routes) — les deux docs ont été corrigés et les scores recalculés.
+
+---
+
+#### Tâche 2 — Reset mensuel des crédits + grace period (réconciliation lazy)
+
+**Commit :** `23335e7` — `feat(billing): reset mensuel crédits, grace period 3j et idempotence webhooks`
+
+**Fichiers modifiés :** `server/src/services/credits.service.ts` · `server/src/middleware/checkCredits.ts` · `server/src/controllers/credits.controller.ts` · `server/src/controllers/stripe.controller.ts` · `server/src/test/credits.test.ts`
+
+**Problème :** Deux trous de logique métier 🔴 :
+1. `credits.resetDate` était posé mais **aucun mécanisme ne réinitialisait les crédits** → les utilisateurs ne récupéraient jamais leur quota mensuel (pas de dossier `jobs/`, BullMQ non utilisé).
+2. `subscription.gracePeriodEnd` existait dans le modèle mais n'était **jamais posé ni exploité** → un échec de paiement laissait l'utilisateur en `past_due` indéfiniment sans downgrade.
+
+**Solution :** Réconciliation **paresseuse on-read** plutôt qu'un worker planifié :
+```ts
+// credits.service.ts — appelée dans checkCredits + getCredits
+export async function reconcileUserBilling(user: HydratedDocument<IUser>): Promise<void> {
+  const now = new Date();
+  let changed = false;
+
+  // 1. Grace period dépassée → downgrade Free
+  if (isGracePeriodExpired(now, user.subscription?.status, user.subscription?.gracePeriodEnd)) {
+    user.role = "free";
+    user.subscription.status = "canceled";
+    user.subscription.gracePeriodEnd = undefined;
+    const freeQuota = PLAN_LIMITS.free.credits;
+    user.credits.total = freeQuota;
+    user.credits.remaining = Math.min(user.credits.remaining, freeQuota);
+    changed = true;
+  }
+
+  // 2. Reset mensuel selon le plan courant
+  if (isMonthlyResetDue(now, user.credits?.resetDate)) {
+    const quota = PLAN_LIMITS[user.role as UserRole]?.credits ?? user.credits.total;
+    user.credits.remaining = quota;
+    user.credits.total = quota;
+    user.credits.resetDate = advanceResetDate(now, new Date(user.credits.resetDate));
+    changed = true;
+    await CreditTransaction.create({ userId: user._id, amount: quota,
+      type: "monthly_reset", description: "Réinitialisation mensuelle des crédits", balanceAfter: quota });
+  }
+
+  if (changed) await user.save();
+}
+```
+Côté Stripe, `invoice.payment_failed` pose désormais `gracePeriodEnd = now + 3j` ; la grace period est nettoyée à la réactivation (`checkout.session.completed`, `subscription.updated` actif). 3 helpers purs (`isMonthlyResetDue`, `advanceResetDate`, `isGracePeriodExpired`) couverts par 9 tests déterministes.
+
+**Justification :** Le PRD prévoyait un `creditResetWorker` BullMQ, mais le déploiement est un **service web Render mono-instance** sans process worker. La réconciliation on-read est plus robuste dans ce contexte (zéro infra, pas de worker à superviser) et suffit : un utilisateur ne « consomme » que lorsqu'il agit, donc le reset au moment de l'action est exactement ce qu'il faut. `advanceResetDate` boucle mois par mois pour gérer les longues absences (pas de dérive de date). Déviation assumée, même esprit que SSE-over-Socket.io. La logique de reset/grace est extraite en fonctions pures pour être testée sans base de données.
+
+---
+
+#### Tâche 3 — Idempotence des webhooks Stripe
+
+**Commit :** `23335e7` (même commit que la Tâche 2)
+
+**Fichiers créés/modifiés :** `server/src/models/ProcessedWebhookEvent.model.ts` (nouveau) · `server/src/controllers/stripe.controller.ts`
+
+**Problème :** Le handler de webhook Stripe n'avait **aucune protection contre les rejeux**. Stripe réémet un événement en cas de timeout/erreur réseau → un même `checkout.session.completed` pouvait re-créditer/re-upgrader l'utilisateur deux fois.
+
+**Solution :**
+```ts
+// après vérification de signature, avant le switch
+try {
+  await ProcessedWebhookEvent.create({ eventId: event.id, type: event.type });
+} catch (err) {
+  if ((err as { code?: number }).code === 11000) {   // clé dupliquée
+    res.json({ received: true, duplicate: true });
+    return;                                            // déjà traité → on acquitte sans rejouer
+  }
+  throw err;
+}
+```
+Le modèle `ProcessedWebhookEvent` a un index unique sur `eventId` et un **TTL de 30 jours** (auto-nettoyage).
+
+**Justification :** L'unicité au niveau base (index unique + capture de l'erreur 11000) est la garantie d'idempotence la plus simple et la plus fiable — atomique, pas de race possible entre deux rejeux simultanés. Le TTL évite une croissance infinie de la collection. L'enregistrement se fait **après** la vérification de signature (on ne stocke que des événements authentiques) mais **avant** le traitement (on bloque le rejeu même si le traitement précédent a partiellement échoué).
+
+---
+
+#### État final de la session
+
+| Métrique | Valeur |
+|----------|--------|
+| Tests serveur | 72/72 ✓ (63 → 72, +9) |
+| Tests client | 32/32 ✓ |
+| TypeScript | 0 erreur ✓ |
+| Biome | exit 0 ✓ |
+| Commits | 2 mergés dans `main` via **PR #3** (`426298e`) |
+| Déploiement | déclenché auto — Vercel + Render |
+
+**Résumé des fichiers modifiés :**
+| Fichier | Type | Changement |
+|---------|------|-----------|
+| `docs/Analyse-Conformite-PRD.md` | **nouveau** | analyse conformité PRD + backlog Session 18-21 |
+| `docs/Rapport-Comparaison-Prod-vs-PRD.md` | **nouveau** | matrice de parité prod vs prévu (~71 %) |
+| `server/src/services/credits.service.ts` | modifié | `reconcileUserBilling` + helpers purs (reset/grace) |
+| `server/src/middleware/checkCredits.ts` | modifié | appel réconciliation + select `subscription` |
+| `server/src/controllers/credits.controller.ts` | modifié | réconciliation dans `getCredits` |
+| `server/src/controllers/stripe.controller.ts` | modifié | grace period 3j + idempotence webhooks |
+| `server/src/models/ProcessedWebhookEvent.model.ts` | **nouveau** | dédup événements Stripe (TTL 30j) |
+| `server/src/test/credits.test.ts` | modifié | +9 tests helpers réconciliation |
+
+---
+
 ### [2026-06-02 → 06-03] — Session 17 : Durcissement chaîne IA — correctness, prompt caching, evals LLMOps + observabilité déploiement — COMPLÉTÉ ✅ (mergé en prod)
 - **Session :** 17
 - **Statut :** Complété — **mergé dans `main` et déployé**

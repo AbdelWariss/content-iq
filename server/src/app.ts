@@ -2,6 +2,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
+import mongoose from "mongoose";
 import morgan from "morgan";
 import passport from "passport";
 import { env } from "./config/env.js";
@@ -79,10 +80,14 @@ export function createApp(): import("express").Express {
   // Rate limiting global
   app.use("/api", apiLimiter);
 
-  // Health check
+  // Health check — reflète l'état réel de la connexion MongoDB.
+  // 503 si la DB est down (le process reste vivant en mode dégradé, mais
+  // le monitoring/Render détecte la dégradation au lieu d'un faux "ok").
   app.get("/health", (_req, res) => {
-    res.json({
-      status: "ok",
+    const dbConnected = mongoose.connection.readyState === 1;
+    res.status(dbConnected ? 200 : 503).json({
+      status: dbConnected ? "ok" : "degraded",
+      db: dbConnected ? "up" : "down",
       timestamp: new Date().toISOString(),
       version: process.env.npm_package_version ?? "1.0.0",
       commit: env.RENDER_GIT_COMMIT?.slice(0, 7) ?? "dev",

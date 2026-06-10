@@ -7,10 +7,9 @@ import { connectRedis } from "./config/redis.js";
 import { logger } from "./utils/logger.js";
 
 async function bootstrap() {
-  // Connexions bases de données
-  await connectDB();
-  await connectRedis();
-
+  // Le serveur HTTP démarre AVANT les bases : `/health` reste joignable même si
+  // MongoDB/Redis sont momentanément indisponibles (mode dégradé, 503), et les
+  // connexions retentent en arrière-plan sans tuer le process.
   const app = createApp();
   const httpServer = createServer(app);
 
@@ -42,6 +41,10 @@ async function bootstrap() {
   httpServer.listen(env.PORT, () => {
     logger.info(`🚀 CONTENT.IQ Server démarré sur http://localhost:${env.PORT} [${env.NODE_ENV}]`);
   });
+
+  // Connexions non bloquantes : un échec ne crashe pas le serveur (retry interne).
+  connectDB().catch((err) => logger.error("MongoDB indisponible au démarrage :", err));
+  connectRedis().catch((err) => logger.error("Redis indisponible au démarrage :", err));
 
   // Graceful shutdown
   const shutdown = async (signal: string) => {

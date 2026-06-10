@@ -9,7 +9,9 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
-      exclude: ["src/test/**", "**/*.d.ts"],
+      // Couverture limitée au code source (jamais le build compilé dist/)
+      include: ["src/**/*.ts"],
+      exclude: ["src/test/**", "**/*.d.ts", "src/index.ts"],
     },
   },
   resolve: {

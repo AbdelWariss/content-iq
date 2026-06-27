@@ -6,7 +6,6 @@ import { exportService } from "@/services/export.service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { enUS, fr } from "date-fns/locale";
-import JSZip from "jszip";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
@@ -396,6 +395,9 @@ export default function HistoryPage() {
     }
     setIsExportingZip(true);
     try {
+      // Import dynamique : jszip (~lourd) n'est chargé qu'au moment de l'export ZIP,
+      // pas dans le bundle initial de la page Historique.
+      const { default: JSZip } = await import("jszip");
       const zip = new JSZip();
       for (const item of items) {
         const plain = (item.bodyPlain ?? "").replace(/<[^>]*>/g, "");

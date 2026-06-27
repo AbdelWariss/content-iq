@@ -82,6 +82,9 @@ export function AssistantPanel() {
     }
   }, [isOpen, dispatch]);
 
+  // `messages` est un déclencheur volontaire : on re-scrolle à chaque nouveau
+  // message (sa valeur n'est pas lue dans le corps, d'où l'avertissement).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: dépendance déclencheur intentionnelle
   useEffect(() => {
     if (isOpen) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

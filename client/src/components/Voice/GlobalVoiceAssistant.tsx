@@ -214,7 +214,7 @@ export function GlobalVoiceAssistant({ isOpen, onOpen, onClose }: GlobalVoiceAss
         setIsProcessing(false);
       }
     },
-    [executeCommand],
+    [executeCommand, t],
   );
 
   const handleMicClick = useCallback(() => {
@@ -244,7 +244,11 @@ export function GlobalVoiceAssistant({ isOpen, onOpen, onClose }: GlobalVoiceAss
     [stopListening, handleVoiceResult],
   );
 
-  // Auto-start listening when overlay opens (paid users)
+  // Auto-start listening when overlay opens (paid users).
+  // Volontairement déclenché par le seul `isOpen` : on ne veut PAS redémarrer la
+  // reconnaissance vocale quand `lang`/les callbacks changent d'identité — cela
+  // couperait l'écoute en cours. Les valeurs lues sont fraîches à l'ouverture.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: réaction volontaire à l'ouverture/fermeture uniquement
   useEffect(() => {
     if (isOpen && canUseVoice) {
       setParsedResult(null);
@@ -254,7 +258,6 @@ export function GlobalVoiceAssistant({ isOpen, onOpen, onClose }: GlobalVoiceAss
     if (!isOpen) {
       stopListening();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   return (

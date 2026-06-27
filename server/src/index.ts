@@ -4,15 +4,24 @@ import { createApp } from "./app.js";
 import { connectDB } from "./config/db.js";
 import { env } from "./config/env.js";
 import { connectRedis } from "./config/redis.js";
+import { initSentry } from "./config/sentry.js";
 import { logger } from "./utils/logger.js";
 
 async function bootstrap() {
+  // Capture d'erreurs prod (no-op sans SENTRY_DSN).
+  initSentry();
+
   // Le serveur HTTP démarre AVANT les bases : `/health` reste joignable même si
   // MongoDB/Redis sont momentanément indisponibles (mode dégradé, 503), et les
   // connexions retentent en arrière-plan sans tuer le process.
   const app = createApp();
   const httpServer = createServer(app);
 
+  // ⚠️ INFRA EN ATTENTE D'USAGE — socket.io est câblé mais aucun producteur
+  // n'émet encore d'événement (les workers BullMQ envisagés n'existent pas ;
+  // les exports bulk sont synchrones). Conservé volontairement comme point
+  // d'ancrage pour un futur temps-réel (notifications, progression d'export).
+  // À retirer si aucun usage n'arrive — ne pas tester tant que c'est dormant.
   // Socket.io pour les notifications temps réel (exports bulk, etc.)
   const io = new SocketIOServer(httpServer, {
     cors: {
@@ -35,7 +44,7 @@ async function bootstrap() {
     });
   });
 
-  // Rendre io accessible globalement pour les workers BullMQ
+  // Exposé globalement pour un futur producteur d'événements (cf. note ci-dessus).
   (global as { io?: SocketIOServer }).io = io;
 
   httpServer.listen(env.PORT, () => {

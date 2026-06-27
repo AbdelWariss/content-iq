@@ -7,6 +7,7 @@ import morgan from "morgan";
 import passport from "passport";
 import { env } from "./config/env.js";
 import { configurePassport } from "./config/passport.js";
+import { Sentry } from "./config/sentry.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { apiLimiter } from "./middleware/rateLimiter.js";
 import { logger } from "./utils/logger.js";
@@ -116,6 +117,12 @@ export function createApp(): import("express").Express {
       error: { code: "NOT_FOUND", message: "Route non trouvée" },
     });
   });
+
+  // Capture Sentry avant notre handler global. No-op si Sentry n'est pas
+  // initialisé (pas de DSN) — donc inerte en dev/tests.
+  if (env.SENTRY_DSN) {
+    Sentry.setupExpressErrorHandler(app);
+  }
 
   // Global error handler — doit être en dernier
   app.use(errorHandler);

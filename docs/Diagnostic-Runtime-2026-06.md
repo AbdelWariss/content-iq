@@ -68,13 +68,26 @@
 
 ## 3. Recommandations priorisées
 
-| Priorité | Action | Faiblesse |
+| Priorité | Action | Faiblesse | État |
+|---|---|---|---|
+| **P0** | `.env.development` séparé (Mongo/Redis locaux) + garde anti-prod sur `seed` | F3 | ✅ `18e31ba` |
+| **P0** | Tests services/controllers : webhooks Stripe (idempotence, grace, reset), réconciliation crédits | F1 | ✅ `1385802` |
+| **P1** | Boot résilient : HTTP avant DB + `/health` reflétant l'état DB + retry au lieu de `exit(1)` | F2 | ✅ `ac011f5` |
+| **P1** | Exclure `dist/` de la couverture | F4 | ✅ `18e31ba` |
+| **P2** | `jszip` dynamique (HistoryPage 114→21 KB) | F6 | ✅ `315572a` |
+| **P2** | Brancher Sentry (init conditionnel `SENTRY_DSN`) | F10 | ✅ `aa4c67c` |
+| **P2** | Trancher socket.io | F5 | ✅ conservé + documenté `aa4c67c` |
+| **P2** | Corriger hook deps Voice (anti-closures périmées) | F9 | ✅ `1353766` |
+
+### Reste ouvert (hors périmètre prioritaire initial)
+
+| Faiblesse | Statut | Note |
 |---|---|---|
-| **P0** | `.env.development` séparé (Mongo/Redis locaux) + garde anti-prod sur `seed` | F3 |
-| **P0** | Tests services/controllers : webhooks Stripe (idempotence, grace, reset), `content.controller`, réconciliation crédits | F1 |
-| **P1** | Boot résilient : HTTP avant DB + `/health` reflétant l'état DB + retry au lieu de `exit(1)` | F2 |
-| **P1** | Exclure `dist/` de la couverture | F4 |
-| **P2** | `jszip` dynamique · trancher socket.io · brancher Sentry · corriger hook deps Voice | F5,F6,F9,F10 |
+| **F7** — Aucun test E2E (Playwright/Cypress) | ⏳ non traité | Flux Free→Pro→Generate→Export non validé bout-en-bout |
+| **F8** — Whisper STT stub `501` | ⏳ non traité | Feature vocale annoncée, non livrée |
+| **F11** — Typage fragile webhook Stripe (`as unknown`) | ⏳ non traité | Cosmétique, sans impact runtime |
+
+> **Décision F5 :** socket.io conservé volontairement comme point d'ancrage temps-réel, mais annoté `INFRA EN ATTENTE D'USAGE` dans `index.ts` (aucun producteur d'événement aujourd'hui).
 
 ---
 

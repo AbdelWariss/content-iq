@@ -5,6 +5,7 @@ import { connectDB } from "./config/db.js";
 import { env } from "./config/env.js";
 import { connectRedis } from "./config/redis.js";
 import { initSentry } from "./config/sentry.js";
+import { initSocket } from "./services/socket.service.js";
 import { logger } from "./utils/logger.js";
 
 async function bootstrap() {
@@ -17,12 +18,9 @@ async function bootstrap() {
   const app = createApp();
   const httpServer = createServer(app);
 
-  // ⚠️ INFRA EN ATTENTE D'USAGE — socket.io est câblé mais aucun producteur
-  // n'émet encore d'événement (les workers BullMQ envisagés n'existent pas ;
-  // les exports bulk sont synchrones). Conservé volontairement comme point
-  // d'ancrage pour un futur temps-réel (notifications, progression d'export).
-  // À retirer si aucun usage n'arrive — ne pas tester tant que c'est dormant.
-  // Socket.io pour les notifications temps réel (exports bulk, etc.)
+  // Temps-réel : sync crédits multi-onglets, notifications toast, feed admin live.
+  // L'authentification JWT et les rooms (user:<id>, admins) sont gérées dans
+  // socket.service.ts, qui expose aussi les helpers d'émission (emitCreditsUpdate…).
   const io = new SocketIOServer(httpServer, {
     cors: {
       origin: env.CLIENT_URL,
@@ -30,22 +28,7 @@ async function bootstrap() {
       credentials: true,
     },
   });
-
-  io.on("connection", (socket) => {
-    logger.debug(`Socket connecté : ${socket.id}`);
-
-    socket.on("join", (userId: string) => {
-      socket.join(`user:${userId}`);
-      logger.debug(`Socket ${socket.id} a rejoint la room user:${userId}`);
-    });
-
-    socket.on("disconnect", () => {
-      logger.debug(`Socket déconnecté : ${socket.id}`);
-    });
-  });
-
-  // Exposé globalement pour un futur producteur d'événements (cf. note ci-dessus).
-  (global as { io?: SocketIOServer }).io = io;
+  initSocket(io);
 
   httpServer.listen(env.PORT, () => {
     logger.info(`🚀 CONTENT.IQ Server démarré sur http://localhost:${env.PORT} [${env.NODE_ENV}]`);

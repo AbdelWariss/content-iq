@@ -5,6 +5,7 @@ import { getStripe } from "../config/stripe.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { ProcessedWebhookEvent } from "../models/ProcessedWebhookEvent.model.js";
 import { User } from "../models/User.model.js";
+import { emitCreditsUpdate, emitNotify } from "../services/socket.service.js";
 import { logger } from "../utils/logger.js";
 import { getAuthUser } from "../utils/requestHelpers.js";
 
@@ -120,15 +121,20 @@ export async function handleWebhook(req: Request, res: Response): Promise<void> 
         const { userId, plan } = session.metadata ?? {};
         if (!userId || !plan) break;
 
+        const newCredits = CREDIT_MAP[plan] ?? 50;
         await User.findByIdAndUpdate(userId, {
           role: ROLE_MAP[plan] ?? "free",
           "subscription.status": "active",
           "subscription.stripeCustomerId": session.customer as string,
           "subscription.gracePeriodEnd": null,
-          "credits.total": CREDIT_MAP[plan] ?? 50,
-          "credits.remaining": CREDIT_MAP[plan] ?? 50,
+          "credits.total": newCredits,
+          "credits.remaining": newCredits,
         });
         logger.info(`Upgrade plan ${plan} pour userId ${userId}`);
+
+        // Temps-réel : sync solde + toast de confirmation côté client.
+        emitCreditsUpdate(userId, { remaining: newCredits, total: newCredits });
+        emitNotify(userId, { level: "success", messageKey: "notify.subscriptionActive" });
         break;
       }
 
@@ -167,13 +173,21 @@ export async function handleWebhook(req: Request, res: Response): Promise<void> 
         // Échec de paiement → past_due + période de grâce de 3 jours.
         // Le downgrade effectif vers Free se fait ensuite à la lecture
         // (reconcileUserBilling) une fois la grace period dépassée.
-        await User.findOneAndUpdate(
+        const pastDueUser = await User.findOneAndUpdate(
           { "subscription.stripeCustomerId": customerId },
           {
             "subscription.status": "past_due",
             "subscription.gracePeriodEnd": new Date(Date.now() + GRACE_PERIOD_MS),
           },
+          { new: true },
         );
+        // Temps-réel : prévient l'utilisateur de l'échec de paiement (toast).
+        if (pastDueUser) {
+          emitNotify(String(pastDueUser._id), {
+            level: "warning",
+            messageKey: "notify.paymentFailed",
+          });
+        }
         break;
       }
 

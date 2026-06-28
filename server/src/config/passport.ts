@@ -1,6 +1,7 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { User } from "../models/User.model.js";
+import { emitAdminSignup } from "../services/socket.service.js";
 import { logger } from "../utils/logger.js";
 import { env } from "./env.js";
 
@@ -47,6 +48,14 @@ export function configurePassport(): void {
               emailVerified: true,
               role: "free",
               credits: { remaining: 50, total: 50 },
+            });
+            // Feed admin live (nouvelle inscription via Google)
+            emitAdminSignup({
+              userId: String(user._id),
+              name: user.name,
+              email: user.email,
+              method: "google",
+              at: new Date().toISOString(),
             });
           }
 

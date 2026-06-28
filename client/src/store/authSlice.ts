@@ -45,9 +45,12 @@ const authSlice = createSlice({
         state.user = { ...state.user, ...action.payload };
       }
     },
-    updateCredits(state, action: PayloadAction<{ remaining: number }>) {
+    updateCredits(state, action: PayloadAction<{ remaining: number; total?: number }>) {
       if (state.user) {
         state.user.credits.remaining = action.payload.remaining;
+        if (action.payload.total !== undefined) {
+          state.user.credits.total = action.payload.total;
+        }
       }
     },
     logout(state) {

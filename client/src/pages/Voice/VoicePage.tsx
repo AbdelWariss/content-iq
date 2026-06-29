@@ -133,7 +133,7 @@ export default function VoicePage() {
     navigator.clipboard.writeText(transcript).then(() => {
       toast({ title: t("voice.transcriptionCopied") });
     });
-  }, [transcript]);
+  }, [transcript, t]);
 
   const formatTime = (s: number) =>
     `${Math.floor(s / 60)

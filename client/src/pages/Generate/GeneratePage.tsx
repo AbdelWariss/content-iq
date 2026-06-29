@@ -144,8 +144,7 @@ export default function GeneratePage() {
         dispatch(setEditorContent(markdownToHTML(c.body ?? "")));
       })
       .catch(() => toast({ title: t("generate.contentNotFound"), variant: "destructive" }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewContentId]);
+  }, [viewContentId, dispatch, setValue, t]);
 
   // Debounced keyword suggestions
   useEffect(() => {
@@ -185,7 +184,7 @@ export default function GeneratePage() {
         },
       );
     },
-    [dispatch, stream, keywords],
+    [dispatch, stream, keywords, t, queryClient],
   );
 
   const handleCopy = useCallback(async () => {
@@ -194,7 +193,7 @@ export default function GeneratePage() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     toast({ title: t("generate.copied") });
-  }, [displayContent]);
+  }, [displayContent, t]);
 
   const handleSpeak = useCallback(() => {
     if (isTtsSpeaking) {
@@ -222,7 +221,7 @@ export default function GeneratePage() {
     } finally {
       setIsTranslating(false);
     }
-  }, [savedContentId]);
+  }, [savedContentId, t]);
 
   const addKeyword = useCallback(() => {
     if (keyword.trim() && keywords.length < 10) {
@@ -255,7 +254,7 @@ export default function GeneratePage() {
       setValue("subject", voiceTranscript);
       toast({ title: t("generate.briefDictated"), description: t("generate.briefDictatedDesc") });
     }
-  }, [voiceTranscript, setValue, stopListening]);
+  }, [voiceTranscript, setValue, stopListening, t]);
 
   const handleExport = useCallback(
     async (format: "pdf" | "docx" | "markdown" | "txt") => {
@@ -275,7 +274,7 @@ export default function GeneratePage() {
         setIsExporting(false);
       }
     },
-    [savedContentId, currentParams.subject],
+    [savedContentId, currentParams.subject, t],
   );
 
   const handleSaveContent = useCallback(async () => {

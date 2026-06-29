@@ -3,6 +3,7 @@ import { VoiceOrb } from "@/components/Voice/VoiceOrb";
 import { toast } from "@/hooks/use-toast";
 import { useStreaming } from "@/hooks/useStreaming";
 import { useVoice } from "@/hooks/useVoice";
+import { keyboardActivate, stopPropagation } from "@/lib/a11y";
 import { CiqIcon, Ico, MicWave } from "@/lib/ciq-icons";
 import { markdownToHTML } from "@/lib/markdownToHtml";
 import api from "@/services/axios";
@@ -347,11 +348,12 @@ export default function GeneratePage() {
             backdropFilter: "blur(6px)",
           }}
           onClick={() => setShowSaveTemplate(false)}
+          onKeyDown={() => setShowSaveTemplate(false)}
         >
           <div
             className="card"
             style={{ width: "100%", maxWidth: 420, padding: 24, margin: "0 16px" }}
-            onClick={(e) => e.stopPropagation()}
+            {...stopPropagation()}
           >
             <div className="row between" style={{ marginBottom: 16 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>
@@ -515,6 +517,7 @@ export default function GeneratePage() {
                         key={value}
                         className="card"
                         onClick={() => setValue("type", value)}
+                        {...keyboardActivate}
                         style={{
                           padding: "10px 8px",
                           textAlign: "center",
@@ -649,6 +652,7 @@ export default function GeneratePage() {
                         cursor: "pointer",
                       }}
                       onClick={() => setKeywords((k) => k.filter((x) => x !== kw))}
+                      {...keyboardActivate}
                     >
                       {kw} ×
                     </span>
@@ -704,6 +708,7 @@ export default function GeneratePage() {
                       onClick={() =>
                         setKeywords((prev) => (prev.includes(kw) ? prev : [...prev, kw]))
                       }
+                      {...keyboardActivate}
                     >
                       + {kw}
                     </span>

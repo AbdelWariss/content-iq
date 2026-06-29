@@ -1,6 +1,7 @@
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
+import { keyboardActivate, stopPropagation } from "@/lib/a11y";
 import { CiqIcon, Ico, MicWave } from "@/lib/ciq-icons";
 import api from "@/services/axios";
 import { stripeService } from "@/services/stripe.service";
@@ -43,6 +44,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
   return (
     <div
       onClick={() => onChange(!on)}
+      {...keyboardActivate}
       style={{
         width: 44,
         height: 26,
@@ -110,6 +112,7 @@ function SettingsRow({
         cursor: onClick ? "pointer" : "default",
       }}
       onClick={onClick}
+      {...keyboardActivate}
     >
       <span style={{ fontSize: 15 }}>{label}</span>
       <div className="row" style={{ gap: 5 }}>
@@ -146,11 +149,12 @@ function InlineSelector({
         backdropFilter: "blur(4px)",
       }}
       onClick={onClose}
+      onKeyDown={onClose}
     >
       <div
         className="card"
         style={{ width: "100%", maxWidth: 340, padding: 0, margin: "0 16px", overflow: "hidden" }}
-        onClick={(e) => e.stopPropagation()}
+        {...stopPropagation()}
       >
         <div
           style={{ padding: "14px 18px", borderBottom: "1px solid var(--line)", fontWeight: 600 }}
@@ -172,6 +176,7 @@ function InlineSelector({
               onChange(opt);
               onClose();
             }}
+            {...keyboardActivate}
           >
             <span style={{ fontSize: 15 }}>{opt}</span>
             {opt === value && (
@@ -654,6 +659,7 @@ export default function ProfilePage() {
                     handleVoiceChange(name);
                     previewVoice(name, voiceId, lang);
                   }}
+                  {...keyboardActivate}
                 >
                   <div className="row between">
                     <strong style={{ fontSize: 15 }}>{name}</strong>
@@ -716,6 +722,7 @@ export default function ProfilePage() {
                   height: 42,
                 }}
                 onClick={() => handleAutoPlayChange(!autoPlay)}
+                {...keyboardActivate}
               >
                 <span style={{ fontSize: 13 }}>{t("profile.autoPlayDesc")}</span>
                 <Toggle on={autoPlay} onChange={handleAutoPlayChange} />
@@ -966,6 +973,7 @@ export default function ProfilePage() {
               backdropFilter: "blur(4px)",
             }}
             onClick={() => setEditingProfile(false)}
+            onKeyDown={() => setEditingProfile(false)}
           >
             <div
               className="card"
@@ -976,7 +984,7 @@ export default function ProfilePage() {
                 margin: 0,
                 borderRadius: "20px 20px 0 0",
               }}
-              onClick={(e) => e.stopPropagation()}
+              {...stopPropagation()}
             >
               <div className="row between" style={{ marginBottom: 18 }}>
                 <h3 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>

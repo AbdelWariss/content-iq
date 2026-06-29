@@ -1,5 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
+import { clickable, stopPropagation } from "@/lib/a11y";
 import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import { type ContentItem, contentService } from "@/services/content.service";
 import { exportService } from "@/services/export.service";
@@ -97,6 +98,7 @@ function ExportMenu({ item }: { item: ContentItem }) {
           <div
             style={{ position: "fixed", inset: 0, zIndex: 100 }}
             onClick={() => setOpen(false)}
+            onKeyDown={() => setOpen(false)}
           />
           <div
             className="card"
@@ -167,7 +169,7 @@ function TagEditor({
     <div
       className="row"
       style={{ gap: 4, flexWrap: "wrap", alignItems: "center" }}
-      onClick={(e) => e.stopPropagation()}
+      {...stopPropagation()}
     >
       {tags.map((tag) => (
         <span
@@ -270,11 +272,12 @@ function DeleteConfirmDialog({
         backdropFilter: "blur(4px)",
       }}
       onClick={onCancel}
+      onKeyDown={onCancel}
     >
       <div
         className="card"
         style={{ padding: 28, maxWidth: 380, width: "90%", margin: "0 16px" }}
-        onClick={(e) => e.stopPropagation()}
+        {...stopPropagation()}
       >
         <h3 style={{ fontSize: 18, fontWeight: 600, margin: "0 0 10px" }}>
           Supprimer ce contenu ?
@@ -755,6 +758,7 @@ export default function HistoryPage() {
             <div
               key={item._id}
               className="card history-grid-card"
+              {...clickable(() => handleRowClick(item))}
               style={{
                 padding: 18,
                 display: "flex",
@@ -825,7 +829,7 @@ export default function HistoryPage() {
               </p>
 
               {/* Tags */}
-              <div onClick={(e) => e.stopPropagation()}>
+              <div {...stopPropagation()}>
                 <TagEditor item={item} onSaved={handleTagSaved} />
               </div>
 
@@ -836,7 +840,7 @@ export default function HistoryPage() {
                   paddingTop: 8,
                   marginTop: "auto",
                 }}
-                onClick={(e) => e.stopPropagation()}
+                {...stopPropagation()}
               >
                 <span style={{ fontSize: 11, color: "var(--ink-mute)" }}>
                   {formatDistanceToNow(new Date(item.createdAt), {
@@ -913,6 +917,7 @@ export default function HistoryPage() {
                   alignItems: "flex-start",
                 }}
                 onClick={() => handleRowClick(item)}
+                {...clickable(() => handleRowClick(item))}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLDivElement).style.background = "var(--bg-sunk)";
                 }}
@@ -946,7 +951,7 @@ export default function HistoryPage() {
                     gap: 3,
                     minWidth: 0,
                   }}
-                  onClick={(e) => e.stopPropagation()}
+                  {...stopPropagation()}
                 >
                   <span
                     style={{
@@ -1013,7 +1018,7 @@ export default function HistoryPage() {
                 <div
                   className="row"
                   style={{ width: 100, flexShrink: 0, gap: 2, justifyContent: "flex-end" }}
-                  onClick={(e) => e.stopPropagation()}
+                  {...stopPropagation()}
                 >
                   <button
                     type="button"
@@ -1060,6 +1065,7 @@ export default function HistoryPage() {
                   alignItems: "center",
                 }}
                 onClick={() => handleRowClick(item)}
+                {...clickable(() => handleRowClick(item))}
               >
                 <Ico
                   icon={TYPE_ICON[item.type] ?? CiqIcon.blog}
@@ -1087,15 +1093,11 @@ export default function HistoryPage() {
                     })}
                   </div>
                   {/* Tags on mobile */}
-                  <div style={{ marginTop: 4 }} onClick={(e) => e.stopPropagation()}>
+                  <div style={{ marginTop: 4 }} {...stopPropagation()}>
                     <TagEditor item={item} onSaved={handleTagSaved} />
                   </div>
                 </div>
-                <div
-                  className="row"
-                  style={{ gap: 0, flexShrink: 0 }}
-                  onClick={(e) => e.stopPropagation()}
-                >
+                <div className="row" style={{ gap: 0, flexShrink: 0 }} {...stopPropagation()}>
                   <button
                     type="button"
                     className="btn btn-ghost btn-sm"

@@ -1,5 +1,6 @@
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
 import { CiqIcon, Ico, MicWave } from "@/lib/ciq-icons";
 import api from "@/services/axios";
 import { stripeService } from "@/services/stripe.service";
@@ -228,7 +229,7 @@ export default function ProfilePage() {
   const { logout } = useAuth();
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   const MIC_SENS_LABELS: Record<string, string> = {
     Auto: t("profile.sensAuto"),
@@ -263,8 +264,8 @@ export default function ProfilePage() {
     () => localStorage.getItem("ciq_activation") ?? "CONTENT",
   );
 
-  /* Language */
-  const [uiLang, setUiLang] = useState<"fr" | "en">(user?.language ?? "fr");
+  /* Language — source unique partagée avec le sélecteur du header (useLanguage) */
+  const { lang: uiLang, changeLanguage } = useLanguage();
 
   /* UI state */
   const [openSelector, setOpenSelector] = useState<null | "voice" | "speed" | "mic" | "activation">(
@@ -322,7 +323,6 @@ export default function ProfilePage() {
         }
         if (vp?.autoTts !== undefined) setAutoPlay(vp.autoTts);
         if (vp?.language) setMicLang(vp.language);
-        if (res.data.data.user.language) setUiLang(res.data.data.user.language as "fr" | "en");
       })
       .catch(() => {});
   }, []);
@@ -481,19 +481,6 @@ export default function ProfilePage() {
     }
   }
 
-  async function handleUiLangChange(lang: "fr" | "en") {
-    setUiLang(lang);
-    i18n.changeLanguage(lang).catch(() => {});
-    dispatch(updateUser({ language: lang }));
-    try {
-      await api.put("/users/me", { language: lang });
-    } catch {
-      dispatch(updateUser({ language: uiLang }));
-      i18n.changeLanguage(uiLang).catch(() => {});
-      toast({ title: t("profile.saveError"), variant: "destructive" });
-    }
-  }
-
   function handleMicSensChange(val: string) {
     setMicSensitivity(val);
     localStorage.setItem("ciq_mic_sens", val);
@@ -576,7 +563,7 @@ export default function ProfilePage() {
                   <select
                     className="select"
                     value={uiLang}
-                    onChange={(e) => handleUiLangChange(e.target.value as "fr" | "en")}
+                    onChange={(e) => changeLanguage(e.target.value as "fr" | "en")}
                   >
                     <option value="fr">Français</option>
                     <option value="en">English</option>
@@ -745,7 +732,7 @@ export default function ProfilePage() {
               <select
                 className="select"
                 value={uiLang}
-                onChange={(e) => handleUiLangChange(e.target.value as "fr" | "en")}
+                onChange={(e) => changeLanguage(e.target.value as "fr" | "en")}
               >
                 <option value="fr">Français</option>
                 <option value="en">English</option>
@@ -1048,7 +1035,7 @@ export default function ProfilePage() {
                     <select
                       className="select"
                       value={uiLang}
-                      onChange={(e) => handleUiLangChange(e.target.value as "fr" | "en")}
+                      onChange={(e) => changeLanguage(e.target.value as "fr" | "en")}
                     >
                       <option value="fr">Français</option>
                       <option value="en">English</option>

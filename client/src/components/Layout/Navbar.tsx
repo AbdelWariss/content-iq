@@ -1,8 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
 import { CiqIcon, Ico } from "@/lib/ciq-icons";
-import api from "@/services/axios";
-import { updateUser } from "@/store/authSlice";
-import { useAppDispatch, useAppSelector } from "@/store/index";
+import { useAppSelector } from "@/store/index";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -12,12 +11,12 @@ interface NavbarProps {
 }
 
 export function Navbar({ onMenuOpen }: NavbarProps) {
-  const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const { logout } = useAuth();
+  const { lang, changeLanguage } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -31,7 +30,6 @@ export function Navbar({ onMenuOpen }: NavbarProps) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [menuOpen]);
-  const lang = user?.language ?? "fr";
 
   const pageTitles: Record<string, string> = {
     "/dashboard": t("sidebar.dashboard"),
@@ -47,26 +45,8 @@ export function Navbar({ onMenuOpen }: NavbarProps) {
 
   const pageTitle = pageTitles[location.pathname] ?? "CONTENT.IQ";
 
-  async function setLanguage(newLang: "fr" | "en") {
-    if (newLang === lang) return;
-    dispatch(updateUser({ language: newLang }));
-    i18n.changeLanguage(newLang);
-    try {
-      await api.put("/users/me", { language: newLang });
-    } catch {
-      dispatch(updateUser({ language: lang }));
-      i18n.changeLanguage(lang);
-    }
-  }
-
-  const plan =
-    user?.role === "admin"
-      ? "Admin"
-      : user?.role === "business"
-        ? "Business"
-        : user?.role === "pro"
-          ? "Pro"
-          : "Free";
+  const planLabels: Record<string, string> = { admin: "Admin", business: "Business", pro: "Pro" };
+  const plan = planLabels[user?.role ?? ""] ?? "Free";
 
   const credits = user?.credits?.remaining ?? 0;
 
@@ -134,14 +114,14 @@ export function Navbar({ onMenuOpen }: NavbarProps) {
           <button
             type="button"
             className={lang === "fr" ? "on" : ""}
-            onClick={() => setLanguage("fr")}
+            onClick={() => changeLanguage("fr")}
           >
             FR
           </button>
           <button
             type="button"
             className={lang === "en" ? "on" : ""}
-            onClick={() => setLanguage("en")}
+            onClick={() => changeLanguage("en")}
           >
             EN
           </button>

@@ -50,6 +50,8 @@ export const RegisterSchema = z.object({
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
       message: "Le mot de passe doit contenir une majuscule, une minuscule et un chiffre",
     }),
+  // Langue détectée côté client (navigateur/zone) — persistée dès l'inscription.
+  language: z.enum(["fr", "en"]).optional(),
 });
 
 export const LoginSchema = z.object({

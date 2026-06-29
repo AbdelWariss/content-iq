@@ -69,8 +69,11 @@ export function useAuth() {
 
   const register = useCallback(
     async (name: string, email: string, password: string) => {
-      const res = await authService.register({ name, email, password });
-      const regLang = res.data.user.language ?? "fr";
+      // Persiste la langue détectée (navigateur/zone) dès l'inscription, pour que
+      // l'utilisateur continue dans la langue où l'app lui a été présentée.
+      const detected = i18n.language?.startsWith("en") ? "en" : "fr";
+      const res = await authService.register({ name, email, password, language: detected });
+      const regLang = res.data.user.language ?? detected;
       dispatch(
         setCredentials({
           accessToken: res.data.accessToken,

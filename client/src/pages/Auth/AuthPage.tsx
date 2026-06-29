@@ -838,6 +838,7 @@ function pathToMode(pathname: string): AuthMode {
 }
 
 export default function AuthPage() {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const [mode, setMode] = useState<AuthMode>(() => pathToMode(location.pathname));
@@ -906,9 +907,7 @@ export default function AuthPage() {
           </div>
         </div>
 
-        <div style={{ fontSize: 13, color: "var(--ink-mute)" }}>
-          © 2026 CODEXA Solutions · Tous droits réservés
-        </div>
+        <div style={{ fontSize: 13, color: "var(--ink-mute)" }}>{t("common.copyright")}</div>
       </div>
 
       {/* ── Panneau droit : témoignages directement sur le fond ── */}

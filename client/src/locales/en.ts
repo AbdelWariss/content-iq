@@ -409,6 +409,7 @@ const en = {
     edit: "Edit",
     close: "Close",
     back: "Back",
+    copyright: "© 2026 CODEXA Solutions — All rights reserved",
   },
   // Landing page
   landing: {
@@ -475,6 +476,10 @@ const en = {
     ctaBtn: "Create my free account",
     // Footer
     footerLogin: "Sign in",
+    footerPrivacy: "Privacy",
+    footerTerms: "Terms",
+    footerApi: "API",
+    footerApiSoon: "Soon",
     // Demo modal
     demoPaused: "Paused",
     demoPlaying: "Playing",
@@ -488,6 +493,10 @@ const en = {
     generate: "Generate content",
     backHome: "Back to home",
     login: "Sign in",
+  },
+  notify: {
+    subscriptionActive: "Subscription activated — your credits have been updated.",
+    paymentFailed: "Payment failed. Update it within 3 days to avoid downgrade to Free.",
   },
 } as const;
 

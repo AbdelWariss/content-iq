@@ -1,7 +1,37 @@
+import { SITE_URL, Seo } from "@/components/Seo";
+import { SocialLinks } from "@/components/SocialLinks";
 import { CiqIcon, Ico, MicWave } from "@/lib/ciq-icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
+
+const LANDING_JSON_LD = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "CODEXA Solutions",
+    url: SITE_URL,
+    logo: `${SITE_URL}/icon-512.png`,
+    founder: { "@type": "Person", name: "Abdel Wariss OSSENI" },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "CONTENT.IQ",
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web",
+    description:
+      "Générateur de contenu professionnel assisté par IA, pilotable à la voix : articles, posts, emails et plus, en streaming temps réel.",
+    url: SITE_URL,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "EUR",
+      description: "Plan Free : 50 crédits offerts à l'inscription.",
+    },
+    publisher: { "@type": "Organization", name: "CODEXA Solutions" },
+  },
+];
 
 const DEMO_SCENES = [
   {
@@ -71,6 +101,27 @@ function pickBestFrenchVoice(): SpeechSynthesisVoice | null {
   );
 }
 
+/**
+ * « Débloque » la synthèse vocale dans le geste utilisateur (clic). Sur iOS et
+ * la plupart des navigateurs mobiles, `speechSynthesis.speak()` n'émet du son
+ * que s'il est amorcé pendant un geste utilisateur : on lance ici une utterance
+ * silencieuse synchrone, ce qui autorise les `speak()` suivants (dans la modale)
+ * à être audibles. Sans ça, le minuteur avançait mais aucun son n'était émis.
+ */
+function primeSpeechSynthesis(): void {
+  try {
+    const synth = window.speechSynthesis;
+    if (!synth) return;
+    synth.resume();
+    synth.getVoices(); // déclenche le chargement des voix sur certains navigateurs
+    const warmup = new SpeechSynthesisUtterance(" ");
+    warmup.volume = 0;
+    synth.speak(warmup);
+  } catch {
+    // pas de synthèse vocale disponible — la démo reste visuelle
+  }
+}
+
 function DemoModal({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   const [scene, setScene] = useState(0);
@@ -98,7 +149,11 @@ function DemoModal({ onClose }: { onClose: () => void }) {
       speechPlayedMsRef.current = totalPlayed; // keep in sync for accurate pause reads
       const pct = Math.min(totalPlayed / DEMO_DURATION_MS, 1);
       setProgress(pct);
-      if (pct >= 1) clearInterval(intervalRef.current);
+      if (pct >= 1) {
+        clearInterval(intervalRef.current);
+        // Fin de la timeline (42 s) → fermeture auto, indépendamment du TTS.
+        if (!isPausedRef.current) onCloseRef.current();
+      }
     }, 100);
   }, []);
 
@@ -136,13 +191,14 @@ function DemoModal({ onClose }: { onClose: () => void }) {
     utt.volume = 1;
     const voice = pickBestFrenchVoice();
     if (voice) utt.voice = voice;
-    utt.onend = () => {
-      if (!isPausedRef.current) onCloseRef.current();
-    };
-    utt.onerror = () => {
-      if (!isPausedRef.current) onCloseRef.current();
-    };
+    // Le cycle de vie de la modale est volontairement DÉCOUPLÉ de la synthèse
+    // vocale : ni `onend` ni `onerror` ne ferment la fenêtre. Sans ce découplage,
+    // le `speechSynthesis.cancel()` ci-dessous (ou un double-montage StrictMode,
+    // ou l'absence de voix FR) déclenchait un `onerror`/`onend` qui refermait la
+    // modale immédiatement → elle « ne s'ouvrait pas ». La fermeture automatique
+    // est désormais pilotée par la timeline (progress >= 1), pas par le TTS.
     speechSynthesis.cancel();
+    speechSynthesis.resume(); // Chrome mobile met parfois la file en pause
     speechSynthesis.speak(utt);
   }, []);
 
@@ -175,8 +231,10 @@ function DemoModal({ onClose }: { onClose: () => void }) {
 
     const startSpeech = () => speakFrom(0);
 
+    // Lancement immédiat (au plus près du geste utilisateur → audio mobile fiable).
+    // Fallback `voiceschanged` si les voix ne sont pas encore chargées.
     if (speechSynthesis.getVoices().length > 0) {
-      setTimeout(startSpeech, 50);
+      startSpeech();
     } else {
       speechSynthesis.addEventListener("voiceschanged", startSpeech, { once: true });
     }
@@ -501,6 +559,12 @@ export default function LandingPage() {
         overflowX: "hidden",
       }}
     >
+      <Seo
+        title="CONTENT.IQ — Créez vos contenus professionnels à la voix"
+        description="Générez articles, posts LinkedIn, emails et plus en streaming temps réel, pilotés à la voix. Par CODEXA Solutions. 50 crédits offerts."
+        path="/"
+        jsonLd={LANDING_JSON_LD}
+      />
       {/* ── Demo Modal ── */}
       {showDemo && <DemoModal onClose={() => setShowDemo(false)} />}
 
@@ -632,7 +696,7 @@ export default function LandingPage() {
           <a href="#voice" className="landing-nav-link">
             {t("landing.navVoice")}
           </a>
-          <Link to="/templates" className="landing-nav-link">
+          <Link to="/register" className="landing-nav-link">
             {t("landing.navTemplates")}
           </Link>
           <Link to="/pricing" className="landing-nav-link">
@@ -709,7 +773,14 @@ export default function LandingPage() {
               {t("landing.heroCtaPrimary")}
               <Ico icon={CiqIcon.arrow} size={16} />
             </button>
-            <button className="btn btn-outline btn-lg" onClick={() => setShowDemo(true)}>
+            <button
+              className="btn btn-outline btn-lg"
+              onClick={() => {
+                // Amorce la voix DANS le geste utilisateur (requis iOS/mobile)
+                primeSpeechSynthesis();
+                setShowDemo(true);
+              }}
+            >
               <Ico icon={CiqIcon.play} />
               {t("landing.heroCtaDemo")}
             </button>
@@ -1189,11 +1260,33 @@ export default function LandingPage() {
           className="row between landing-footer-row"
           style={{ maxWidth: 1320, margin: "0 auto", color: "var(--ink-mute)", fontSize: 12.5 }}
         >
-          <span>CODEXA Solutions · Abdel Wariss OSSENI · 2026</span>
+          <span className="row" style={{ gap: 16 }}>
+            {t("common.copyright")}
+            <SocialLinks />
+          </span>
           <span className="row" style={{ gap: 18 }}>
-            <span style={{ cursor: "pointer" }}>Privacy</span>
-            <span style={{ cursor: "pointer" }}>Terms</span>
-            <span style={{ cursor: "pointer" }}>API</span>
+            <Link to="/privacy" style={{ color: "inherit" }}>
+              {t("landing.footerPrivacy")}
+            </Link>
+            <Link to="/terms" style={{ color: "inherit" }}>
+              {t("landing.footerTerms")}
+            </Link>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, opacity: 0.7 }}>
+              {t("landing.footerApi")}
+              <span
+                style={{
+                  fontSize: 9.5,
+                  padding: "1px 5px",
+                  borderRadius: 5,
+                  background: "var(--bg-elev)",
+                  border: "1px solid var(--line)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.03em",
+                }}
+              >
+                {t("landing.footerApiSoon")}
+              </span>
+            </span>
             <Link to="/login" style={{ color: "inherit" }}>
               {t("landing.footerLogin")}
             </Link>

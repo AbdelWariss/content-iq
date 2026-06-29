@@ -1,3 +1,4 @@
+import { Seo } from "@/components/Seo";
 import { toast } from "@/hooks/use-toast";
 import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import { stripeService } from "@/services/stripe.service";
@@ -109,6 +110,11 @@ export default function PricingPage() {
         overflowX: "hidden",
       }}
     >
+      <Seo
+        title="Tarifs — CONTENT.IQ"
+        description="Découvrez les offres CONTENT.IQ : Free (50 crédits offerts), Pro et Business. Génération de contenu IA à la voix."
+        path="/pricing"
+      />
       {/* ── Header public (visible uniquement si non connecté) ── */}
       {!isAuthenticated && (
         <div

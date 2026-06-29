@@ -241,7 +241,7 @@ export default function ResetPasswordPage() {
         </div>
 
         <div style={{ fontSize: 14, color: "var(--ink-mute)" }}>
-          © 2026 CODEXA · Document confidentiel
+          © 2026 CODEXA Solutions — Tous droits réservés
         </div>
       </div>
 

@@ -2,6 +2,7 @@ import { AppLayout } from "@/components/Layout/AppLayout";
 import { AuthLayout } from "@/components/Layout/AuthLayout";
 import { ProtectedRoute } from "@/components/Layout/ProtectedRoute";
 import { PageLoader } from "@/components/ui/PageLoader";
+import { useAppSocket } from "@/hooks/useAppSocket";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppSelector } from "@/store/index";
 import { Suspense, lazy } from "react";
@@ -16,6 +17,7 @@ const GoogleCallbackPage = lazy(() => import("@/pages/Auth/GoogleCallbackPage"))
 // Public
 const LandingPage = lazy(() => import("@/pages/Landing/LandingPage"));
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
+const LegalPage = lazy(() => import("@/pages/Legal/LegalPage"));
 
 // App
 const DashboardPage = lazy(() => import("@/pages/Dashboard/DashboardPage"));
@@ -33,6 +35,12 @@ function AuthInitializer() {
   return null;
 }
 
+/** Gère la connexion socket temps-réel (sync crédits + notifications). */
+function SocketManager() {
+  useAppSocket();
+  return null;
+}
+
 /** Route racine : Landing si non connecté, Dashboard si connecté */
 function RootRoute() {
   const { isAuthenticated, isLoading } = useAppSelector((s) => s.auth);
@@ -45,6 +53,7 @@ export function App() {
   return (
     <>
       <AuthInitializer />
+      <SocketManager />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Landing page publique */}
@@ -63,6 +72,10 @@ export function App() {
 
           {/* Page tarifs — publique (non connecté → /register, connecté → Stripe) */}
           <Route path="/pricing" element={<PricingPage />} />
+
+          {/* Pages légales — publiques */}
+          <Route path="/privacy" element={<LegalPage type="privacy" />} />
+          <Route path="/terms" element={<LegalPage type="terms" />} />
 
           {/* Routes protégées */}
           <Route element={<ProtectedRoute />}>

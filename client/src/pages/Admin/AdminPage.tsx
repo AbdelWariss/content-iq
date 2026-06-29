@@ -1,3 +1,4 @@
+import { AdminLiveFeed } from "@/components/Admin/AdminLiveFeed";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -235,6 +236,9 @@ export default function AdminPage() {
               />
             </div>
           ) : null}
+
+          {/* Feed temps-réel (socket.io) */}
+          <AdminLiveFeed />
 
           {/* Filtres */}
           <div className="flex flex-col sm:flex-row gap-3">

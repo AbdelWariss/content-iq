@@ -30,3 +30,20 @@ export function stopPropagation() {
     onKeyDown: (e: KeyboardEvent) => e.stopPropagation(),
   };
 }
+
+/**
+ * Rend accessible au clavier n'importe quel élément non-bouton qui a déjà un
+ * `onClick`, sans connaître son handler : Entrée/Espace déclenchent un vrai clic
+ * sur l'élément. À étaler EN PLUS du `onClick` existant :
+ *   <div onClick={...} {...keyboardActivate}>…</div>
+ */
+export const keyboardActivate = {
+  role: "button" as const,
+  tabIndex: 0,
+  onKeyDown: (e: KeyboardEvent<HTMLElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      e.currentTarget.click();
+    }
+  },
+};

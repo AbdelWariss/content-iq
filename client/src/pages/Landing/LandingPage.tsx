@@ -1,5 +1,6 @@
 import { SITE_URL, Seo } from "@/components/Seo";
 import { SocialLinks } from "@/components/SocialLinks";
+import { stopPropagation } from "@/lib/a11y";
 import { CiqIcon, Ico, MicWave } from "@/lib/ciq-icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -269,6 +270,7 @@ function DemoModal({ onClose }: { onClose: () => void }) {
         animation: "fadeSlideIn 0.2s ease",
       }}
       onClick={onClose}
+      onKeyDown={onClose}
     >
       <div
         className="card"
@@ -280,7 +282,7 @@ function DemoModal({ onClose }: { onClose: () => void }) {
           overflow: "hidden",
           boxShadow: "0 32px 80px rgba(0,0,0,0.35)",
         }}
-        onClick={(e) => e.stopPropagation()}
+        {...stopPropagation()}
       >
         {/* Modal header */}
         <div

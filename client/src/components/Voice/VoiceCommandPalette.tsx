@@ -1,3 +1,4 @@
+import { keyboardActivate, stopPropagation } from "@/lib/a11y";
 import { CiqIcon, Ico, MicWave } from "@/lib/ciq-icons";
 import { useEffect } from "react";
 
@@ -50,11 +51,12 @@ export function VoiceCommandPalette({
         paddingTop: 80,
       }}
       onClick={onClose}
+      onKeyDown={onClose}
     >
       <div
         className="card"
         style={{ width: 620, maxWidth: "92%", boxShadow: "var(--shadow-pop)", overflow: "hidden" }}
-        onClick={(e) => e.stopPropagation()}
+        {...stopPropagation()}
       >
         {/* Mic header */}
         <div
@@ -114,6 +116,7 @@ export function VoiceCommandPalette({
                   cursor: "pointer",
                 }}
                 onClick={() => onExecute(topCommand)}
+                {...keyboardActivate}
               >
                 <span className="ico" style={{ color: "var(--accent-ink)" }}>
                   {topCommand.icon}
@@ -150,6 +153,7 @@ export function VoiceCommandPalette({
                     cursor: "pointer",
                   }}
                   onClick={() => onExecute(cmd)}
+                  {...keyboardActivate}
                 >
                   <span className="ico" style={{ color: "var(--ink-mute)" }}>
                     {cmd.icon}

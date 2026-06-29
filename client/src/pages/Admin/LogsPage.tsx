@@ -1,4 +1,5 @@
 import { toast } from "@/hooks/use-toast";
+import { keyboardActivate } from "@/lib/a11y";
 import { type AppLogEntry, type LogsParams, adminService } from "@/services/admin.service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
@@ -82,6 +83,7 @@ function LogRow({ log }: { log: AppLogEntry }) {
           cursor: hasDetails ? "pointer" : "default",
         }}
         onClick={() => hasDetails && setOpen((o) => !o)}
+        {...keyboardActivate}
       >
         <td
           style={{

@@ -5,6 +5,7 @@ import { authService } from "@/services/auth.service";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import { DynamicPanel } from "./AuthPage";
@@ -25,6 +26,7 @@ const Schema = z
 type FormData = z.infer<typeof Schema>;
 
 export default function ResetPasswordPage() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
@@ -48,7 +50,13 @@ export default function ResetPasswordPage() {
     pwd.length >= 12 && /[^A-Za-z0-9]/.test(pwd),
   ];
   const level = strength.filter(Boolean).length;
-  const levelLabel = ["", "Faible", "Correct", "Solide", "Fort"][level];
+  const levelLabel = [
+    "",
+    t("resetPassword.strengthWeak"),
+    t("resetPassword.strengthOk"),
+    t("resetPassword.strengthSolid"),
+    t("resetPassword.strengthStrong"),
+  ][level];
 
   async function onSubmit({ password }: FormData) {
     if (!token) {
@@ -67,7 +75,7 @@ export default function ResetPasswordPage() {
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
-          ?.message ?? "Lien invalide ou expiré";
+          ?.message ?? t("resetPassword.invalidLink");
       toast({ title: i18n.t("common.error"), description: message, variant: "destructive" });
     } finally {
       setIsLoading(false);
@@ -117,36 +125,36 @@ export default function ResetPasswordPage() {
                   <Ico icon={CiqIcon.check} size={32} style={{ color: "var(--accent)" }} />
                 </div>
                 <h1 className="t-display" style={{ fontSize: 48, margin: "0 0 12px" }}>
-                  Mot de passe réinitialisé !
+                  {t("resetPassword.successTitle")}
                 </h1>
                 <p style={{ color: "var(--ink-soft)", fontSize: 17, marginBottom: 32 }}>
-                  Redirection vers la connexion dans quelques secondes…
+                  {t("resetPassword.successDesc")}
                 </p>
                 <Link
                   to="/login"
                   className="btn btn-primary btn-lg"
                   style={{ display: "flex", justifyContent: "center" }}
                 >
-                  Se connecter maintenant
+                  {t("resetPassword.successCta")}
                   <Ico icon={CiqIcon.arrow} size={18} />
                 </Link>
               </div>
             ) : (
               <div>
                 <h1 className="t-display" style={{ fontSize: 54, margin: "0 0 10px" }}>
-                  Nouveau mot de passe
+                  {t("resetPassword.title")}
                 </h1>
                 <p style={{ color: "var(--ink-soft)", marginBottom: 30, fontSize: 17 }}>
-                  Choisissez un mot de passe sécurisé pour votre compte.
+                  {t("resetPassword.subtitle")}
                 </p>
 
                 <form onSubmit={handleSubmit(onSubmit)}>
                   <div className="col" style={{ gap: 18 }}>
                     <div>
                       <label className="label">
-                        Nouveau mot de passe{" "}
+                        {t("resetPassword.labelNew")}{" "}
                         <span style={{ color: "var(--ink-mute)", fontWeight: 400 }}>
-                          · min. 8 caractères
+                          {t("resetPassword.labelNewHint")}
                         </span>
                       </label>
                       <div style={{ position: "relative" }}>
@@ -203,7 +211,7 @@ export default function ResetPasswordPage() {
                     </div>
 
                     <div>
-                      <label className="label">Confirmer le mot de passe</label>
+                      <label className="label">{t("resetPassword.labelConfirm")}</label>
                       <input
                         className="input"
                         type="password"
@@ -224,7 +232,7 @@ export default function ResetPasswordPage() {
                       className="btn btn-primary btn-lg"
                       style={{ width: "100%", justifyContent: "center", marginTop: 4 }}
                     >
-                      {isLoading ? "Réinitialisation…" : "Réinitialiser mon mot de passe"}
+                      {isLoading ? t("resetPassword.submitting") : t("resetPassword.submit")}
                       {!isLoading && <Ico icon={CiqIcon.arrow} size={18} />}
                     </button>
                   </div>
@@ -232,7 +240,7 @@ export default function ResetPasswordPage() {
 
                 <div style={{ marginTop: 26, fontSize: 15, color: "var(--ink-soft)" }}>
                   <Link to="/login" className="lnk" style={{ textDecoration: "none" }}>
-                    ← Retour à la connexion
+                    {t("resetPassword.backLogin")}
                   </Link>
                 </div>
               </div>
@@ -240,9 +248,7 @@ export default function ResetPasswordPage() {
           </div>
         </div>
 
-        <div style={{ fontSize: 14, color: "var(--ink-mute)" }}>
-          © 2026 CODEXA Solutions — Tous droits réservés
-        </div>
+        <div style={{ fontSize: 14, color: "var(--ink-mute)" }}>{t("common.copyright")}</div>
       </div>
 
       {/* ── Right — dynamic panel ── */}

@@ -2,6 +2,7 @@ import { getSocket } from "@/services/socket";
 import type { AdminGenerationPayload, AdminSignupPayload } from "@contentiq/shared";
 import { SOCKET_EVENTS } from "@contentiq/shared";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 type FeedItem =
   | { kind: "signup"; at: string; label: string }
@@ -14,6 +15,7 @@ const MAX_ITEMS = 20;
  * inscriptions et générations poussées par le serveur (room socket `admins`).
  */
 export function AdminLiveFeed() {
+  const { t } = useTranslation();
   const [items, setItems] = useState<FeedItem[]>([]);
 
   useEffect(() => {
@@ -35,10 +37,10 @@ export function AdminLiveFeed() {
 
     const onGeneration = (p: AdminGenerationPayload) => {
       setItems((prev) =>
-        [
-          { kind: "generation" as const, at: p.at, label: `Génération « ${p.contentType} »` },
-          ...prev,
-        ].slice(0, MAX_ITEMS),
+        [{ kind: "generation" as const, at: p.at, label: `« ${p.contentType} »` }, ...prev].slice(
+          0,
+          MAX_ITEMS,
+        ),
       );
     };
 
@@ -58,13 +60,11 @@ export function AdminLiveFeed() {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500/60" />
           <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-500" />
         </span>
-        <h3 className="font-medium">Activité en direct</h3>
+        <h3 className="font-medium">{t("admin.liveTitle")}</h3>
       </div>
 
       {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-4">
-          En attente d'événements (inscriptions, générations)…
-        </p>
+        <p className="text-sm text-muted-foreground py-4">{t("admin.liveWaiting")}</p>
       ) : (
         <ul className="space-y-2 max-h-72 overflow-y-auto">
           {items.map((item) => (
@@ -76,7 +76,7 @@ export function AdminLiveFeed() {
                     : "shrink-0 rounded px-1.5 py-0.5 text-xs bg-blue-500/10 text-blue-500"
                 }
               >
-                {item.kind === "signup" ? "Inscription" : "Génération"}
+                {item.kind === "signup" ? t("admin.liveSignup") : t("admin.liveGeneration")}
               </span>
               <span className="truncate">{item.label}</span>
               <span className="ml-auto shrink-0 text-xs text-muted-foreground">

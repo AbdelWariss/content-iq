@@ -404,7 +404,7 @@ export async function translateContent(
   const msg = await client.messages.create({
     model: env.CLAUDE_MODEL,
     max_tokens: 4000,
-    system: `Tu es un traducteur expert. ${targetLang === "fr" ? "Traduis en français." : "Translate to " + langLabel + "."}`,
+    system: `Tu es un traducteur expert. ${targetLang === "fr" ? "Traduis en français." : `Translate to ${langLabel}.`}`,
     messages: [
       {
         role: "user",

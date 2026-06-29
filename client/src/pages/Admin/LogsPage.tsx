@@ -290,7 +290,7 @@ export default function LogsPage() {
           onChange={(e) =>
             setFilter(
               "to",
-              e.target.value ? new Date(e.target.value + "T23:59:59").toISOString() : "",
+              e.target.value ? new Date(`${e.target.value}T23:59:59`).toISOString() : "",
             )
           }
         />

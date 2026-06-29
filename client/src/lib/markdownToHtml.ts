@@ -45,7 +45,8 @@ export function markdownToHTML(text: string): string {
         out.push("<ul>");
         inList = true;
       }
-      out.push(`<li>${(li ?? oli)![1]}</li>`);
+      const item = li ?? oli;
+      out.push(`<li>${item ? item[1] : ""}</li>`);
     } else if (!line.trim()) {
       if (inList) {
         out.push("</ul>");

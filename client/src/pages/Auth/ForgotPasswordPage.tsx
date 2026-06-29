@@ -83,7 +83,7 @@ export default function ForgotPasswordPage() {
             <p style={{ color: "var(--ink-soft)", fontSize: 14, marginBottom: 22 }}>
               Un email a été envoyé à{" "}
               <strong className="t-mono">
-                {sentEmail.replace(/^(.).*@/, (_, c) => c + "***@")}
+                {sentEmail.replace(/^(.).*@/, (_, c) => `${c}***@`)}
               </strong>
               . Le lien expire dans 1h.
             </p>

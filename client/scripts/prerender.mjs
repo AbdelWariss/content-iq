@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 /**
  * Prerendering opt-in des pages publiques (SEO / découvrabilité LLM).
  *
@@ -14,9 +16,7 @@
  * déploiement de preview avant de toucher le build de prod.
  */
 import { createServer } from "node:http";
-import { readFile, mkdir, writeFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
-import { extname, join, dirname } from "node:path";
+import { dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright-core";
 
@@ -56,7 +56,9 @@ function startServer() {
       }
       try {
         const data = await readFile(filePath);
-        res.writeHead(200, { "Content-Type": MIME[extname(filePath)] || "application/octet-stream" });
+        res.writeHead(200, {
+          "Content-Type": MIME[extname(filePath)] || "application/octet-stream",
+        });
         res.end(data);
       } catch {
         res.writeHead(404);
@@ -73,7 +75,9 @@ async function run() {
     process.exit(1);
   }
   if (!existsSync(CHROMIUM)) {
-    console.error(`❌ Chromium introuvable : ${CHROMIUM}\n   Définis PRERENDER_CHROMIUM ou installe-le.`);
+    console.error(
+      `❌ Chromium introuvable : ${CHROMIUM}\n   Définis PRERENDER_CHROMIUM ou installe-le.`,
+    );
     process.exit(1);
   }
 

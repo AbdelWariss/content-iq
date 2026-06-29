@@ -151,12 +151,12 @@ export default function ResetPasswordPage() {
                 <form onSubmit={handleSubmit(onSubmit)}>
                   <div className="col" style={{ gap: 18 }}>
                     <div>
-                      <label className="label">
+                      <span className="label">
                         {t("resetPassword.labelNew")}{" "}
                         <span style={{ color: "var(--ink-mute)", fontWeight: 400 }}>
                           {t("resetPassword.labelNewHint")}
                         </span>
-                      </label>
+                      </span>
                       <div style={{ position: "relative" }}>
                         <input
                           className="input"
@@ -211,7 +211,7 @@ export default function ResetPasswordPage() {
                     </div>
 
                     <div>
-                      <label className="label">{t("resetPassword.labelConfirm")}</label>
+                      <span className="label">{t("resetPassword.labelConfirm")}</span>
                       <input
                         className="input"
                         type="password"

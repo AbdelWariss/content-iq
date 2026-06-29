@@ -352,7 +352,7 @@ function LoginForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="col" style={{ gap: 16 }}>
           <div>
-            <label className="label">{t("auth.labelEmail")}</label>
+            <span className="label">{t("auth.labelEmail")}</span>
             <input
               className="input"
               type="email"
@@ -368,7 +368,7 @@ function LoginForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
           </div>
           <div>
             <div className="row between">
-              <label className="label">{t("auth.labelPassword")}</label>
+              <span className="label">{t("auth.labelPassword")}</span>
               <button
                 type="button"
                 className="lnk"
@@ -521,7 +521,7 @@ function RegisterForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="col" style={{ gap: 10 }}>
           <div>
-            <label className="label">{t("auth.labelFullName")}</label>
+            <span className="label">{t("auth.labelFullName")}</span>
             <input
               className="input"
               placeholder={t("auth.fullNamePh")}
@@ -535,7 +535,7 @@ function RegisterForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
             )}
           </div>
           <div>
-            <label className="label">{t("auth.labelEmail")}</label>
+            <span className="label">{t("auth.labelEmail")}</span>
             <input
               className="input"
               type="email"
@@ -550,12 +550,12 @@ function RegisterForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
             )}
           </div>
           <div>
-            <label className="label">
+            <span className="label">
               {t("auth.labelPasswordStrength")}{" "}
               <span style={{ color: "var(--ink-mute)", fontWeight: 400 }}>
                 {t("auth.passwordHint")}
               </span>
-            </label>
+            </span>
             <div style={{ position: "relative" }}>
               <input
                 className="input"
@@ -609,7 +609,7 @@ function RegisterForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
             )}
           </div>
           <div>
-            <label className="label">{t("auth.labelYouAre")}</label>
+            <span className="label">{t("auth.labelYouAre")}</span>
             <select className="select">
               <option>{t("auth.contentCreator")}</option>
               <option>{t("auth.agency")}</option>
@@ -785,7 +785,7 @@ function ForgotForm({ onSwitch }: { onSwitch: (m: AuthMode) => void }) {
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="col" style={{ gap: 18 }}>
           <div>
-            <label className="label">{t("auth.labelEmail")}</label>
+            <span className="label">{t("auth.labelEmail")}</span>
             <input
               className="input"
               type="email"

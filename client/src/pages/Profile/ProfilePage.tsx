@@ -536,7 +536,7 @@ export default function ProfilePage() {
               </div>
               <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 <div>
-                  <label className="label">{t("profile.labelName")}</label>
+                  <span className="label">{t("profile.labelName")}</span>
                   <input className="input" {...register("name")} />
                   {errors.name && (
                     <p style={{ fontSize: 11, color: "var(--accent)", marginTop: 4 }}>
@@ -545,7 +545,7 @@ export default function ProfilePage() {
                   )}
                 </div>
                 <div>
-                  <label className="label">{t("profile.labelEmail")}</label>
+                  <span className="label">{t("profile.labelEmail")}</span>
                   <input
                     className="input"
                     defaultValue={user.email}
@@ -554,11 +554,11 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div>
-                  <label className="label">{t("profile.labelBio")}</label>
+                  <span className="label">{t("profile.labelBio")}</span>
                   <input className="input" placeholder={t("profile.bioPh")} {...register("bio")} />
                 </div>
                 <div>
-                  <label className="label">{t("profile.labelLang")}</label>
+                  <span className="label">{t("profile.labelLang")}</span>
                   <select
                     className="select"
                     value={uiLang}
@@ -694,7 +694,7 @@ export default function ProfilePage() {
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 22 }}>
             <div>
-              <label className="label">{t("profile.speedLabel")}</label>
+              <span className="label">{t("profile.speedLabel")}</span>
               <div className="seg" style={{ width: "100%" }}>
                 {SPEED_OPTIONS.map(({ v, l }) => (
                   <button
@@ -710,7 +710,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <div>
-              <label className="label">{t("profile.autoPlayLabel")}</label>
+              <span className="label">{t("profile.autoPlayLabel")}</span>
               <div
                 className="row between"
                 style={{
@@ -729,7 +729,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <div>
-              <label className="label">{t("profile.labelLang")}</label>
+              <span className="label">{t("profile.labelLang")}</span>
               <select
                 className="select"
                 value={uiLang}
@@ -749,7 +749,7 @@ export default function ProfilePage() {
             style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 22, marginTop: 20 }}
           >
             <div>
-              <label className="label">{t("profile.micLangLabel")}</label>
+              <span className="label">{t("profile.micLangLabel")}</span>
               <select
                 className="select"
                 value={micLang}
@@ -763,7 +763,7 @@ export default function ProfilePage() {
               </select>
             </div>
             <div>
-              <label className="label">{t("profile.micEngineLabel")}</label>
+              <span className="label">{t("profile.micEngineLabel")}</span>
               <div className="seg" style={{ width: "100%" }}>
                 <button
                   type="button"
@@ -790,7 +790,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <div>
-              <label className="label">{t("profile.micSensLabel")}</label>
+              <span className="label">{t("profile.micSensLabel")}</span>
               <div className="seg" style={{ width: "100%" }}>
                 {MIC_SENSITIVITIES.map((s) => (
                   <button
@@ -806,7 +806,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <div style={{ gridColumn: "1 / -1" }}>
-              <label className="label">{t("profile.micSensLabel")}</label>
+              <span className="label">{t("profile.micSensLabel")}</span>
               <div
                 style={{
                   background: "var(--bg-sunk)",
@@ -834,7 +834,7 @@ export default function ProfilePage() {
 
             {/* Wake word — desktop */}
             <div style={{ gridColumn: "1 / -1" }}>
-              <label className="label">{t("voice.wakeWordLabel")}</label>
+              <span className="label">{t("voice.wakeWordLabel")}</span>
               <p style={{ fontSize: 12, color: "var(--ink-mute)", margin: "0 0 10px" }}>
                 {t("voice.wakeWordDesc")}
               </p>
@@ -1007,7 +1007,7 @@ export default function ProfilePage() {
               >
                 <div className="col" style={{ gap: 12 }}>
                   <div>
-                    <label className="label">{t("profile.labelName")}</label>
+                    <span className="label">{t("profile.labelName")}</span>
                     <input className="input" {...register("name")} />
                     {errors.name && (
                       <p style={{ fontSize: 11, color: "var(--accent)", marginTop: 4 }}>
@@ -1016,7 +1016,7 @@ export default function ProfilePage() {
                     )}
                   </div>
                   <div>
-                    <label className="label">{t("profile.labelEmail")}</label>
+                    <span className="label">{t("profile.labelEmail")}</span>
                     <input
                       className="input"
                       defaultValue={user.email}
@@ -1025,7 +1025,7 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div>
-                    <label className="label">{t("profile.labelBio")}</label>
+                    <span className="label">{t("profile.labelBio")}</span>
                     <input
                       className="input"
                       placeholder={t("profile.bioPh")}
@@ -1033,7 +1033,7 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div>
-                    <label className="label">{t("profile.labelLang")}</label>
+                    <span className="label">{t("profile.labelLang")}</span>
                     <select
                       className="select"
                       value={uiLang}

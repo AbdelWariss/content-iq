@@ -368,7 +368,7 @@ export default function GeneratePage() {
                 <Ico icon={CiqIcon.x} />
               </button>
             </div>
-            <label className="label">Nom du template</label>
+            <span className="label">Nom du template</span>
             <input
               className="input"
               placeholder="Ex : Post LinkedIn inspirant"
@@ -505,7 +505,7 @@ export default function GeneratePage() {
 
               {/* Content type */}
               <div>
-                <label className="label">{t("generate.contentType")}</label>
+                <span className="label">{t("generate.contentType")}</span>
                 <div
                   className="mobile-content-type-grid"
                   style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}
@@ -548,7 +548,7 @@ export default function GeneratePage() {
 
               {/* Subject */}
               <div>
-                <label className="label">{t("generate.subject")}</label>
+                <span className="label">{t("generate.subject")}</span>
                 <textarea
                   className="textarea"
                   rows={3}
@@ -565,7 +565,7 @@ export default function GeneratePage() {
               {/* Tone + Length + Language */}
               <div className="row" style={{ gap: 10 }}>
                 <div style={{ flex: 1 }}>
-                  <label className="label">{t("generate.tone")}</label>
+                  <span className="label">{t("generate.tone")}</span>
                   <select className="select" {...register("tone")}>
                     {TONES.map(({ value, label }) => (
                       <option key={value} value={value}>
@@ -575,7 +575,7 @@ export default function GeneratePage() {
                   </select>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label className="label">{t("generate.length")}</label>
+                  <span className="label">{t("generate.length")}</span>
                   <select className="select" {...register("length")}>
                     {LENGTHS.map(({ value, label }) => (
                       <option key={value} value={value}>
@@ -585,7 +585,7 @@ export default function GeneratePage() {
                   </select>
                 </div>
                 <div style={{ flex: 0.7 }}>
-                  <label className="label">{t("generate.language")}</label>
+                  <span className="label">{t("generate.language")}</span>
                   <select className="select" {...register("language")}>
                     {LANGUAGES.map(({ value, label }) => (
                       <option key={value} value={value}>
@@ -629,7 +629,7 @@ export default function GeneratePage() {
 
               {/* Keywords */}
               <div>
-                <label className="label">{t("generate.keywords")}</label>
+                <span className="label">{t("generate.keywords")}</span>
                 <div
                   className="row"
                   style={{
@@ -718,7 +718,7 @@ export default function GeneratePage() {
 
               {/* Audience */}
               <div>
-                <label className="label">{t("generate.audience")}</label>
+                <span className="label">{t("generate.audience")}</span>
                 <input
                   className="input"
                   placeholder={t("generate.audiencePlaceholder")}

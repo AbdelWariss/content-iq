@@ -634,6 +634,7 @@ export default function DashboardPage() {
                     <div
                       key={item._id}
                       className="row"
+                      // biome-ignore lint/a11y/useSemanticElements: ligne cliquable stylée, déjà accessible (role/tabIndex/onKeyDown)
                       role="button"
                       tabIndex={0}
                       onClick={() => navigate(`/generate?view=${item._id}`)}
@@ -647,12 +648,12 @@ export default function DashboardPage() {
                         transition: "background 0.1s",
                         minWidth: 0,
                       }}
-                      onMouseEnter={(e) =>
-                        ((e.currentTarget as HTMLDivElement).style.background = "var(--bg-sunk)")
-                      }
-                      onMouseLeave={(e) =>
-                        ((e.currentTarget as HTMLDivElement).style.background = "transparent")
-                      }
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "var(--bg-sunk)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                      }}
                     >
                       <Ico
                         icon={TYPE_ICON[item.type] ?? CiqIcon.blog}

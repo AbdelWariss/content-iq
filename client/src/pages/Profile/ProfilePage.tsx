@@ -280,12 +280,6 @@ export default function ProfilePage() {
   const [previewing, setPreviewing] = useState<string | null>(null);
 
   /* Subscription */
-  const planLabel: Record<string, string> = {
-    free: "Free",
-    pro: "Pro",
-    business: "Business",
-    admin: "Admin",
-  };
   const planPrice: Record<string, string> = {
     free: "Gratuit",
     pro: "Pro · $9.99/mo",
@@ -330,7 +324,7 @@ export default function ProfilePage() {
   /* ── Mic test (getUserMedia) ── */
   async function toggleMicTest() {
     if (isMicTesting) {
-      micStreamRef.current?.getTracks().forEach((t) => t.stop());
+      for (const t of micStreamRef.current?.getTracks() ?? []) t.stop();
       micStreamRef.current = null;
       setIsMicTesting(false);
       return;

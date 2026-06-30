@@ -8,6 +8,314 @@ Répertoire détaillé de toutes les tâches effectuées au cours des sessions d
 
 ---
 
+### [2026-06-30] — Session 21 : Polish UX, responsive mobile & identité visuelle — COMPLÉTÉ ✅ (branche, non mergé)
+- **Session :** 21
+- **Statut :** Complété — sur branche `feat/reliability-hardening`, **non poussé / non mergé** (le merge vers `main` déclenche le déploiement prod, en attente de feu vert utilisateur)
+- **Commits :** `c6c0273` · `7d2ee14` · `556a0ec` · `93a1e78` · `543e63d` · `6a57a7b`
+- **Tests :** 32 client / 81 serveur — tous verts · TypeScript 0 erreur · Biome 0 erreur / 0 warning
+
+> Contexte : session de finition pilotée par retours visuels de l'utilisateur (captures d'écran), corrigeant des redondances UI, un bug de scroll horizontal mobile, et finalisant l'identité de marque. Méthode notable : **vérification automatisée par Playwright** (chromium headless en cache) — audit responsive 14 pages × 3 largeurs, et captures de validation du FAB vocal et du logo chat.
+
+---
+
+#### Tâche 1 — Retrait du champ « Langue de sortie » redondant
+
+**Commit :** `c6c0273` — `refactor(generate): retire le champ 'Langue de sortie' redondant`
+
+**Fichiers modifiés :** `client/src/pages/Generate/GeneratePage.tsx` · `client/src/locales/fr.ts` · `client/src/locales/en.ts` · `packages/shared/src/schemas/index.ts` · `server/src/services/claude.service.ts`
+
+**Problème :** La page de génération exposait **deux sélecteurs de langue** : « Langue » (`language` : fr/en/es/ar) et « Langue de sortie » (`outputLanguage` : fr/en/vide). Déroutant et redondant.
+
+**Solution :** Vérification du backend avant retrait — `getSystemPrompt(language, outputLanguage)` retombait sur `LANG_INSTRUCTIONS[language]` dès que `outputLanguage` valait « — Même langue — » (la valeur par défaut). Confirmé que le champ « Langue » fait déjà tout le travail. Retrait complet :
+```ts
+// AVANT
+function getSystemPrompt(language: ContentLanguage, outputLanguage?: "fr" | "en") {
+  const langInstruction = outputLanguage ? OUTPUT_LANG_INSTRUCTIONS[outputLanguage] : LANG_INSTRUCTIONS[language];
+  ...
+}
+// APRÈS
+function getSystemPrompt(language: ContentLanguage) {
+  const langInstruction = LANG_INSTRUCTIONS[language];
+  ...
+}
+```
+UI supprimée, clés i18n `outputLanguageLabel`/`outputLanguageAuto` retirées (fr+en), champ `outputLanguage` retiré de `GenerateContentSchema`, `OUTPUT_LANG_INSTRUCTIONS` supprimé.
+
+**Justification :** `outputLanguage` n'était qu'un override par défaut sur `language`, limité à fr/en (alors que `language` couvre fr/en/es/ar). Le retirer **côté schéma + backend + UI** (et pas seulement masquer l'UI) évite de laisser du code mort. Comportement inchangé : le backend retombait déjà sur `language` par défaut.
+
+---
+
+#### Tâche 2 — Retrait du bouton micro flottant redondant (avec correction d'itération)
+
+**Commits :** `7d2ee14` (premier essai, mauvais bouton) puis `556a0ec` (correction)
+
+**Fichiers modifiés :** `client/src/pages/Generate/GeneratePage.tsx` · `client/src/locales/fr.ts` · `client/src/locales/en.ts`
+
+**Problème :** Deux contrôles « Dicter le brief » faisaient doublon (même action `handleFloatingMic`) : un bouton **inline** dans l'en-tête du brief et un bouton **flottant** (`generate-mic-float`) en bas à droite, au-dessus du chat assistant.
+
+**Solution :** Au 1er essai (`7d2ee14`) j'ai retiré le mauvais (l'inline). L'utilisateur a clarifié par capture qu'il fallait garder l'inline et retirer le **flottant**. Correction (`556a0ec`) : inline restauré, flottant supprimé, + nettoyage des éléments devenus inutilisés (import `MicWave`, variable `voiceStatus`, clés i18n orphelines `listening`/`dictateHint`/`clickToStop`/`voiceExample`).
+
+**Justification :** Leçon notée : **quand deux éléments portent le même libellé à des positions différentes, demander confirmation** avant de supprimer. Le nettoyage des imports/clés orphelines maintient 0 warning lint.
+
+---
+
+#### Tâche 3 — Suppression du scroll horizontal en mobile
+
+**Commit :** `93a1e78` — `fix(responsive): supprime le scroll horizontal en mobile`
+
+**Fichiers modifiés :** `client/src/index.css` · `client/src/components/Layout/AuthLayout.tsx` · `client/src/pages/NotFoundPage.tsx` · `client/src/pages/Landing/LandingPage.tsx`
+
+**Problème :** En mode responsive desktop, toutes les pages scrollaient horizontalement. Cause : `html/body/#root` sans garde anti-débordement + usage de `width: 100vw` (3 fichiers). `100vw` inclut la barre de défilement → dépasse la largeur visible sur desktop (scrollbar ~15px), invisible sur mobile réel (overlay scrollbar).
+
+**Solution :**
+```css
+html, body { max-width: 100%; overflow-x: clip; }
+#root { max-width: 100%; overflow-x: clip; }
+```
++ `width: 100vw` → `width: 100%` dans les 3 fichiers.
+
+**Justification :** `overflow-x: **clip**` (et non `hidden`) car il clippe le débordement **sans créer de conteneur de scroll** → ne casse pas les `position: sticky` (présents sur Landing/Pricing) ni `fixed`. Les tableaux gardent leur propre `overflow-x: auto`. **Validé par Playwright** : audit 14 pages × 3 largeurs (360/375/414px) = **0 débordement** (`scrollWidth === clientWidth` partout). Note importante donnée à l'utilisateur : le bug n'apparaissait qu'en dev car testé sur **desktop** (scrollbar réservée), pas sur téléphone (overlay).
+
+---
+
+#### Tâche 4 — Quadrillage de fond plus visible (continuité header/corps)
+
+**Commit :** `543e63d` — `style(bg): quadrillage plus visible (continuité header/corps)`
+
+**Fichiers modifiés :** `client/src/index.css`
+
+**Problème :** L'utilisateur signalait qu'en prod l'en-tête mobile montrait un dégradé bleu **sans le quadrillage**, alors qu'en dev le quadrillage était visible.
+
+**Solution :** Diagnostic approfondi (comparaison du **style calculé** dev-live vs CSS servi en prod via Playwright) prouvant que le fond `.app` est **strictement identique** (grid ✅ + aurora ✅ dans les deux). La vraie cause : quadrillage à seulement **2,4 % d'opacité**, quasi invisible sur un vrai écran mobile (DPR), surtout sous le blob aurora bleu. Fix : opacité `rgba(58,47,37, 0.024)` → `0.045` (body + .app, 10 occurrences).
+
+**Justification :** Ce n'était **ni un bug ni une différence dev/prod** (prouvé). J'ai écarté deux fausses pistes au passage (le raccourci `.app { background }` et l'aurora `body`), testées puis **revertées**. Le bump rend le quadrillage fiablement visible sur tous les écrans → l'effet de continuité header/corps ressort.
+
+---
+
+#### Tâche 5 — Logo de marque dans le chat assistant + FAB vocal lumineux/lévitation
+
+**Commit :** `6a57a7b` — `feat(ui): logo marque dans le chat assistant + FAB vocal lumineux/lévitation`
+
+**Fichiers modifiés :** `client/src/components/Assistant/AssistantPanel.tsx` · `client/src/components/Voice/GlobalVoiceAssistant.tsx` · `client/src/index.css`
+
+**Problème :** (a) Le logo de marque avait été déployé partout sauf dans la fenêtre du chat assistant (deux « C » typographiques restants : header + état vide). (b) Le bouton d'activation vocal devait être lumineux, en lévitation, plus grand, avec un micro plus gros et centré.
+
+**Solution :**
+- AssistantPanel : les 2 div « C » → `<img src="/brand-mark.png">` (marque officielle), header 30px + état vide 52px.
+- FAB vocal : 48→**64px**, micro 20→**30px** (`display: block` pour centrage net), fond teal en **dégradé radial**, `box-shadow` lumineux (halo), classe `.voice-fab` avec animation **lévitation** + **glow pulsant** :
+```css
+.voice-fab { animation: voiceFloat 3s ease-in-out infinite, voiceGlow 2.6s ease-in-out infinite; }
+@keyframes voiceFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@keyframes voiceGlow { /* halo teal qui pulse */ }
+@media (prefers-reduced-motion: reduce) { .voice-fab { animation: voiceGlow ...; } }
+```
+
+**Justification :** `brand-mark.png` (déjà en `public/`) réutilisé pour cohérence. L'animation respecte `prefers-reduced-motion` (accessibilité). **Validé par capture Playwright** : FAB teal lumineux avec micro centré + marque officielle dans le header et l'état vide du chat.
+
+---
+
+#### État final de la Session 21
+
+| Métrique | Valeur |
+|----------|--------|
+| Tests serveur | 81/81 ✓ |
+| Tests client | 32/32 ✓ |
+| TypeScript | 0 erreur ✓ |
+| Biome (lint) | 0 erreur / 0 warning ✓ |
+| Build | OK ✓ |
+| Commits | 6 sur `feat/reliability-hardening` (non poussé) |
+
+---
+
+### [2026-06-28 → 06-29] — Session 20 : Temps-réel, SEO/IA, i18n complet, pages légales & qualité 0 erreur/0 warning — COMPLÉTÉ ✅ (branche, non mergé)
+- **Session :** 20
+- **Statut :** Complété — sur branche `feat/reliability-hardening`, **non poussé / non mergé**
+- **Commits :** `01d658c` · `e374e08` · `d4fde19` · `4a9eb02` · `b418a4c` · `7bb62dc` · `f37dca3` · `b4511a9` · `bb470f5` · `d431483` · `e414abb` · `8a5d0d4` · `f1890b0` · `c614cfc`
+- **Tests :** 32 client / 81 serveur — tous verts · TypeScript 0 erreur · Biome **0 erreur / 0 warning** (point de départ : 109 warnings + erreurs)
+
+> Contexte : grosse vague fonctionnelle (temps-réel, SEO/découvrabilité LLM, internationalisation complète, pages légales, identité de marque) suivie d'un **nettoyage qualité total** amenant le projet à **zéro erreur et zéro warning** lint.
+
+---
+
+#### Tâche 1 — Couche temps-réel socket.io (crédits live, notifications, feed admin)
+
+**Commit :** `01d658c` — `feat(realtime): couche socket.io temps-réel`
+
+**Fichiers créés :** `packages/shared/src/types/socket.ts` · `server/src/services/socket.service.ts` · `client/src/services/socket.ts` · `client/src/hooks/useAppSocket.ts` · `client/src/components/Admin/AdminLiveFeed.tsx`
+**Fichiers modifiés :** `server/src/index.ts` · `server/src/controllers/content.controller.ts` · `server/src/controllers/stripe.controller.ts` · `client/src/store/authSlice.ts` · locales
+
+**Problème :** `socket.io` + `global.io` étaient câblés dans `index.ts` « pour des workers BullMQ » inexistants — infra morte, non authentifiée, sans producteur d'événement (faiblesse F5 du diagnostic).
+
+**Solution :** Vraie couche temps-réel **authentifiée JWT** (l'utilisateur a choisi de l'implémenter plutôt que la retirer) :
+- `socket.service.ts` : `io.use()` vérifie le token JWT du handshake, rooms `user:<id>` + `admins`, helpers `emitCreditsUpdate` / `emitNotify` / `emitAdminSignup` / `emitAdminGeneration` (no-op si `io` absent → tests sereins).
+- Producteurs : crédits (génération + webhooks Stripe), notifications toast (upgrade/échec paiement), feed admin (inscriptions + générations).
+- Client : connexion auto à l'auth (`useAppSocket`), sync crédits multi-onglets, panneau « Activité en direct » sur `/admin`.
+
+**Justification :** Authentification par `handshake.auth.token` (plus de `join` arbitraire). Contrat d'événements typé dans `@contentiq/shared` (`SOCKET_EVENTS` + payloads) pour cohérence client/serveur. Remplace le hack `global.io`.
+
+---
+
+#### Tâche 2 — SEO + identité de marque (favicon, logo, meta par route, robots/sitemap/llms, prerender)
+
+**Commit :** `e374e08` — `feat(seo+brand): favicon, logo officiel, meta par route, robots/sitemap/llms, prerender`
+
+**Fichiers créés :** `client/public/` (favicons, `brand-mark.png`, `brand-full.png`, `robots.txt`, `sitemap.xml`, `llms.txt`, `site.webmanifest`) · `client/src/components/Seo.tsx` · `client/scripts/prerender.mjs` · `client/src/assets/brand/`
+**Fichiers modifiés :** `client/index.html` · `client/src/main.tsx` · `client/src/index.css` · `client/package.json`
+
+**Problème :** Favicon cassé (référence `/favicon.svg` sans dossier `public`), logo typographique (CSS `.ciq-mark`) au lieu de la marque officielle, aucune meta par route, SPA invisible aux crawlers IA (GPTBot/ClaudeBot n'exécutent pas le JS).
+
+**Solution :**
+- Favicons multi-tailles (marque carrée fond blanc) + `apple-touch-icon` + manifest, `theme-color` bleu de marque.
+- `<Seo>` (react-helmet-async) : title/description/canonical/OG/JSON-LD par route.
+- `robots.txt` (bots IA autorisés : GPTBot, ClaudeBot, PerplexityBot, Google-Extended…) + `sitemap.xml` + `llms.txt`.
+- Logo horizontal officiel partout via un seul réglage CSS `.ciq-mark .dot` (image au lieu du carré « C »), cas spécial sidebar repliée (marque carrée).
+- **Prerendering opt-in** (`prerender.mjs`, playwright-core) des pages publiques — **hors build Vercel** (à valider sur preview avant prod).
+
+**Justification :** Le verrou SEO n°1 d'une SPA est l'invisibilité aux crawlers ; le prerender (page HTML réelle) le lève sans réécrire l'app. `overflow-x: clip` et l'approche CSS unique pour le logo évitent de toucher 9 fichiers. Domaine réel `contentiq.codexagroup.com` utilisé partout.
+
+---
+
+#### Tâche 3 — i18n : détection automatique + synchro des sélecteurs + persistance
+
+**Commit :** `d4fde19` — `feat(i18n): détection auto navigateur/zone + synchro sélecteurs + persistance`
+
+**Fichiers créés :** `client/src/hooks/useLanguage.ts`
+**Fichiers modifiés :** `client/src/lib/i18n.ts` · `client/src/components/Layout/Navbar.tsx` · `client/src/pages/Profile/ProfilePage.tsx` · `client/src/hooks/useAuth.ts` · `packages/shared/src/schemas/index.ts` · `server/src/controllers/auth.controller.ts`
+
+**Problème :** `i18n.ts` avait `lng: "fr"` codé en dur — aucune détection navigateur/zone, aucune persistance. Les sélecteurs header et paramètres étaient désynchronisés (état local séparé).
+
+**Solution :**
+- `i18next-browser-languagedetector` : ordre `localStorage > navigator > htmlTag`, `load: "languageOnly"` (en-US → en), persistance localStorage.
+- Hook **`useLanguage`** centralisé (source unique) : `changeLanguage` met à jour i18n + Redux + serveur (avec rollback). Header **et** paramètres l'utilisent → synchro bidirectionnelle automatique.
+- Persistance à l'inscription : `RegisterSchema.language` optionnel, `auth.controller` crée le compte avec la langue détectée.
+
+**Justification :** Un hook centralisé élimine la duplication (Navbar + Profile avaient chacun leur logique) et **garantit** la synchro car tous les sélecteurs lisent `i18n.language` (réactif). Persister la langue détectée à l'inscription évite qu'un utilisateur vu en EN repasse en FR.
+
+---
+
+#### Tâche 4 — Pages légales, liens footer, réseaux sociaux & copyright
+
+**Commit :** `4a9eb02` — `feat(landing+legal): démo vocale corrigée, pages légales, liens footer, social, copyright`
+
+**Fichiers créés :** `client/src/pages/Legal/LegalPage.tsx` · `client/src/pages/Legal/legalContent.ts` · `client/src/components/SocialLinks.tsx`
+**Fichiers modifiés :** `client/src/App.tsx` · `client/src/pages/Landing/LandingPage.tsx` · `client/src/pages/Pricing/PricingPage.tsx` · pages Auth · locales
+
+**Problème :** Footer landing avec 3 liens **morts** (Privacy/Terms/API — `<span cursor:pointer>` sans action), copyright affichant le nom personnel « Abdel Wariss OSSENI », nav « Templates » pointant vers une route protégée, bug démo vocale (modale se fermait à l'ouverture).
+
+**Solution :**
+- Pages `/privacy` et `/terms` (FR/EN, structure + texte standard marqué « à valider juridiquement ») branchées au footer.
+- `SocialLinks` (LinkedIn, Instagram, Facebook, X, TikTok, site CODEXA) en composant réutilisable.
+- Copyright unifié « © 2026 CODEXA Solutions — Tous droits réservés » (clé i18n `common.copyright`), nom perso retiré.
+- Nav « Templates » → `/register` ; « API » → badge « Bientôt ».
+- **Fix démo vocale** : cycle de vie de la modale **découplé du TTS** (ni `onend` ni `onerror` ne ferment), fermeture pilotée par la timeline ; déblocage audio mobile via amorçage de la synthèse dans le geste utilisateur (`primeSpeechSynthesis`).
+
+**Justification :** Décisions produit confirmées avec l'utilisateur (créer les pages légales plutôt que masquer, « API » en « Bientôt » par honnêteté). Le découplage modale/TTS corrige un bug où le `cancel()` + double-montage StrictMode déclenchait `onerror` → fermeture immédiate.
+
+---
+
+#### Tâche 5 — Traduction FR/EN des pages restantes + audit i18n
+
+**Commit :** `b418a4c` — `i18n(pages): traduit FR/EN VerifyEmail, ResetPassword, Admin, Logs + feed live`
+
+**Fichiers modifiés :** `client/src/pages/Auth/VerifyEmailPage.tsx` · `client/src/pages/Auth/ResetPasswordPage.tsx` · `client/src/pages/Admin/AdminPage.tsx` · `client/src/pages/Admin/LogsPage.tsx` · `client/src/components/Admin/AdminLiveFeed.tsx` · locales
+
+**Problème :** Audit i18n → 4 pages routées encore en français codé en dur (VerifyEmail, ResetPassword publiques ; Admin, Logs internes), plus 3 pages mortes non routées (Login/Register/ForgotPassword — gérées par AuthPage).
+
+**Solution :** Namespaces i18n `verifyEmail`, `resetPassword`, `admin`, `logs` (FR + EN, avec interpolation pour pagination/compteurs). Toutes via `useTranslation`. Dates admin/logs localisées selon la langue active.
+
+**Justification :** Distinction faite entre la « vraie » version mobile (le client responsive, déjà traduit) et le dossier maquette `Version Mobile/` (prototype non shippé). Les pages mortes ont été supprimées plutôt que traduites.
+
+---
+
+#### Tâche 6 — Nettoyage qualité total : 0 erreur, 0 warning lint
+
+**Commits :** `7bb62dc` · `f37dca3` · `b4511a9` · `bb470f5` · `d431483` · `e414abb` · `8a5d0d4` · `f1890b0` · `c614cfc`
+
+**Fichiers :** transverses (helpers `client/src/lib/a11y.ts` créé, nombreux composants/pages)
+
+**Problème :** À l'audit, **109 warnings + erreurs** lint, dont une régression de tests introduite (PricingPage + Helmet sans `HelmetProvider`).
+
+**Solution (par lots) :**
+- `7bb62dc` : fix régression — test PricingPage wrappé dans `HelmetProvider`.
+- `f37dca3` : 2 erreurs lint réelles (formatage `prerender.mjs` non couvert par le hook + assertions/concat).
+- `b4511a9` : suppression des pages mortes (Login/Register/ForgotPassword), `forEach`→`for...of`, variables inutilisées, assign-in-expression → blocs, imports `node:`.
+- `bb470f5` : dépendances de hooks complétées (`useExhaustiveDependencies` ×10).
+- `d431483`/`e414abb`/`8a5d0d4` : **support clavier a11y** (`useKeyWithClickEvents` 85→0) via helpers réutilisables `clickable` / `keyboardActivate` / `stopPropagation` (HistoryPage, AppLayout, Logs, Landing, palette vocale, Favorites, Generate, Profile) + `biome-ignore` documentés pour `useSemanticElements`.
+- `f1890b0` : `<label>` non associés → `<span className="label">` (`noLabelWithoutControl` 38→0).
+- `c614cfc` : `Version Mobile/` (maquette) ajouté au `.gitignore` + dernier warning `seed.ts`.
+
+**Justification :** Les éléments cliquables non-bouton sont **réellement rendus accessibles au clavier** (vrai gain a11y, pas une suppression). Helper `keyboardActivate` agnostique du handler (`e.currentTarget.click()` sur Entrée/Espace) pour appliquer vite et sûrement. Les `<label>` non associés étaient de faux labels pour lecteurs d'écran → `<span>` est plus honnête. Résultat : **`pnpm lint` exit 0, 0 warning**.
+
+---
+
+#### État final de la Session 20
+
+| Métrique | Valeur |
+|----------|--------|
+| Tests serveur | 81/81 ✓ (72→81, +9 socket/billing) |
+| Tests client | 32/32 ✓ |
+| TypeScript | 0 erreur ✓ |
+| Biome (lint) | **0 erreur / 0 warning** ✓ (depuis 109) |
+| Commits | 14 sur `feat/reliability-hardening` (non poussé) |
+
+---
+
+### [2026-06-10 → 06-27] — Session 19 : Durcissement fiabilité & observabilité (P0/P1/P2) — COMPLÉTÉ ✅ (branche, non mergé)
+- **Session :** 19
+- **Statut :** Complété — sur branche `feat/reliability-hardening`, **non poussé / non mergé**
+- **Commits :** `b05e09a` · `18e31ba` · `ac011f5` · `1385802` · `315572a` · `aa4c67c` · `1353766` · `2e1bc83`
+- **Tests :** 32 client / 81 serveur (104→113 sur la durée) — verts · TypeScript 0 erreur
+
+> Contexte : session démarrée par un **diagnostic runtime réel** (exécution de la stack, pas d'analyse statique) identifiant 11 faiblesses (F1-F11), puis correction par ordre de priorité P0 → P1 → P2.
+
+---
+
+#### Tâche 1 — Diagnostic runtime + garde anti-prod + boot résilient + tests billing
+
+**Commits :** `b05e09a` (diagnostic) · `18e31ba` (safety) · `ac011f5` (résilience) · `1385802` (tests billing)
+
+**Fichiers :** `docs/Diagnostic-Runtime-2026-06.md` · `scripts/seed.ts` · `server/vitest.config.ts` · `.env.development.example` · `server/src/config/db.ts` · `server/src/index.ts` · `server/src/app.ts` · `server/src/test/{health,stripe,billing}.test.ts`
+
+**Problème (F1/F2/F3/F4) :** Couverture métier basse (controllers 16 %, services 22 %), zéro résilience au démarrage (`await connectDB()` avant le serveur HTTP + `process.exit(1)`), `.env` local pointant sur la PROD (Atlas/Upstash), couverture faussée par `dist/`.
+
+**Solution :**
+- `assertSafeToSeed(uri)` refuse les URIs Atlas/distantes sauf `ALLOW_PROD_SEED=true`.
+- Boot non bloquant : `httpServer.listen()` **avant** `connectDB().catch()`, `db.ts` avec retry/backoff exponentiel au lieu de `exit(1)`, `/health` reflète l'état DB (503 si down).
+- Tests : `stripe.test.ts` (idempotence/upgrade/grace 3j) + `billing.test.ts` (reset/downgrade), couverture scopée hors `dist/`.
+
+**Justification :** Réconciliation lazy on-read (déjà en Session 18) plutôt que worker (contrainte mono-service Render). `/health` 503 dégradé permet à un orchestrateur de détecter la panne DB sans crash du process.
+
+---
+
+#### Tâche 2 — Performances, observabilité & dépendances de hooks
+
+**Commits :** `315572a` (jszip) · `aa4c67c` (Sentry) · `1353766` (hook deps F9) · `2e1bc83` (diagnostic màj)
+
+**Fichiers :** `client/src/pages/History/HistoryPage.tsx` · `server/src/config/sentry.ts` · `server/src/{index,app}.ts` · composants Voice/Assistant · `docs/Diagnostic-Runtime-2026-06.md`
+
+**Problème (F5/F6/F9/F10) :** Bundle HistoryPage 114 KB (jszip importé statiquement), Sentry non branché malgré `SENTRY_DSN`, socket.io infra morte, warnings `useExhaustiveDependencies` (closures périmées Voice).
+
+**Solution :**
+- `jszip` en **import dynamique** (HistoryPage 114→21 KB).
+- `initSentry()` conditionnel (`SENTRY_DSN`) + `setupExpressErrorHandler` — no-op total en dev/tests.
+- Hook deps corrigées au cas par cas (ref pour `useWakeWord` anti-redémarrage, `t` ajouté, `biome-ignore` justifiés pour déclencheurs/effets run-once volontaires).
+
+**Justification :** Distinction vrais fix vs suppressions : pour les hooks, ajout de deps stables ou pattern ref plutôt que d'ignorer à l'aveugle (le risque de closure que le diagnostic pointait). Sentry inerte sans DSN garantit des tests/CI sereins.
+
+---
+
+#### État final de la Session 19
+
+| Métrique | Valeur |
+|----------|--------|
+| Tests serveur | 81/81 ✓ |
+| Tests client | 32/32 ✓ |
+| TypeScript | 0 erreur ✓ |
+| Diagnostic | F1-F6/F9/F10 résolus · F7 (E2E), F8 (Whisper STT), F11 (typage webhook) ouverts |
+| Commits | 8 sur `feat/reliability-hardening` (non poussé) |
+
+---
+
 ### [2026-06-04 → 06-05] — Session 18 : Analyse conformité PRD + logique métier critique (reset crédits, grace period, idempotence webhooks) — COMPLÉTÉ ✅ (mergé en prod)
 - **Session :** 18
 - **Statut :** Complété — **mergé dans `main` et déployé** (PR #3, `426298e`)

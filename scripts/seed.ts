@@ -161,10 +161,7 @@ function assertSafeToSeed(uri: string): void {
   const looksProd = /mongodb\+srv:|mongodb\.net|\.com\b/i.test(uri);
   if (looksProd && process.env.ALLOW_PROD_SEED !== "true") {
     console.error(
-      "\n⛔ Seed bloqué : MONGODB_URI semble pointer sur une base distante/production.\n" +
-        `   URI: ${uri.replace(/\/\/[^@]*@/, "//***@")}\n` +
-        "   Pour seeder une base locale, utilise une URI localhost.\n" +
-        "   Pour forcer (DANGER, écrit en prod) : ALLOW_PROD_SEED=true pnpm seed\n",
+      `\n⛔ Seed bloqué : MONGODB_URI semble pointer sur une base distante/production.\n   URI: ${uri.replace(/\/\/[^@]*@/, "//***@")}\n   Pour seeder une base locale, utilise une URI localhost.\n   Pour forcer (DANGER, écrit en prod) : ALLOW_PROD_SEED=true pnpm seed\n`,
     );
     process.exit(1);
   }

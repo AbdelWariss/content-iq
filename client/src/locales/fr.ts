@@ -60,7 +60,6 @@ const fr = {
   generate: {
     title: "Nouveau contenu",
     briefHeader: "Brief de génération",
-    dictate: "Dicter le brief",
     contentType: "Type de contenu",
     subject: "Sujet *",
     subjectPlaceholder: "Ex: Annonce de notre plan Business pour les agences africaines",

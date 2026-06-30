@@ -490,17 +490,6 @@ export default function GeneratePage() {
               {/* Brief header */}
               <div className="row between">
                 <span className="t-eyebrow">{t("generate.briefHeader")}</span>
-                {!viewMode && (
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    style={{ color: "var(--accent)" }}
-                    onClick={handleFloatingMic}
-                  >
-                    <Ico icon={CiqIcon.mic} />
-                    {t("generate.dictate")}
-                  </button>
-                )}
               </div>
 
               {/* Content type */}

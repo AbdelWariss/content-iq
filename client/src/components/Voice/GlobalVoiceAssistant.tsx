@@ -113,7 +113,7 @@ function UpgradeCard({ onClose }: { onClose: () => void }) {
 export function GlobalVoiceAssistant({ isOpen, onOpen, onClose }: GlobalVoiceAssistantProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { startListening, stopListening, stopSpeaking, status: voiceStatus } = useVoice();
+  const { startListening, stopListening, speak, stopSpeaking, status: voiceStatus } = useVoice();
   const { transcript } = useAppSelector((s) => s.voice);
   const user = useAppSelector((s) => s.auth.user);
 
@@ -127,6 +127,7 @@ export function GlobalVoiceAssistant({ isOpen, onOpen, onClose }: GlobalVoiceAss
   const timerRef = useRef<ReturnType<typeof setInterval>>();
 
   const isListening = voiceStatus === "listening";
+  const isUnsupported = voiceStatus === "unsupported";
   const lang =
     typeof localStorage !== "undefined" ? (localStorage.getItem("ciq_lang") ?? "fr-FR") : "fr-FR";
 
@@ -149,6 +150,11 @@ export function GlobalVoiceAssistant({ isOpen, onOpen, onClose }: GlobalVoiceAss
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [isOpen, onClose]);
+
+  // Réponse vocale : l'assistant lit à voix haute chaque retour d'action
+  useEffect(() => {
+    if (actionFeedback) speak(actionFeedback, lang);
+  }, [actionFeedback, speak, lang]);
 
   const executeCommand = useCallback(
     (cmd: ParsedCommand) => {
@@ -221,6 +227,18 @@ export function GlobalVoiceAssistant({ isOpen, onOpen, onClose }: GlobalVoiceAss
     if (isListening) {
       stopListening();
     } else {
+      // Amorce la synthèse vocale dans le geste utilisateur (requis sur iOS
+      // pour autoriser la réponse vocale qui suivra la reconnaissance)
+      try {
+        const synth = window.speechSynthesis;
+        synth?.resume();
+        synth?.getVoices();
+        const warmup = new SpeechSynthesisUtterance(" ");
+        warmup.volume = 0;
+        synth?.speak(warmup);
+      } catch {
+        /* synthèse vocale indisponible */
+      }
       setParsedResult(null);
       setActionFeedback(null);
       startListening(handleVoiceResult, lang);
@@ -358,6 +376,58 @@ export function GlobalVoiceAssistant({ isOpen, onOpen, onClose }: GlobalVoiceAss
               }}
             >
               <UpgradeCard onClose={onClose} />
+            </div>
+          ) : isUnsupported ? (
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 18,
+                padding: "0 32px",
+                textAlign: "center",
+              }}
+            >
+              <div
+                style={{
+                  width: 88,
+                  height: 88,
+                  borderRadius: "50%",
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  display: "grid",
+                  placeItems: "center",
+                }}
+              >
+                <Ico icon={CiqIcon.mic} size={38} style={{ color: "rgba(255,255,255,0.4)" }} />
+              </div>
+              <p
+                style={{
+                  fontSize: 22,
+                  fontFamily: "var(--font-serif)",
+                  color: "rgba(255,255,255,0.9)",
+                  margin: 0,
+                }}
+              >
+                {t("voice.unsupportedTitle")}
+              </p>
+              <p
+                style={{
+                  fontSize: 14.5,
+                  color: "rgba(255,255,255,0.55)",
+                  margin: 0,
+                  maxWidth: 420,
+                  lineHeight: 1.6,
+                }}
+              >
+                {t("voice.unsupportedHint")}
+              </p>
+              <button type="button" className="btn btn-primary btn-sm" onClick={onClose}>
+                <Ico icon={CiqIcon.x} size={14} />
+                {t("voice.unsupportedClose")}
+              </button>
             </div>
           ) : (
             <div
@@ -606,7 +676,7 @@ export function GlobalVoiceAssistant({ isOpen, onOpen, onClose }: GlobalVoiceAss
           )}
 
           {/* Bottom: example commands */}
-          {canUseVoice && (
+          {canUseVoice && !isUnsupported && (
             <div
               style={{ padding: "20px 40px 28px", borderTop: "1px solid rgba(255,255,255,0.07)" }}
             >

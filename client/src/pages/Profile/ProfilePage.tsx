@@ -488,6 +488,8 @@ export default function ProfilePage() {
   function handleActivationWordChange(val: string) {
     setActivationWord(val);
     localStorage.setItem("ciq_activation", val);
+    // Notifie AppLayout pour appliquer le nouveau mot immédiatement (sans reload)
+    window.dispatchEvent(new Event("ciq:activation-changed"));
   }
 
   if (!user) return null;

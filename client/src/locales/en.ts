@@ -167,6 +167,10 @@ const en = {
     wakeWordCustom: "Custom word…",
     transcriptionCopied: "Transcription copied!",
     processingError: "Processing error",
+    unsupportedTitle: "Voice input unavailable",
+    unsupportedHint:
+      "Your browser doesn't support speech recognition. Try Chrome on Android or a desktop browser (Chrome / Edge). Voice input isn't available on iPhone/iPad.",
+    unsupportedClose: "Close",
   },
   // History page
   history: {

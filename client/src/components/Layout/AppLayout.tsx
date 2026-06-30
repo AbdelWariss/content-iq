@@ -7,7 +7,7 @@ import api from "@/services/axios";
 import { toggleOpen } from "@/store/assistantSlice";
 import { useAppDispatch, useAppSelector } from "@/store/index";
 import { PLAN_LIMITS } from "@contentiq/shared";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { MobileTabBar } from "./MobileTabBar";
 import { Navbar } from "./Navbar";
@@ -109,10 +109,22 @@ export function AppLayout() {
     ? PLAN_LIMITS[user.role as keyof typeof PLAN_LIMITS]?.voiceCommands
     : false;
 
-  const wakeWord =
+  // Mot de déclenchement réactif : se met à jour dès que l'utilisateur le
+  // personnalise (événement custom) ou change dans un autre onglet (storage).
+  const [wakeWord, setWakeWord] = useState(() =>
     typeof localStorage !== "undefined"
       ? (localStorage.getItem("ciq_activation") ?? "CONTENT")
-      : "CONTENT";
+      : "CONTENT",
+  );
+  useEffect(() => {
+    const sync = () => setWakeWord(localStorage.getItem("ciq_activation") ?? "CONTENT");
+    window.addEventListener("ciq:activation-changed", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("ciq:activation-changed", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
 
   useWakeWord(wakeWord, () => setVoiceAssistantOpen(true), !voiceAssistantOpen && canUseVoice);
 

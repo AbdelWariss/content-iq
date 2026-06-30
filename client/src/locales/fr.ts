@@ -167,6 +167,10 @@ const fr = {
     wakeWordCustom: "Mot personnalisé…",
     transcriptionCopied: "Transcription copiée !",
     processingError: "Erreur de traitement",
+    unsupportedTitle: "Saisie vocale indisponible",
+    unsupportedHint:
+      "Votre navigateur ne prend pas en charge la reconnaissance vocale. Essayez Chrome sur Android ou un navigateur de bureau (Chrome / Edge). La saisie vocale n'est pas disponible sur iPhone/iPad.",
+    unsupportedClose: "Fermer",
   },
   // History page
   history: {

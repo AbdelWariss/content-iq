@@ -767,6 +767,37 @@
   }
 }
 
+/* ── Bouton vocal flottant : lévitation + halo lumineux ── */
+.voice-fab {
+  animation: voiceFloat 3s ease-in-out infinite, voiceGlow 2.6s ease-in-out infinite;
+}
+.voice-fab:hover {
+  filter: brightness(1.06);
+}
+@keyframes voiceFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+@keyframes voiceGlow {
+  0%,
+  100% {
+    box-shadow: 0 10px 28px rgba(8, 145, 178, 0.5), 0 0 22px 4px rgba(8, 145, 178, 0.35);
+  }
+  50% {
+    box-shadow: 0 16px 36px rgba(8, 145, 178, 0.68), 0 0 34px 10px rgba(8, 145, 178, 0.48);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .voice-fab {
+    animation: voiceGlow 2.6s ease-in-out infinite;
+  }
+}
+
 /* Form switch animation */
 [key] {
   animation: fadeSlideIn 0.28s ease;

@@ -102,6 +102,17 @@
   body {
     margin: 0;
     padding: 0;
+    /* Empêche tout débordement/scroll horizontal accidentel (éléments off-canvas,
+       largeurs > viewport sur mobile). `clip` clippe SANS créer de conteneur de
+       scroll → ne casse pas position: sticky/fixed. Les tableaux qui doivent
+       scroller à l'horizontale définissent leur propre overflow-x: auto. */
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  #root {
+    max-width: 100%;
+    overflow-x: clip;
   }
 
   body {

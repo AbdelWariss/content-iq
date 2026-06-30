@@ -82,6 +82,9 @@ export function AssistantPanel() {
     }
   }, [isOpen, dispatch]);
 
+  // `messages` est un déclencheur volontaire : on re-scrolle à chaque nouveau
+  // message (sa valeur n'est pas lue dans le corps, d'où l'avertissement).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: dépendance déclencheur intentionnelle
   useEffect(() => {
     if (isOpen) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -151,22 +154,13 @@ export function AssistantPanel() {
         >
           <div className="row between">
             <div className="row" style={{ gap: 10 }}>
-              <div
-                style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: 9,
-                  background: "var(--ink)",
-                  color: "var(--bg)",
-                  display: "grid",
-                  placeItems: "center",
-                  fontFamily: "var(--font-serif)",
-                  fontSize: 14,
-                  flexShrink: 0,
-                }}
-              >
-                C
-              </div>
+              <img
+                src="/brand-mark.png"
+                alt="CONTENT.IQ"
+                width={30}
+                height={30}
+                style={{ flexShrink: 0, objectFit: "contain" }}
+              />
               <div className="col">
                 <strong style={{ fontSize: 13.5 }}>IQ Assistant</strong>
                 <span style={{ fontSize: 11, color: "var(--ink-mute)" }}>
@@ -231,21 +225,13 @@ export function AssistantPanel() {
                 textAlign: "center",
               }}
             >
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: "50%",
-                  background: "var(--ink)",
-                  color: "var(--bg)",
-                  display: "grid",
-                  placeItems: "center",
-                  fontFamily: "var(--font-serif)",
-                  fontSize: 18,
-                }}
-              >
-                C
-              </div>
+              <img
+                src="/brand-mark.png"
+                alt="CONTENT.IQ"
+                width={52}
+                height={52}
+                style={{ objectFit: "contain" }}
+              />
               <div>
                 <p style={{ fontSize: 14, fontWeight: 600 }}>Bonjour ! Je suis IQ Assistant</p>
                 <p style={{ fontSize: 12, color: "var(--ink-mute)", marginTop: 4 }}>

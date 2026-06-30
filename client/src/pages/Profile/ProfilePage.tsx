@@ -1,5 +1,7 @@
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
+import { keyboardActivate, stopPropagation } from "@/lib/a11y";
 import { CiqIcon, Ico, MicWave } from "@/lib/ciq-icons";
 import api from "@/services/axios";
 import { stripeService } from "@/services/stripe.service";
@@ -42,6 +44,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
   return (
     <div
       onClick={() => onChange(!on)}
+      {...keyboardActivate}
       style={{
         width: 44,
         height: 26,
@@ -109,6 +112,7 @@ function SettingsRow({
         cursor: onClick ? "pointer" : "default",
       }}
       onClick={onClick}
+      {...keyboardActivate}
     >
       <span style={{ fontSize: 15 }}>{label}</span>
       <div className="row" style={{ gap: 5 }}>
@@ -145,11 +149,12 @@ function InlineSelector({
         backdropFilter: "blur(4px)",
       }}
       onClick={onClose}
+      onKeyDown={onClose}
     >
       <div
         className="card"
         style={{ width: "100%", maxWidth: 340, padding: 0, margin: "0 16px", overflow: "hidden" }}
-        onClick={(e) => e.stopPropagation()}
+        {...stopPropagation()}
       >
         <div
           style={{ padding: "14px 18px", borderBottom: "1px solid var(--line)", fontWeight: 600 }}
@@ -171,6 +176,7 @@ function InlineSelector({
               onChange(opt);
               onClose();
             }}
+            {...keyboardActivate}
           >
             <span style={{ fontSize: 15 }}>{opt}</span>
             {opt === value && (
@@ -228,7 +234,7 @@ export default function ProfilePage() {
   const { logout } = useAuth();
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   const MIC_SENS_LABELS: Record<string, string> = {
     Auto: t("profile.sensAuto"),
@@ -263,8 +269,8 @@ export default function ProfilePage() {
     () => localStorage.getItem("ciq_activation") ?? "CONTENT",
   );
 
-  /* Language */
-  const [uiLang, setUiLang] = useState<"fr" | "en">(user?.language ?? "fr");
+  /* Language — source unique partagée avec le sélecteur du header (useLanguage) */
+  const { lang: uiLang, changeLanguage } = useLanguage();
 
   /* UI state */
   const [openSelector, setOpenSelector] = useState<null | "voice" | "speed" | "mic" | "activation">(
@@ -279,12 +285,6 @@ export default function ProfilePage() {
   const [previewing, setPreviewing] = useState<string | null>(null);
 
   /* Subscription */
-  const planLabel: Record<string, string> = {
-    free: "Free",
-    pro: "Pro",
-    business: "Business",
-    admin: "Admin",
-  };
   const planPrice: Record<string, string> = {
     free: "Gratuit",
     pro: "Pro · $9.99/mo",
@@ -322,7 +322,6 @@ export default function ProfilePage() {
         }
         if (vp?.autoTts !== undefined) setAutoPlay(vp.autoTts);
         if (vp?.language) setMicLang(vp.language);
-        if (res.data.data.user.language) setUiLang(res.data.data.user.language as "fr" | "en");
       })
       .catch(() => {});
   }, []);
@@ -330,7 +329,7 @@ export default function ProfilePage() {
   /* ── Mic test (getUserMedia) ── */
   async function toggleMicTest() {
     if (isMicTesting) {
-      micStreamRef.current?.getTracks().forEach((t) => t.stop());
+      for (const t of micStreamRef.current?.getTracks() ?? []) t.stop();
       micStreamRef.current = null;
       setIsMicTesting(false);
       return;
@@ -481,19 +480,6 @@ export default function ProfilePage() {
     }
   }
 
-  async function handleUiLangChange(lang: "fr" | "en") {
-    setUiLang(lang);
-    i18n.changeLanguage(lang).catch(() => {});
-    dispatch(updateUser({ language: lang }));
-    try {
-      await api.put("/users/me", { language: lang });
-    } catch {
-      dispatch(updateUser({ language: uiLang }));
-      i18n.changeLanguage(uiLang).catch(() => {});
-      toast({ title: t("profile.saveError"), variant: "destructive" });
-    }
-  }
-
   function handleMicSensChange(val: string) {
     setMicSensitivity(val);
     localStorage.setItem("ciq_mic_sens", val);
@@ -550,7 +536,7 @@ export default function ProfilePage() {
               </div>
               <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 <div>
-                  <label className="label">{t("profile.labelName")}</label>
+                  <span className="label">{t("profile.labelName")}</span>
                   <input className="input" {...register("name")} />
                   {errors.name && (
                     <p style={{ fontSize: 11, color: "var(--accent)", marginTop: 4 }}>
@@ -559,7 +545,7 @@ export default function ProfilePage() {
                   )}
                 </div>
                 <div>
-                  <label className="label">{t("profile.labelEmail")}</label>
+                  <span className="label">{t("profile.labelEmail")}</span>
                   <input
                     className="input"
                     defaultValue={user.email}
@@ -568,15 +554,15 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div>
-                  <label className="label">{t("profile.labelBio")}</label>
+                  <span className="label">{t("profile.labelBio")}</span>
                   <input className="input" placeholder={t("profile.bioPh")} {...register("bio")} />
                 </div>
                 <div>
-                  <label className="label">{t("profile.labelLang")}</label>
+                  <span className="label">{t("profile.labelLang")}</span>
                   <select
                     className="select"
                     value={uiLang}
-                    onChange={(e) => handleUiLangChange(e.target.value as "fr" | "en")}
+                    onChange={(e) => changeLanguage(e.target.value as "fr" | "en")}
                   >
                     <option value="fr">Français</option>
                     <option value="en">English</option>
@@ -673,6 +659,7 @@ export default function ProfilePage() {
                     handleVoiceChange(name);
                     previewVoice(name, voiceId, lang);
                   }}
+                  {...keyboardActivate}
                 >
                   <div className="row between">
                     <strong style={{ fontSize: 15 }}>{name}</strong>
@@ -707,7 +694,7 @@ export default function ProfilePage() {
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 22 }}>
             <div>
-              <label className="label">{t("profile.speedLabel")}</label>
+              <span className="label">{t("profile.speedLabel")}</span>
               <div className="seg" style={{ width: "100%" }}>
                 {SPEED_OPTIONS.map(({ v, l }) => (
                   <button
@@ -723,7 +710,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <div>
-              <label className="label">{t("profile.autoPlayLabel")}</label>
+              <span className="label">{t("profile.autoPlayLabel")}</span>
               <div
                 className="row between"
                 style={{
@@ -735,17 +722,18 @@ export default function ProfilePage() {
                   height: 42,
                 }}
                 onClick={() => handleAutoPlayChange(!autoPlay)}
+                {...keyboardActivate}
               >
                 <span style={{ fontSize: 13 }}>{t("profile.autoPlayDesc")}</span>
                 <Toggle on={autoPlay} onChange={handleAutoPlayChange} />
               </div>
             </div>
             <div>
-              <label className="label">{t("profile.labelLang")}</label>
+              <span className="label">{t("profile.labelLang")}</span>
               <select
                 className="select"
                 value={uiLang}
-                onChange={(e) => handleUiLangChange(e.target.value as "fr" | "en")}
+                onChange={(e) => changeLanguage(e.target.value as "fr" | "en")}
               >
                 <option value="fr">Français</option>
                 <option value="en">English</option>
@@ -761,7 +749,7 @@ export default function ProfilePage() {
             style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 22, marginTop: 20 }}
           >
             <div>
-              <label className="label">{t("profile.micLangLabel")}</label>
+              <span className="label">{t("profile.micLangLabel")}</span>
               <select
                 className="select"
                 value={micLang}
@@ -775,7 +763,7 @@ export default function ProfilePage() {
               </select>
             </div>
             <div>
-              <label className="label">{t("profile.micEngineLabel")}</label>
+              <span className="label">{t("profile.micEngineLabel")}</span>
               <div className="seg" style={{ width: "100%" }}>
                 <button
                   type="button"
@@ -802,7 +790,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <div>
-              <label className="label">{t("profile.micSensLabel")}</label>
+              <span className="label">{t("profile.micSensLabel")}</span>
               <div className="seg" style={{ width: "100%" }}>
                 {MIC_SENSITIVITIES.map((s) => (
                   <button
@@ -818,7 +806,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <div style={{ gridColumn: "1 / -1" }}>
-              <label className="label">{t("profile.micSensLabel")}</label>
+              <span className="label">{t("profile.micSensLabel")}</span>
               <div
                 style={{
                   background: "var(--bg-sunk)",
@@ -846,7 +834,7 @@ export default function ProfilePage() {
 
             {/* Wake word — desktop */}
             <div style={{ gridColumn: "1 / -1" }}>
-              <label className="label">{t("voice.wakeWordLabel")}</label>
+              <span className="label">{t("voice.wakeWordLabel")}</span>
               <p style={{ fontSize: 12, color: "var(--ink-mute)", margin: "0 0 10px" }}>
                 {t("voice.wakeWordDesc")}
               </p>
@@ -985,6 +973,7 @@ export default function ProfilePage() {
               backdropFilter: "blur(4px)",
             }}
             onClick={() => setEditingProfile(false)}
+            onKeyDown={() => setEditingProfile(false)}
           >
             <div
               className="card"
@@ -995,7 +984,7 @@ export default function ProfilePage() {
                 margin: 0,
                 borderRadius: "20px 20px 0 0",
               }}
-              onClick={(e) => e.stopPropagation()}
+              {...stopPropagation()}
             >
               <div className="row between" style={{ marginBottom: 18 }}>
                 <h3 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>
@@ -1018,7 +1007,7 @@ export default function ProfilePage() {
               >
                 <div className="col" style={{ gap: 12 }}>
                   <div>
-                    <label className="label">{t("profile.labelName")}</label>
+                    <span className="label">{t("profile.labelName")}</span>
                     <input className="input" {...register("name")} />
                     {errors.name && (
                       <p style={{ fontSize: 11, color: "var(--accent)", marginTop: 4 }}>
@@ -1027,7 +1016,7 @@ export default function ProfilePage() {
                     )}
                   </div>
                   <div>
-                    <label className="label">{t("profile.labelEmail")}</label>
+                    <span className="label">{t("profile.labelEmail")}</span>
                     <input
                       className="input"
                       defaultValue={user.email}
@@ -1036,7 +1025,7 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div>
-                    <label className="label">{t("profile.labelBio")}</label>
+                    <span className="label">{t("profile.labelBio")}</span>
                     <input
                       className="input"
                       placeholder={t("profile.bioPh")}
@@ -1044,11 +1033,11 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div>
-                    <label className="label">{t("profile.labelLang")}</label>
+                    <span className="label">{t("profile.labelLang")}</span>
                     <select
                       className="select"
                       value={uiLang}
-                      onChange={(e) => handleUiLangChange(e.target.value as "fr" | "en")}
+                      onChange={(e) => changeLanguage(e.target.value as "fr" | "en")}
                     >
                       <option value="fr">Français</option>
                       <option value="en">English</option>

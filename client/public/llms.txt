@@ -1,0 +1,38 @@
+# CONTENT.IQ
+
+> CONTENT.IQ est une application web de génération de contenu professionnel
+> assistée par IA, pilotable à la voix. Éditée par CODEXA Solutions. Elle permet
+> de créer articles, posts LinkedIn, emails, légendes et plus, en streaming temps
+> réel via les modèles Claude (Anthropic), avec dictée vocale, assistant
+> conversationnel, historique et export (PDF, DOCX, ZIP).
+
+## Ce que fait Content.IQ
+- Génération de contenu IA en streaming (articles, posts sociaux, emails, scripts)
+- Création et navigation **à la voix** (dictée du brief, commandes vocales)
+- Assistant IA conversationnel intégré
+- Historique des contenus, favoris, modèles réutilisables
+- Export multi-format (PDF, DOCX, ZIP en lot)
+- Multilingue (français, anglais)
+
+## Public visé
+PME, freelances, entrepreneurs et équipes marketing francophones qui veulent
+produire du contenu professionnel rapidement, sans partir d'une page blanche.
+
+## Offres (crédits = unités de génération)
+- Free : 50 crédits offerts à l'inscription
+- Pro : quota mensuel étendu, formats avancés
+- Business : quota supérieur, usage équipe
+
+## Pages publiques
+- Accueil : https://contentiq.codexagroup.com/
+- Tarifs : https://contentiq.codexagroup.com/pricing
+- Confidentialité : https://contentiq.codexagroup.com/privacy
+- Conditions d'utilisation : https://contentiq.codexagroup.com/terms
+- Inscription : https://contentiq.codexagroup.com/register
+
+## Éditeur
+CODEXA Solutions — Abdel Wariss OSSENI
+
+## Notes
+- Domaine : https://contentiq.codexagroup.com
+- Technologie : React, Node.js/Express, MongoDB, modèles Claude (Anthropic).

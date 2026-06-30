@@ -1,8 +1,9 @@
 import { toast } from "@/hooks/use-toast";
+import { keyboardActivate } from "@/lib/a11y";
 import { type AppLogEntry, type LogsParams, adminService } from "@/services/admin.service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { fr } from "date-fns/locale";
+import { enUS, fr } from "date-fns/locale";
 import {
   AlertCircle,
   AlertTriangle,
@@ -13,23 +14,40 @@ import {
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const LEVEL_CONFIG = {
-  info: { label: "Info", bg: "rgba(45,122,128,.12)", color: "var(--voice)", Icon: Info },
-  warn: { label: "Avert.", bg: "rgba(229,165,76,.14)", color: "#b07a20", Icon: AlertTriangle },
-  error: { label: "Erreur", bg: "rgba(229,76,76,.12)", color: "#c0392b", Icon: AlertCircle },
+  info: {
+    labelKey: "logs.levelInfo",
+    bg: "rgba(45,122,128,.12)",
+    color: "var(--voice)",
+    Icon: Info,
+  },
+  warn: {
+    labelKey: "logs.levelWarnShort",
+    bg: "rgba(229,165,76,.14)",
+    color: "#b07a20",
+    Icon: AlertTriangle,
+  },
+  error: {
+    labelKey: "logs.levelError",
+    bg: "rgba(229,76,76,.12)",
+    color: "#c0392b",
+    Icon: AlertCircle,
+  },
 } as const;
 
-const CATEGORY_LABELS: Record<string, string> = {
-  auth: "Auth",
-  generation: "Génération",
-  credits: "Crédits",
-  system: "Système",
-  admin: "Admin",
+const CATEGORY_KEYS: Record<string, string> = {
+  auth: "logs.catAuth",
+  generation: "logs.catGeneration",
+  credits: "logs.catCredits",
+  system: "logs.catSystem",
+  admin: "logs.catAdmin",
 };
 
 function LevelBadge({ level }: { level: AppLogEntry["level"] }) {
-  const { label, bg, color, Icon } = LEVEL_CONFIG[level];
+  const { t } = useTranslation();
+  const { labelKey, bg, color, Icon } = LEVEL_CONFIG[level];
   return (
     <span
       style={{
@@ -46,14 +64,16 @@ function LevelBadge({ level }: { level: AppLogEntry["level"] }) {
       }}
     >
       <Icon size={11} />
-      {label}
+      {t(labelKey)}
     </span>
   );
 }
 
 function LogRow({ log }: { log: AppLogEntry }) {
+  const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
   const hasDetails = log.details && Object.keys(log.details).length > 0;
+  const dateLocale = i18n.language.startsWith("en") ? enUS : fr;
 
   return (
     <>
@@ -63,6 +83,7 @@ function LogRow({ log }: { log: AppLogEntry }) {
           cursor: hasDetails ? "pointer" : "default",
         }}
         onClick={() => hasDetails && setOpen((o) => !o)}
+        {...keyboardActivate}
       >
         <td
           style={{
@@ -73,10 +94,10 @@ function LogRow({ log }: { log: AppLogEntry }) {
             fontFamily: "var(--font-mono)",
           }}
         >
-          {new Date(log.createdAt).toLocaleString("fr-FR")}
+          {new Date(log.createdAt).toLocaleString(i18n.language)}
           <br />
           <span style={{ fontSize: 10 }}>
-            {formatDistanceToNow(new Date(log.createdAt), { locale: fr, addSuffix: true })}
+            {formatDistanceToNow(new Date(log.createdAt), { locale: dateLocale, addSuffix: true })}
           </span>
         </td>
         <td style={{ padding: "10px 12px" }}>
@@ -93,7 +114,7 @@ function LogRow({ log }: { log: AppLogEntry }) {
               fontWeight: 500,
             }}
           >
-            {CATEGORY_LABELS[log.category] ?? log.category}
+            {CATEGORY_KEYS[log.category] ? t(CATEGORY_KEYS[log.category]) : log.category}
           </span>
         </td>
         <td
@@ -156,6 +177,7 @@ function LogRow({ log }: { log: AppLogEntry }) {
 }
 
 export default function LogsPage() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [params, setParams] = useState<LogsParams>({ page: 1, limit: 50 });
   const [autoRefresh, setAutoRefresh] = useState(false);
@@ -170,7 +192,7 @@ export default function LogsPage() {
   const clearMut = useMutation({
     mutationFn: () => adminService.clearLogs(),
     onSuccess: (d) => {
-      toast({ title: `${d.data.deleted} logs supprimés`, variant: "default" });
+      toast({ title: t("logs.cleared", { count: d.data.deleted }), variant: "default" });
       void qc.invalidateQueries({ queryKey: ["admin-logs"] });
     },
   });
@@ -196,12 +218,10 @@ export default function LogsPage() {
       >
         <div>
           <h2 style={{ fontSize: 22, fontWeight: 700, color: "var(--ink)", margin: 0 }}>
-            Journal des logs
+            {t("logs.title")}
           </h2>
           <p style={{ fontSize: 13, color: "var(--ink-mute)", margin: "2px 0 0" }}>
-            {pagination
-              ? `${pagination.total} entrées · auto-suppression après 90 jours`
-              : "Chargement…"}
+            {pagination ? t("logs.meta", { total: pagination.total }) : t("logs.loading")}
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -215,20 +235,20 @@ export default function LogsPage() {
               size={13}
               style={{ animation: autoRefresh ? "spin 2s linear infinite" : "none" }}
             />
-            {autoRefresh ? "Auto ON" : "Auto OFF"}
+            {autoRefresh ? t("logs.autoOn") : t("logs.autoOff")}
           </button>
           <button type="button" className="btn btn-outline btn-sm" onClick={() => refetch()}>
-            <RefreshCw size={13} /> Rafraîchir
+            <RefreshCw size={13} /> {t("logs.refresh")}
           </button>
           <button
             type="button"
             className="btn btn-outline btn-sm"
             style={{ color: "var(--accent)" }}
             onClick={() => {
-              if (window.confirm("Supprimer tous les logs ?")) clearMut.mutate();
+              if (window.confirm(t("logs.clearConfirm"))) clearMut.mutate();
             }}
           >
-            <Trash2 size={13} /> Vider
+            <Trash2 size={13} /> {t("logs.clear")}
           </button>
         </div>
       </div>
@@ -240,22 +260,22 @@ export default function LogsPage() {
           style={{ width: 130 }}
           onChange={(e) => setFilter("level", e.target.value)}
         >
-          <option value="">Tous niveaux</option>
-          <option value="info">Info</option>
-          <option value="warn">Avertissement</option>
-          <option value="error">Erreur</option>
+          <option value="">{t("logs.allLevels")}</option>
+          <option value="info">{t("logs.levelInfo")}</option>
+          <option value="warn">{t("logs.levelWarn")}</option>
+          <option value="error">{t("logs.levelError")}</option>
         </select>
         <select
           className="select"
           style={{ width: 150 }}
           onChange={(e) => setFilter("category", e.target.value)}
         >
-          <option value="">Toutes catégories</option>
-          <option value="auth">Auth</option>
-          <option value="generation">Génération</option>
-          <option value="credits">Crédits</option>
-          <option value="system">Système</option>
-          <option value="admin">Admin</option>
+          <option value="">{t("logs.allCats")}</option>
+          <option value="auth">{t("logs.catAuth")}</option>
+          <option value="generation">{t("logs.catGeneration")}</option>
+          <option value="credits">{t("logs.catCredits")}</option>
+          <option value="system">{t("logs.catSystem")}</option>
+          <option value="admin">{t("logs.catAdmin")}</option>
         </select>
         <input
           type="date"
@@ -272,7 +292,7 @@ export default function LogsPage() {
           onChange={(e) =>
             setFilter(
               "to",
-              e.target.value ? new Date(e.target.value + "T23:59:59").toISOString() : "",
+              e.target.value ? new Date(`${e.target.value}T23:59:59`).toISOString() : "",
             )
           }
         />
@@ -290,23 +310,29 @@ export default function LogsPage() {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ borderBottom: "1px solid var(--line)", background: "var(--bg-sunk)" }}>
-              {["Horodatage", "Niveau", "Catégorie", "Action", "Message", "Utilisateur", "IP"].map(
-                (h) => (
-                  <th
-                    key={h}
-                    style={{
-                      padding: "9px 12px",
-                      textAlign: "left",
-                      fontSize: 11,
-                      fontWeight: 600,
-                      color: "var(--ink-mute)",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {h}
-                  </th>
-                ),
-              )}
+              {[
+                t("logs.colTime"),
+                t("logs.colLevel"),
+                t("logs.colCategory"),
+                t("logs.colAction"),
+                t("logs.colMessage"),
+                t("logs.colUser"),
+                t("logs.colIp"),
+              ].map((h) => (
+                <th
+                  key={h}
+                  style={{
+                    padding: "9px 12px",
+                    textAlign: "left",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: "var(--ink-mute)",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -338,7 +364,7 @@ export default function LogsPage() {
                     fontSize: 14,
                   }}
                 >
-                  Aucun log trouvé
+                  {t("logs.noLogs")}
                 </td>
               </tr>
             ) : (
@@ -360,7 +386,11 @@ export default function LogsPage() {
             <ChevronLeft size={14} />
           </button>
           <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>
-            Page {params.page} / {pagination.pages} · {pagination.total} entrées
+            {t("logs.pagination", {
+              page: params.page,
+              pages: pagination.pages,
+              total: pagination.total,
+            })}
           </span>
           <button
             type="button"

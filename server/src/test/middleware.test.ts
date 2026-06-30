@@ -39,7 +39,7 @@ describe("authenticate", () => {
 
   it("appelle next() et attache le payload si le token est valide", () => {
     const payload = { userId: "u1", role: "free", email: "u@test.com" };
-    const token = jwt.sign(payload, process.env.JWT_ACCESS_SECRET!, { expiresIn: "15m" });
+    const token = jwt.sign(payload, process.env.JWT_ACCESS_SECRET ?? "", { expiresIn: "15m" });
     const req = makeReq({ headers: { authorization: `Bearer ${token}` } });
 
     authenticate(req, makeRes(), next);

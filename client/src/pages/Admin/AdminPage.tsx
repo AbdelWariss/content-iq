@@ -1,3 +1,4 @@
+import { AdminLiveFeed } from "@/components/Admin/AdminLiveFeed";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,6 +21,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Suspense, lazy, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const LogsPage = lazy(() => import("./LogsPage"));
 
@@ -82,6 +84,7 @@ function RoleSelect({
 type AdminTab = "users" | "logs";
 
 export default function AdminPage() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const currentUser = useAppSelector((s) => s.auth.user);
   const [activeTab, setActiveTab] = useState<AdminTab>("users");
@@ -113,9 +116,9 @@ export default function AdminPage() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["admin-users"] });
       void qc.invalidateQueries({ queryKey: ["admin-stats"] });
-      toast({ title: "Rôle mis à jour" });
+      toast({ title: t("admin.roleUpdated") });
     },
-    onError: () => toast({ title: "Erreur", variant: "destructive" }),
+    onError: () => toast({ title: t("admin.error"), variant: "destructive" }),
   });
 
   const banMutation = useMutation({
@@ -124,11 +127,11 @@ export default function AdminPage() {
       void qc.invalidateQueries({ queryKey: ["admin-users"] });
       setConfirmBan(null);
       toast({
-        title: "Utilisateur banni",
-        description: "Sessions révoquées, rôle réinitialisé à Free.",
+        title: t("admin.banned"),
+        description: t("admin.bannedDesc"),
       });
     },
-    onError: () => toast({ title: "Erreur", variant: "destructive" }),
+    onError: () => toast({ title: t("admin.error"), variant: "destructive" }),
   });
 
   const handleSearch = (value: string) => {
@@ -147,10 +150,8 @@ export default function AdminPage() {
         <div className="flex items-center gap-3">
           <ShieldCheck className="h-6 w-6 text-primary" />
           <div>
-            <h1 className="text-2xl font-bold">Administration</h1>
-            <p className="text-sm text-muted-foreground">
-              Gestion des utilisateurs, statistiques et logs
-            </p>
+            <h1 className="text-2xl font-bold">{t("admin.title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("admin.subtitle")}</p>
           </div>
         </div>
         {/* Tabs */}
@@ -161,7 +162,7 @@ export default function AdminPage() {
             onClick={() => setActiveTab("users")}
             style={{ display: "flex", alignItems: "center", gap: 6 }}
           >
-            <Users size={14} /> Utilisateurs
+            <Users size={14} /> {t("admin.tabUsers")}
           </button>
           <button
             type="button"
@@ -169,7 +170,7 @@ export default function AdminPage() {
             onClick={() => setActiveTab("logs")}
             style={{ display: "flex", alignItems: "center", gap: 6 }}
           >
-            <ScrollText size={14} /> Logs
+            <ScrollText size={14} /> {t("admin.tabLogs")}
           </button>
         </div>
       </div>
@@ -179,7 +180,7 @@ export default function AdminPage() {
         <Suspense
           fallback={
             <div style={{ padding: 40, textAlign: "center", color: "var(--ink-mute)" }}>
-              Chargement…
+              {t("admin.loading")}
             </div>
           }
         >
@@ -201,47 +202,50 @@ export default function AdminPage() {
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
               <StatCard
                 icon={Users}
-                label="Utilisateurs totaux"
+                label={t("admin.statUsers")}
                 value={stats.users.total}
-                sub={`+${stats.users.newThisWeek} cette semaine`}
+                sub={t("admin.statUsersSub", { count: stats.users.newThisWeek })}
                 color="text-primary bg-primary/10"
               />
               <StatCard
                 icon={FileText}
-                label="Contenus générés"
+                label={t("admin.statContents")}
                 value={stats.contents}
                 color="text-blue-500 bg-blue-500/10"
               />
               <StatCard
                 icon={Zap}
-                label="Crédits consommés"
+                label={t("admin.statCredits")}
                 value={stats.creditsConsumed.toLocaleString()}
-                sub="total cumulé"
+                sub={t("admin.statCreditsSub")}
                 color="text-yellow-500 bg-yellow-500/10"
               />
               <StatCard
                 icon={TrendingUp}
-                label="Répartition plans"
+                label={t("admin.statPlans")}
                 value={`${stats.users.byRole.pro ?? 0} Pro · ${stats.users.byRole.business ?? 0} Biz`}
                 sub={`${stats.users.byRole.free ?? 0} Free · ${stats.users.byRole.admin ?? 0} Admin`}
                 color="text-green-500 bg-green-500/10"
               />
               <StatCard
                 icon={Gauge}
-                label="Score qualité moyen"
+                label={t("admin.statQuality")}
                 value={stats.quality.avgScore !== null ? `${stats.quality.avgScore}%` : "—"}
-                sub={`${stats.quality.scoredContents} contenus évalués`}
+                sub={t("admin.statQualitySub", { count: stats.quality.scoredContents })}
                 color="text-purple-500 bg-purple-500/10"
               />
             </div>
           ) : null}
+
+          {/* Feed temps-réel (socket.io) */}
+          <AdminLiveFeed />
 
           {/* Filtres */}
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
-                placeholder="Rechercher par nom ou email..."
+                placeholder={t("admin.searchPh")}
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="pl-8 text-sm"
@@ -252,7 +256,7 @@ export default function AdminPage() {
               onChange={(e) => handleRoleFilter(e.target.value)}
               className="rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <option value="">Tous les rôles</option>
+              <option value="">{t("admin.allRoles")}</option>
               {ROLES.map((r) => (
                 <option key={r} value={r}>
                   {r.charAt(0).toUpperCase() + r.slice(1)}
@@ -268,17 +272,19 @@ export default function AdminPage() {
                 <thead className="border-b bg-muted/40">
                   <tr>
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                      Utilisateur
+                      {t("admin.colUser")}
                     </th>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Rôle</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                      {t("admin.colRole")}
+                    </th>
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
-                      Crédits
+                      {t("admin.colCredits")}
                     </th>
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden lg:table-cell">
-                      Inscrit le
+                      {t("admin.colJoined")}
                     </th>
                     <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                      Actions
+                      {t("admin.colActions")}
                     </th>
                   </tr>
                 </thead>
@@ -309,7 +315,7 @@ export default function AdminPage() {
                         colSpan={5}
                         className="px-4 py-12 text-center text-muted-foreground text-sm"
                       >
-                        Aucun utilisateur trouvé
+                        {t("admin.noUsers")}
                       </td>
                     </tr>
                   ) : (
@@ -322,7 +328,9 @@ export default function AdminPage() {
                           <div className="font-medium">{user.name}</div>
                           <div className="text-xs text-muted-foreground">{user.email}</div>
                           {!user.emailVerified && (
-                            <span className="text-xs text-yellow-600">Email non vérifié</span>
+                            <span className="text-xs text-yellow-600">
+                              {t("admin.emailUnverified")}
+                            </span>
                           )}
                         </td>
                         <td className="px-4 py-3">
@@ -348,7 +356,7 @@ export default function AdminPage() {
                               className="text-xs text-destructive hover:underline disabled:opacity-50"
                               disabled={banMutation.isPending}
                             >
-                              Bannir
+                              {t("admin.ban")}
                             </button>
                           )}
                         </td>
@@ -363,8 +371,11 @@ export default function AdminPage() {
             {usersData && usersData.pagination.pages > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/20">
                 <p className="text-xs text-muted-foreground">
-                  {usersData.pagination.total} utilisateurs · Page {page}/
-                  {usersData.pagination.pages}
+                  {t("admin.pagination", {
+                    total: usersData.pagination.total,
+                    page,
+                    pages: usersData.pagination.pages,
+                  })}
                 </p>
                 <div className="flex gap-1">
                   <Button
@@ -399,30 +410,25 @@ export default function AdminPage() {
                     <AlertTriangle className="h-5 w-5 text-destructive" />
                   </div>
                   <div>
-                    <p className="font-semibold">Bannir cet utilisateur ?</p>
-                    <p className="text-xs text-muted-foreground">
-                      Cette action est irréversible depuis l'UI.
-                    </p>
+                    <p className="font-semibold">{t("admin.banTitle")}</p>
+                    <p className="text-xs text-muted-foreground">{t("admin.banIrreversible")}</p>
                   </div>
                 </div>
                 <div className="rounded-lg bg-muted p-3 text-sm">
                   <p className="font-medium">{confirmBan.name}</p>
                   <p className="text-muted-foreground text-xs">{confirmBan.email}</p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Toutes les sessions seront révoquées, le rôle réinitialisé à <strong>Free</strong>{" "}
-                  et les crédits remis à zéro.
-                </p>
+                <p className="text-xs text-muted-foreground">{t("admin.banWarning")}</p>
                 <div className="flex gap-3 justify-end">
                   <Button variant="outline" onClick={() => setConfirmBan(null)}>
-                    Annuler
+                    {t("admin.cancel")}
                   </Button>
                   <Button
                     variant="destructive"
                     loading={banMutation.isPending}
                     onClick={() => banMutation.mutate(confirmBan._id)}
                   >
-                    Confirmer le ban
+                    {t("admin.banConfirm")}
                   </Button>
                 </div>
               </div>

@@ -13,6 +13,7 @@ import {
   translateContent,
 } from "../services/claude.service.js";
 import { creditsForTokens, deductCredits } from "../services/credits.service.js";
+import { emitAdminGeneration, emitCreditsUpdate } from "../services/socket.service.js";
 import { appLog } from "../utils/appLog.js";
 import { evaluateContent } from "../utils/contentQuality.js";
 import { logger } from "../utils/logger.js";
@@ -74,6 +75,20 @@ export async function generate(req: Request, res: Response): Promise<void> {
       }
 
       const updatedUser = await User.findById(userId).select("credits").lean();
+
+      // Temps-réel : sync du solde sur tous les onglets/appareils + feed admin.
+      if (updatedUser?.credits) {
+        emitCreditsUpdate(userId, {
+          remaining: updatedUser.credits.remaining,
+          total: updatedUser.credits.total,
+        });
+      }
+      emitAdminGeneration({
+        userId,
+        contentType: params.type,
+        at: new Date().toISOString(),
+      });
+
       return {
         contentId: String(saved._id),
         creditsRemaining: updatedUser?.credits?.remaining,

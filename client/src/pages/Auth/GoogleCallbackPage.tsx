@@ -11,6 +11,10 @@ export default function GoogleCallbackPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
+  // Callback OAuth exécuté une seule fois au montage : on lit le token de l'URL
+  // et on établit la session. `dispatch`/`navigate` sont stables ; re-déclencher
+  // n'aurait pas de sens (le token n'est consommé qu'une fois).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: effet run-once volontaire au montage
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");

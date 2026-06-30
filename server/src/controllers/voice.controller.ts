@@ -123,7 +123,7 @@ export async function synthesize(req: Request, res: Response): Promise<void> {
   res.json({ success: true, data: { useNativeTts: true, text } });
 }
 
-export async function getVoices(req: Request, res: Response): Promise<void> {
+export async function getVoices(_req: Request, res: Response): Promise<void> {
   if (env.ELEVENLABS_API_KEY) {
     const elevenRes = await fetch("https://api.elevenlabs.io/v1/voices", {
       headers: { "xi-api-key": env.ELEVENLABS_API_KEY },
@@ -204,7 +204,7 @@ export async function executeCommand(req: Request, res: Response): Promise<void>
   res.json({ success: true, data: parsedCommand });
 }
 
-export async function transcribe(req: Request, res: Response): Promise<void> {
+export async function transcribe(_req: Request, res: Response): Promise<void> {
   // Whisper STT — optionnel, nécessite OPENAI_API_KEY
   // Le client utilise Web Speech API nativement, ce endpoint est un fallback
   res.status(501).json({

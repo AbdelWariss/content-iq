@@ -1,0 +1,16 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Content.IQ mark</title>
+  <desc id="desc">Clean Content.IQ logo mark using the current blue accent and teal voice color.</desc>
+  <rect width="512" height="512" rx="112" fill="#F8F7F5"/>
+  <g>
+    <mask id="contentiq-c-cutout" maskUnits="userSpaceOnUse" x="48" y="48" width="416" height="416">
+      <rect x="48" y="48" width="416" height="416" fill="white"/>
+      <circle cx="238" cy="238" r="96" fill="black"/>
+      <rect x="325" y="195" width="155" height="86" fill="black"/>
+      <path d="M312 291H438V396H288L344 342L312 291Z" fill="black"/>
+    </mask>
+    <circle cx="238" cy="238" r="166" fill="#3B82F6" mask="url(#contentiq-c-cutout)"/>
+    <path d="M318 300H420V392H300L348 344L318 300Z" fill="#3B82F6"/>
+    <circle cx="238" cy="238" r="64" fill="#0891B2"/>
+  </g>
+</svg>

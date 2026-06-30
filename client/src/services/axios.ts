@@ -37,10 +37,10 @@ let failedQueue: Array<{
 }> = [];
 
 function processQueue(error: unknown, token: string | null = null) {
-  failedQueue.forEach(({ resolve, reject }) => {
+  for (const { resolve, reject } of failedQueue) {
     if (error) reject(error);
-    else resolve(token!);
-  });
+    else resolve(token ?? "");
+  }
   failedQueue = [];
 }
 

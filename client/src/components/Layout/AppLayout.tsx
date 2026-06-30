@@ -122,6 +122,7 @@ export function AppLayout() {
       <div
         className={cn("sidebar-overlay", sidebarOpen && "visible")}
         onClick={() => setSidebarOpen(false)}
+        onKeyDown={() => setSidebarOpen(false)}
       />
 
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />

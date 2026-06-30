@@ -50,7 +50,7 @@ describe("verifyRefreshToken", () => {
   it("lève une erreur sur un token expiré", () => {
     const expired = jwt.sign(
       { userId: "x", role: "free", email: "x@x.com" },
-      process.env.JWT_REFRESH_SECRET!,
+      process.env.JWT_REFRESH_SECRET ?? "",
       { expiresIn: "0s" },
     );
     expect(() => verifyRefreshToken(expired)).toThrow();

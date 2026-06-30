@@ -36,6 +36,7 @@ export function MobileVoiceScreen({
     <div
       className="mobile-voice-overlay"
       aria-modal="true"
+      // biome-ignore lint/a11y/useSemanticElements: overlay React contrôlé ; <dialog> natif (showModal) inadapté ici
       role="dialog"
       aria-label="Dictée vocale"
     >

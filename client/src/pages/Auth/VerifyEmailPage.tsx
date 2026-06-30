@@ -3,10 +3,12 @@ import api from "@/services/axios";
 import { updateUser } from "@/store/authSlice";
 import { useAppDispatch } from "@/store/index";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 import { DynamicPanel } from "./AuthPage";
 
 export default function VerifyEmailPage() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const token = searchParams.get("token");
@@ -75,10 +77,10 @@ export default function VerifyEmailPage() {
                   <MicWave size="md" color="var(--voice)" />
                 </div>
                 <h1 className="t-display" style={{ fontSize: 48, margin: "0 0 12px" }}>
-                  Vérification en cours…
+                  {t("verifyEmail.loadingTitle")}
                 </h1>
                 <p style={{ color: "var(--ink-soft)", fontSize: 17 }}>
-                  Validation de votre adresse email.
+                  {t("verifyEmail.loadingDesc")}
                 </p>
               </div>
             )}
@@ -100,17 +102,17 @@ export default function VerifyEmailPage() {
                   <Ico icon={CiqIcon.check} size={32} style={{ color: "var(--accent)" }} />
                 </div>
                 <h1 className="t-display" style={{ fontSize: 52, margin: "0 0 12px" }}>
-                  Email vérifié !
+                  {t("verifyEmail.successTitle")}
                 </h1>
                 <p style={{ color: "var(--ink-soft)", fontSize: 17, marginBottom: 32 }}>
-                  Votre compte est actif. Bonne génération !
+                  {t("verifyEmail.successDesc")}
                 </p>
                 <Link
                   to="/dashboard"
                   className="btn btn-primary btn-lg"
                   style={{ display: "flex", justifyContent: "center" }}
                 >
-                  Accéder à mon espace
+                  {t("verifyEmail.successCta")}
                   <Ico icon={CiqIcon.arrow} size={18} />
                 </Link>
               </div>
@@ -133,18 +135,17 @@ export default function VerifyEmailPage() {
                   <Ico icon={CiqIcon.x} size={32} style={{ color: "#f87171" }} />
                 </div>
                 <h1 className="t-display" style={{ fontSize: 48, margin: "0 0 12px" }}>
-                  Lien invalide
+                  {t("verifyEmail.errorTitle")}
                 </h1>
                 <p style={{ color: "var(--ink-soft)", fontSize: 17, marginBottom: 32 }}>
-                  Ce lien est invalide ou a expiré (24h). Demandez un nouveau lien depuis la
-                  connexion.
+                  {t("verifyEmail.errorDesc")}
                 </p>
                 <Link
                   to="/login"
                   className="btn btn-outline btn-lg"
                   style={{ display: "flex", justifyContent: "center" }}
                 >
-                  ← Retour à la connexion
+                  {t("verifyEmail.backLogin")}
                 </Link>
               </div>
             )}
@@ -152,7 +153,7 @@ export default function VerifyEmailPage() {
         </div>
 
         <div className="verify-footer" style={{ fontSize: 14, color: "var(--ink-mute)" }}>
-          © 2026 CODEXA · Document confidentiel
+          {t("common.copyright")}
         </div>
       </div>
 

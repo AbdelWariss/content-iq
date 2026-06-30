@@ -155,7 +155,20 @@ const SYSTEM_TEMPLATES = [
   },
 ];
 
+// Garde anti-prod : refuse de seed une base distante/Atlas sauf override explicite.
+// Évite d'écraser les données de production si le .env local pointe sur Atlas/Upstash.
+function assertSafeToSeed(uri: string): void {
+  const looksProd = /mongodb\+srv:|mongodb\.net|\.com\b/i.test(uri);
+  if (looksProd && process.env.ALLOW_PROD_SEED !== "true") {
+    console.error(
+      `\n⛔ Seed bloqué : MONGODB_URI semble pointer sur une base distante/production.\n   URI: ${uri.replace(/\/\/[^@]*@/, "//***@")}\n   Pour seeder une base locale, utilise une URI localhost.\n   Pour forcer (DANGER, écrit en prod) : ALLOW_PROD_SEED=true pnpm seed\n`,
+    );
+    process.exit(1);
+  }
+}
+
 async function seed() {
+  assertSafeToSeed(MONGODB_URI);
   await mongoose.connect(MONGODB_URI);
   console.log("✅ Connecté à MongoDB");
 

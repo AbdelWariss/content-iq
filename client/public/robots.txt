@@ -1,0 +1,40 @@
+# robots.txt — CONTENT.IQ
+# Domaine : https://contentiq.codexagroup.com
+
+# Crawlers classiques
+User-agent: *
+Allow: /
+# Zones privées / authentifiées : aucun intérêt SEO
+Disallow: /dashboard
+Disallow: /generate
+Disallow: /history
+Disallow: /templates
+Disallow: /favorites
+Disallow: /voice
+Disallow: /profile
+Disallow: /admin
+Disallow: /auth/callback
+
+# Crawlers IA / LLM — autorisés explicitement (découvrabilité)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://contentiq.codexagroup.com/sitemap.xml

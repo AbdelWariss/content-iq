@@ -3,7 +3,8 @@ import { VoiceOrb } from "@/components/Voice/VoiceOrb";
 import { toast } from "@/hooks/use-toast";
 import { useStreaming } from "@/hooks/useStreaming";
 import { useVoice } from "@/hooks/useVoice";
-import { CiqIcon, Ico, MicWave } from "@/lib/ciq-icons";
+import { keyboardActivate, stopPropagation } from "@/lib/a11y";
+import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import { markdownToHTML } from "@/lib/markdownToHtml";
 import api from "@/services/axios";
 import { contentService } from "@/services/content.service";
@@ -83,7 +84,7 @@ export default function GeneratePage() {
   const [templateName, setTemplateName] = useState("");
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const { stream, stop } = useStreaming();
-  const { startListening, stopListening, speak, stopSpeaking, status: voiceStatus } = useVoice();
+  const { startListening, stopListening, speak, stopSpeaking } = useVoice();
   const { isTtsSpeaking } = useAppSelector((s) => s.voice);
   const [copied, setCopied] = useState(false);
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
@@ -144,8 +145,7 @@ export default function GeneratePage() {
         dispatch(setEditorContent(markdownToHTML(c.body ?? "")));
       })
       .catch(() => toast({ title: t("generate.contentNotFound"), variant: "destructive" }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewContentId]);
+  }, [viewContentId, dispatch, setValue, t]);
 
   // Debounced keyword suggestions
   useEffect(() => {
@@ -185,7 +185,7 @@ export default function GeneratePage() {
         },
       );
     },
-    [dispatch, stream, keywords],
+    [dispatch, stream, keywords, t, queryClient],
   );
 
   const handleCopy = useCallback(async () => {
@@ -194,7 +194,7 @@ export default function GeneratePage() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     toast({ title: t("generate.copied") });
-  }, [displayContent]);
+  }, [displayContent, t]);
 
   const handleSpeak = useCallback(() => {
     if (isTtsSpeaking) {
@@ -222,7 +222,7 @@ export default function GeneratePage() {
     } finally {
       setIsTranslating(false);
     }
-  }, [savedContentId]);
+  }, [savedContentId, t]);
 
   const addKeyword = useCallback(() => {
     if (keyword.trim() && keywords.length < 10) {
@@ -255,7 +255,7 @@ export default function GeneratePage() {
       setValue("subject", voiceTranscript);
       toast({ title: t("generate.briefDictated"), description: t("generate.briefDictatedDesc") });
     }
-  }, [voiceTranscript, setValue, stopListening]);
+  }, [voiceTranscript, setValue, stopListening, t]);
 
   const handleExport = useCallback(
     async (format: "pdf" | "docx" | "markdown" | "txt") => {
@@ -275,7 +275,7 @@ export default function GeneratePage() {
         setIsExporting(false);
       }
     },
-    [savedContentId, currentParams.subject],
+    [savedContentId, currentParams.subject, t],
   );
 
   const handleSaveContent = useCallback(async () => {
@@ -348,11 +348,12 @@ export default function GeneratePage() {
             backdropFilter: "blur(6px)",
           }}
           onClick={() => setShowSaveTemplate(false)}
+          onKeyDown={() => setShowSaveTemplate(false)}
         >
           <div
             className="card"
             style={{ width: "100%", maxWidth: 420, padding: 24, margin: "0 16px" }}
-            onClick={(e) => e.stopPropagation()}
+            {...stopPropagation()}
           >
             <div className="row between" style={{ marginBottom: 16 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>
@@ -367,7 +368,7 @@ export default function GeneratePage() {
                 <Ico icon={CiqIcon.x} />
               </button>
             </div>
-            <label className="label">Nom du template</label>
+            <span className="label">Nom du template</span>
             <input
               className="input"
               placeholder="Ex : Post LinkedIn inspirant"
@@ -504,7 +505,7 @@ export default function GeneratePage() {
 
               {/* Content type */}
               <div>
-                <label className="label">{t("generate.contentType")}</label>
+                <span className="label">{t("generate.contentType")}</span>
                 <div
                   className="mobile-content-type-grid"
                   style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}
@@ -516,6 +517,7 @@ export default function GeneratePage() {
                         key={value}
                         className="card"
                         onClick={() => setValue("type", value)}
+                        {...keyboardActivate}
                         style={{
                           padding: "10px 8px",
                           textAlign: "center",
@@ -546,7 +548,7 @@ export default function GeneratePage() {
 
               {/* Subject */}
               <div>
-                <label className="label">{t("generate.subject")}</label>
+                <span className="label">{t("generate.subject")}</span>
                 <textarea
                   className="textarea"
                   rows={3}
@@ -563,7 +565,7 @@ export default function GeneratePage() {
               {/* Tone + Length + Language */}
               <div className="row" style={{ gap: 10 }}>
                 <div style={{ flex: 1 }}>
-                  <label className="label">{t("generate.tone")}</label>
+                  <span className="label">{t("generate.tone")}</span>
                   <select className="select" {...register("tone")}>
                     {TONES.map(({ value, label }) => (
                       <option key={value} value={value}>
@@ -573,7 +575,7 @@ export default function GeneratePage() {
                   </select>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label className="label">{t("generate.length")}</label>
+                  <span className="label">{t("generate.length")}</span>
                   <select className="select" {...register("length")}>
                     {LENGTHS.map(({ value, label }) => (
                       <option key={value} value={value}>
@@ -583,7 +585,7 @@ export default function GeneratePage() {
                   </select>
                 </div>
                 <div style={{ flex: 0.7 }}>
-                  <label className="label">{t("generate.language")}</label>
+                  <span className="label">{t("generate.language")}</span>
                   <select className="select" {...register("language")}>
                     {LANGUAGES.map(({ value, label }) => (
                       <option key={value} value={value}>
@@ -594,40 +596,9 @@ export default function GeneratePage() {
                 </div>
               </div>
 
-              {/* Output language toggle */}
-              <div
-                className="row"
-                style={{
-                  gap: 8,
-                  padding: "8px 12px",
-                  background: "var(--bg-elev)",
-                  borderRadius: 10,
-                  border: "1px solid var(--line-soft)",
-                  alignItems: "center",
-                }}
-              >
-                <Ico
-                  icon={CiqIcon.globe}
-                  size={15}
-                  style={{ color: "var(--ink-mute)", flexShrink: 0 }}
-                />
-                <span style={{ fontSize: 12.5, color: "var(--ink-soft)", flex: 1 }}>
-                  {t("generate.outputLanguageLabel")}
-                </span>
-                <select
-                  className="select"
-                  style={{ width: "auto", fontSize: 12.5, padding: "4px 8px" }}
-                  {...register("outputLanguage")}
-                >
-                  <option value="">{t("generate.outputLanguageAuto")}</option>
-                  <option value="fr">Français</option>
-                  <option value="en">English</option>
-                </select>
-              </div>
-
               {/* Keywords */}
               <div>
-                <label className="label">{t("generate.keywords")}</label>
+                <span className="label">{t("generate.keywords")}</span>
                 <div
                   className="row"
                   style={{
@@ -650,6 +621,7 @@ export default function GeneratePage() {
                         cursor: "pointer",
                       }}
                       onClick={() => setKeywords((k) => k.filter((x) => x !== kw))}
+                      {...keyboardActivate}
                     >
                       {kw} ×
                     </span>
@@ -705,6 +677,7 @@ export default function GeneratePage() {
                       onClick={() =>
                         setKeywords((prev) => (prev.includes(kw) ? prev : [...prev, kw]))
                       }
+                      {...keyboardActivate}
                     >
                       + {kw}
                     </span>
@@ -714,7 +687,7 @@ export default function GeneratePage() {
 
               {/* Audience */}
               <div>
-                <label className="label">{t("generate.audience")}</label>
+                <span className="label">{t("generate.audience")}</span>
                 <input
                   className="input"
                   placeholder={t("generate.audiencePlaceholder")}
@@ -766,56 +739,6 @@ export default function GeneratePage() {
             )}
           </div>
         </form>
-      </div>
-
-      {/* Floating mic button */}
-      <div className="generate-mic-float">
-        <button
-          type="button"
-          onClick={handleFloatingMic}
-          className="card"
-          style={{
-            padding: "10px 14px",
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            boxShadow: "var(--shadow-pop)",
-            cursor: "pointer",
-            border: voiceStatus === "listening" ? "1.5px solid var(--accent)" : undefined,
-            background: "var(--bg-elev)",
-          }}
-          title="Dicter le brief"
-        >
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 999,
-              background: voiceStatus === "listening" ? "var(--accent)" : "var(--ink)",
-              color: "white",
-              display: "grid",
-              placeItems: "center",
-              flexShrink: 0,
-            }}
-          >
-            {voiceStatus === "listening" ? (
-              <MicWave size="sm" color="white" />
-            ) : (
-              <Ico icon={CiqIcon.mic} size={16} />
-            )}
-          </div>
-          <div className="col" style={{ gap: 2 }}>
-            <div
-              style={{ fontSize: 11.5, color: "var(--ink-mute)", fontFamily: "var(--font-mono)" }}
-            >
-              {voiceStatus === "listening" ? t("generate.listening") : t("generate.dictateHint")}
-            </div>
-            <div style={{ fontSize: 13, fontWeight: 500 }}>
-              {voiceStatus === "listening" ? t("generate.clickToStop") : t("generate.voiceExample")}
-            </div>
-          </div>
-          {voiceStatus === "listening" && <MicWave size="md" color="var(--voice)" />}
-        </button>
       </div>
 
       {/* Right — editor */}

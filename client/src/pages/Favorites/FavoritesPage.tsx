@@ -1,5 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
+import { keyboardActivate, stopPropagation } from "@/lib/a11y";
 import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import { type ContentItem, contentService } from "@/services/content.service";
 import { exportService } from "@/services/export.service";
@@ -74,7 +75,11 @@ function ExportMenu({ item }: { item: ContentItem }) {
       </button>
       {open && (
         <>
-          <div style={{ position: "fixed", inset: 0, zIndex: 10 }} onClick={() => setOpen(false)} />
+          <div
+            style={{ position: "fixed", inset: 0, zIndex: 10 }}
+            onClick={() => setOpen(false)}
+            onKeyDown={() => setOpen(false)}
+          />
           <div
             className="card"
             style={{
@@ -219,7 +224,7 @@ function FavoriteCard({
       <div
         className="row between"
         style={{ borderTop: "1px solid var(--line-soft)", paddingTop: 10 }}
-        onClick={(e) => e.stopPropagation()}
+        {...stopPropagation()}
       >
         <div className="row" style={{ gap: 6 }}>
           {item.prompt?.tone && (
@@ -536,6 +541,7 @@ export default function FavoritesPage() {
               onClick={() => {
                 window.location.href = `/generate?view=${item._id}`;
               }}
+              {...keyboardActivate}
             >
               <Ico
                 icon={TYPE_ICON[item.type] ?? CiqIcon.blog}
@@ -578,7 +584,7 @@ export default function FavoritesPage() {
               <div
                 className="row"
                 style={{ width: 80, gap: 2, justifyContent: "flex-end" }}
-                onClick={(e) => e.stopPropagation()}
+                {...stopPropagation()}
               >
                 <button
                   type="button"

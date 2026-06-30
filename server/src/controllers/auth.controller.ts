@@ -14,6 +14,7 @@ import {
   sendVerificationEmail,
   sendWelcomeEmail,
 } from "../services/email.service.js";
+import { emitAdminSignup } from "../services/socket.service.js";
 import { appLog } from "../utils/appLog.js";
 import { logger } from "../utils/logger.js";
 import { getAuthUser } from "../utils/requestHelpers.js";
@@ -53,6 +54,7 @@ export async function register(req: Request, res: Response): Promise<void> {
     name: body.name,
     passwordHash,
     role: "free",
+    language: body.language ?? "fr",
     emailVerified: false,
     emailVerificationToken: verificationTokenHash,
     emailVerificationExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
@@ -85,6 +87,15 @@ export async function register(req: Request, res: Response): Promise<void> {
     userId: user._id as never,
     userEmail: user.email,
     ip: req.ip,
+  });
+
+  // Feed admin live
+  emitAdminSignup({
+    userId: String(user._id),
+    name: user.name,
+    email: user.email,
+    method: "email",
+    at: new Date().toISOString(),
   });
 
   res.status(201).json({

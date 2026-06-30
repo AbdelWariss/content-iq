@@ -54,11 +54,14 @@ function getSpeechRecognition(): SpeechRecognitionCtor | undefined {
 export function useWakeWord(wakeWord: string, onDetected: () => void, enabled = true): void {
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const enabledRef = useRef(enabled);
+  const onDetectedRef = useRef(onDetected);
   const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startedRef = useRef(false);
 
-  // Keep refs in sync without restarting the effect
+  // Keep refs in sync without restarting the effect (évite de relancer la
+  // reconnaissance vocale à chaque changement d'identité de `onDetected`).
   enabledRef.current = enabled;
+  onDetectedRef.current = onDetected;
 
   useEffect(() => {
     if (!enabled || !wakeWord) return;
@@ -87,7 +90,7 @@ export function useWakeWord(wakeWord: string, onDetected: () => void, enabled = 
           if (transcript.includes(wakeWord.toLowerCase())) {
             r.abort();
             startedRef.current = false;
-            onDetected();
+            onDetectedRef.current();
           }
         };
 

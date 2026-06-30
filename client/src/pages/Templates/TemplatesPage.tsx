@@ -219,7 +219,7 @@ function CreateTemplateModal({
 
         <div className="col" style={{ gap: 14 }}>
           <div>
-            <label className="label">{t("templates.labelName")}</label>
+            <span className="label">{t("templates.labelName")}</span>
             <input
               className="input"
               value={name}
@@ -228,7 +228,7 @@ function CreateTemplateModal({
             />
           </div>
           <div>
-            <label className="label">{t("templates.labelDesc")}</label>
+            <span className="label">{t("templates.labelDesc")}</span>
             <input
               className="input"
               value={description}
@@ -238,7 +238,7 @@ function CreateTemplateModal({
           </div>
           <div className="row" style={{ gap: 12 }}>
             <div style={{ flex: 1 }}>
-              <label className="label">{t("templates.labelType")}</label>
+              <span className="label">{t("templates.labelType")}</span>
               <select className="select" value={type} onChange={(e) => setType(e.target.value)}>
                 {Object.entries(TYPE_LABELS).map(([v, l]) => (
                   <option key={v} value={v}>
@@ -248,7 +248,7 @@ function CreateTemplateModal({
               </select>
             </div>
             <div style={{ flex: 1 }}>
-              <label className="label">{t("templates.labelCategory")}</label>
+              <span className="label">{t("templates.labelCategory")}</span>
               <select
                 className="select"
                 value={category}
@@ -262,12 +262,12 @@ function CreateTemplateModal({
             </div>
           </div>
           <div>
-            <label className="label">
+            <span className="label">
               {t("templates.labelPrompt")}{" "}
               <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>
                 {t("templates.promptHint")}
               </span>
-            </label>
+            </span>
             <textarea
               className="textarea"
               rows={4}

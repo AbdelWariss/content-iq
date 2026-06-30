@@ -214,7 +214,7 @@ export function GlobalVoiceAssistant({ isOpen, onOpen, onClose }: GlobalVoiceAss
         setIsProcessing(false);
       }
     },
-    [executeCommand],
+    [executeCommand, t],
   );
 
   const handleMicClick = useCallback(() => {
@@ -244,7 +244,11 @@ export function GlobalVoiceAssistant({ isOpen, onOpen, onClose }: GlobalVoiceAss
     [stopListening, handleVoiceResult],
   );
 
-  // Auto-start listening when overlay opens (paid users)
+  // Auto-start listening when overlay opens (paid users).
+  // Volontairement déclenché par le seul `isOpen` : on ne veut PAS redémarrer la
+  // reconnaissance vocale quand `lang`/les callbacks changent d'identité — cela
+  // couperait l'écoute en cours. Les valeurs lues sont fraîches à l'ouverture.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: réaction volontaire à l'ouverture/fermeture uniquement
   useEffect(() => {
     if (isOpen && canUseVoice) {
       setParsedResult(null);
@@ -254,36 +258,40 @@ export function GlobalVoiceAssistant({ isOpen, onOpen, onClose }: GlobalVoiceAss
     if (!isOpen) {
       stopListening();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   return (
     <>
-      {/* Floating mic FAB */}
+      {/* Floating mic FAB — lumineux + lévitation */}
       <button
         type="button"
         onClick={isOpen ? onClose : onOpen}
+        className={isOpen ? undefined : "voice-fab"}
         style={{
           position: "fixed",
           bottom: 72,
           right: 16,
           zIndex: 250,
-          width: 48,
-          height: 48,
+          width: 64,
+          height: 64,
           borderRadius: "50%",
-          background: isOpen ? "var(--voice)" : "var(--bg-elev)",
-          border: `1.5px solid ${isOpen ? "transparent" : "var(--line)"}`,
-          boxShadow: isOpen ? "0 4px 20px rgba(8,145,178,0.45)" : "0 4px 16px rgba(0,0,0,0.12)",
+          background: isOpen
+            ? "var(--voice)"
+            : "radial-gradient(circle at 35% 30%, #25c2e0 0%, #0aa5c4 45%, #0891b2 100%)",
+          border: "none",
+          boxShadow: isOpen
+            ? "0 4px 20px rgba(8,145,178,0.45)"
+            : "0 10px 28px rgba(8,145,178,0.5), 0 0 22px 4px rgba(8,145,178,0.35)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           cursor: "pointer",
-          color: isOpen ? "white" : "var(--ink-soft)",
-          transition: "all 0.22s ease",
+          color: "white",
+          transition: "background 0.22s ease, box-shadow 0.22s ease",
         }}
         title={t("voice.assistantTitle")}
       >
-        <Ico icon={isOpen ? CiqIcon.x : CiqIcon.mic} size={20} style={{ display: "flex" }} />
+        <Ico icon={isOpen ? CiqIcon.x : CiqIcon.mic} size={30} style={{ display: "block" }} />
       </button>
 
       {/* Full-screen overlay */}

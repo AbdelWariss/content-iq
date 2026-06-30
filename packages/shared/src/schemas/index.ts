@@ -32,7 +32,6 @@ export const GenerateContentSchema = z.object({
   subject: z.string().min(3).max(500),
   tone: ContentToneSchema,
   language: ContentLanguageSchema,
-  outputLanguage: z.enum(["fr", "en"]).optional(),
   length: ContentLengthSchema,
   customLength: z.number().min(50).max(5000).optional(),
   keywords: z.array(z.string().max(50)).max(10).optional(),
@@ -50,6 +49,8 @@ export const RegisterSchema = z.object({
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
       message: "Le mot de passe doit contenir une majuscule, une minuscule et un chiffre",
     }),
+  // Langue détectée côté client (navigateur/zone) — persistée dès l'inscription.
+  language: z.enum(["fr", "en"]).optional(),
 });
 
 export const LoginSchema = z.object({

@@ -1,6 +1,7 @@
 import authReducer from "@/store/authSlice";
 import { configureStore } from "@reduxjs/toolkit";
 import { render, screen } from "@testing-library/react";
+import { HelmetProvider } from "react-helmet-async";
 import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
@@ -35,11 +36,13 @@ function renderWithStore(user: object | null) {
     },
   });
   return render(
-    <Provider store={store}>
-      <MemoryRouter>
-        <PricingPage />
-      </MemoryRouter>
-    </Provider>,
+    <HelmetProvider>
+      <Provider store={store}>
+        <MemoryRouter>
+          <PricingPage />
+        </MemoryRouter>
+      </Provider>
+    </HelmetProvider>,
   );
 }
 

@@ -127,9 +127,6 @@ const fr = {
     translateDone: "Traduction prête !",
     translateError: "Erreur de traduction",
     translationTitle: "Traduction en anglais",
-    // Output language
-    outputLanguageLabel: "Langue de sortie",
-    outputLanguageAuto: "— Même langue —",
     // Toasts
     contentGenerated: "Contenu généré !",
     contentNotFound: "Contenu introuvable",

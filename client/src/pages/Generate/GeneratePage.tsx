@@ -596,37 +596,6 @@ export default function GeneratePage() {
                 </div>
               </div>
 
-              {/* Output language toggle */}
-              <div
-                className="row"
-                style={{
-                  gap: 8,
-                  padding: "8px 12px",
-                  background: "var(--bg-elev)",
-                  borderRadius: 10,
-                  border: "1px solid var(--line-soft)",
-                  alignItems: "center",
-                }}
-              >
-                <Ico
-                  icon={CiqIcon.globe}
-                  size={15}
-                  style={{ color: "var(--ink-mute)", flexShrink: 0 }}
-                />
-                <span style={{ fontSize: 12.5, color: "var(--ink-soft)", flex: 1 }}>
-                  {t("generate.outputLanguageLabel")}
-                </span>
-                <select
-                  className="select"
-                  style={{ width: "auto", fontSize: 12.5, padding: "4px 8px" }}
-                  {...register("outputLanguage")}
-                >
-                  <option value="">{t("generate.outputLanguageAuto")}</option>
-                  <option value="fr">Français</option>
-                  <option value="en">English</option>
-                </select>
-              </div>
-
               {/* Keywords */}
               <div>
                 <span className="label">{t("generate.keywords")}</span>

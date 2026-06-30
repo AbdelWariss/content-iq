@@ -131,15 +131,8 @@ const LANG_INSTRUCTIONS: Record<ContentLanguage, string> = {
   ar: "أجب باللغة العربية فقط.",
 };
 
-const OUTPUT_LANG_INSTRUCTIONS: Record<"fr" | "en", string> = {
-  fr: "Génère le contenu UNIQUEMENT en français.",
-  en: "Generate the content ONLY in English.",
-};
-
-function getSystemPrompt(language: ContentLanguage, outputLanguage?: "fr" | "en"): string {
-  const langInstruction = outputLanguage
-    ? OUTPUT_LANG_INSTRUCTIONS[outputLanguage]
-    : LANG_INSTRUCTIONS[language];
+function getSystemPrompt(language: ContentLanguage): string {
+  const langInstruction = LANG_INSTRUCTIONS[language];
   return `Tu es un expert en copywriting et création de contenu digital de classe mondiale. Tu produis du contenu percutant, authentique et optimisé pour chaque plateforme. ${langInstruction} Formate ta réponse en HTML valide : utilise <h1>, <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>, <br>. N'utilise JAMAIS le markdown (pas de #, ##, **, *, __, etc.). Ne fournis que le contenu demandé, sans explications, sans préambule, sans commentaires.`;
 }
 
@@ -240,7 +233,7 @@ export async function streamContentGeneration(
       max_tokens: params.customLength
         ? Math.min(params.customLength * 2, 4000)
         : (MAX_TOKENS[params.length] ?? 900),
-      system: getSystemPrompt(params.language, params.outputLanguage),
+      system: getSystemPrompt(params.language),
       messages: [{ role: "user", content: buildUserPrompt(params) }],
     });
 
@@ -351,7 +344,7 @@ export async function generateForEval(
     max_tokens: params.customLength
       ? Math.min(params.customLength * 2, 4000)
       : (MAX_TOKENS[params.length] ?? 900),
-    system: getSystemPrompt(params.language, params.outputLanguage),
+    system: getSystemPrompt(params.language),
     messages: [{ role: "user", content: buildUserPrompt(params) }],
   });
   const content = msg.content.map((b) => (b.type === "text" ? b.text : "")).join("");

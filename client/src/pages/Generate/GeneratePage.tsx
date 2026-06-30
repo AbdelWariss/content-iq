@@ -4,7 +4,7 @@ import { toast } from "@/hooks/use-toast";
 import { useStreaming } from "@/hooks/useStreaming";
 import { useVoice } from "@/hooks/useVoice";
 import { keyboardActivate, stopPropagation } from "@/lib/a11y";
-import { CiqIcon, Ico, MicWave } from "@/lib/ciq-icons";
+import { CiqIcon, Ico } from "@/lib/ciq-icons";
 import { markdownToHTML } from "@/lib/markdownToHtml";
 import api from "@/services/axios";
 import { contentService } from "@/services/content.service";
@@ -84,7 +84,7 @@ export default function GeneratePage() {
   const [templateName, setTemplateName] = useState("");
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const { stream, stop } = useStreaming();
-  const { startListening, stopListening, speak, stopSpeaking, status: voiceStatus } = useVoice();
+  const { startListening, stopListening, speak, stopSpeaking } = useVoice();
   const { isTtsSpeaking } = useAppSelector((s) => s.voice);
   const [copied, setCopied] = useState(false);
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
@@ -490,6 +490,17 @@ export default function GeneratePage() {
               {/* Brief header */}
               <div className="row between">
                 <span className="t-eyebrow">{t("generate.briefHeader")}</span>
+                {!viewMode && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    style={{ color: "var(--accent)" }}
+                    onClick={handleFloatingMic}
+                  >
+                    <Ico icon={CiqIcon.mic} />
+                    {t("generate.dictate")}
+                  </button>
+                )}
               </div>
 
               {/* Content type */}
@@ -728,56 +739,6 @@ export default function GeneratePage() {
             )}
           </div>
         </form>
-      </div>
-
-      {/* Floating mic button */}
-      <div className="generate-mic-float">
-        <button
-          type="button"
-          onClick={handleFloatingMic}
-          className="card"
-          style={{
-            padding: "10px 14px",
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            boxShadow: "var(--shadow-pop)",
-            cursor: "pointer",
-            border: voiceStatus === "listening" ? "1.5px solid var(--accent)" : undefined,
-            background: "var(--bg-elev)",
-          }}
-          title="Dicter le brief"
-        >
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 999,
-              background: voiceStatus === "listening" ? "var(--accent)" : "var(--ink)",
-              color: "white",
-              display: "grid",
-              placeItems: "center",
-              flexShrink: 0,
-            }}
-          >
-            {voiceStatus === "listening" ? (
-              <MicWave size="sm" color="white" />
-            ) : (
-              <Ico icon={CiqIcon.mic} size={16} />
-            )}
-          </div>
-          <div className="col" style={{ gap: 2 }}>
-            <div
-              style={{ fontSize: 11.5, color: "var(--ink-mute)", fontFamily: "var(--font-mono)" }}
-            >
-              {voiceStatus === "listening" ? t("generate.listening") : t("generate.dictateHint")}
-            </div>
-            <div style={{ fontSize: 13, fontWeight: 500 }}>
-              {voiceStatus === "listening" ? t("generate.clickToStop") : t("generate.voiceExample")}
-            </div>
-          </div>
-          {voiceStatus === "listening" && <MicWave size="md" color="var(--voice)" />}
-        </button>
       </div>
 
       {/* Right — editor */}

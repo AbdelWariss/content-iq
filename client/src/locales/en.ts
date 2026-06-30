@@ -60,6 +60,7 @@ const en = {
   generate: {
     title: "New content",
     briefHeader: "Generation brief",
+    dictate: "Dictate brief",
     contentType: "Content type",
     subject: "Subject *",
     subjectPlaceholder: "E.g. Announcing our Business plan for African agencies",
@@ -74,10 +75,6 @@ const en = {
     generatingBtn: "Generating…",
     stopBtn: "Stop",
     hint: '⌘ + ↵ or say "generate"',
-    listening: "Listening",
-    dictateHint: "Dictate brief",
-    clickToStop: "Click to stop",
-    voiceExample: '"Generate a LinkedIn post"',
     statusGenerating: "● Generating",
     statusReady: "✓ Content ready",
     statusConfigure: "Configure and generate",

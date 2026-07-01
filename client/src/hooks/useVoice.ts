@@ -58,6 +58,24 @@ function phoneticizeBrand(text: string, lang: string): string {
   return text.replace(/CONTENT\.IQ/g, "Content aï kiou").replace(/\bIQ\b/g, "aï kiou");
 }
 
+// Choisit la voix la plus naturelle disponible dans le navigateur pour éviter
+// le rendu robotique de la voix par défaut. Préfère les voix neuronales
+// (Google / Microsoft Natural / cloud) correspondant à la langue.
+function pickBestVoice(lang: string): SpeechSynthesisVoice | undefined {
+  if (typeof window === "undefined" || !window.speechSynthesis) return undefined;
+  const prefix = lang.toLowerCase().startsWith("en") ? "en" : "fr";
+  const matching = window.speechSynthesis
+    .getVoices()
+    .filter((v) => v.lang.toLowerCase().startsWith(prefix));
+  if (matching.length === 0) return undefined;
+  return (
+    matching.find((v) => /google/i.test(v.name)) ??
+    matching.find((v) => /(natural|neural|enhanced|premium|siri)/i.test(v.name)) ??
+    matching.find((v) => v.localService === false) ??
+    matching[0]
+  );
+}
+
 export function useVoice() {
   const dispatch = useAppDispatch();
   const { status, isMuted } = useAppSelector((s) => s.voice);
@@ -130,7 +148,11 @@ export function useVoice() {
 
       const utterance = new SpeechSynthesisUtterance(phoneticizeBrand(text, lang));
       utterance.lang = lang;
+      const best = pickBestVoice(lang);
+      if (best) utterance.voice = best;
+      // Léger ajustement pour un rendu plus naturel (moins mécanique)
       utterance.rate = 1;
+      utterance.pitch = 1.05;
 
       utterance.onstart = () => dispatch(setTtsSpeaking(true));
       utterance.onend = () => dispatch(setTtsSpeaking(false));

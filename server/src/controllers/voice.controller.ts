@@ -5,6 +5,7 @@ import { z } from "zod";
 import { env } from "../config/env.js";
 import { ForbiddenError } from "../middleware/errorHandler.js";
 import { VoiceCommand } from "../models/VoiceCommand.model.js";
+import { appLog } from "../utils/appLog.js";
 import { getAuthUser } from "../utils/requestHelpers.js";
 
 const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
@@ -108,7 +109,16 @@ export async function synthesize(req: Request, res: Response): Promise<void> {
 
     if (!elevenRes.ok) {
       const err = await elevenRes.text();
-      res.status(502).json({ success: false, error: { message: `ElevenLabs: ${err}` } });
+      // Échec ElevenLabs (ex. plan gratuit refusant les voix « library ») :
+      // on bascule proprement sur le TTS natif du navigateur au lieu d'un 502.
+      void appLog({
+        level: "warn",
+        category: "system",
+        action: "tts_fallback_native",
+        message: "Synthèse ElevenLabs indisponible — bascule TTS natif",
+        details: { status: elevenRes.status, error: err.slice(0, 300) },
+      });
+      res.json({ success: true, data: { useNativeTts: true, text } });
       return;
     }
 

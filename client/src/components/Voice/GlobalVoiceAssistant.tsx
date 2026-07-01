@@ -2,7 +2,8 @@ import { toast } from "@/hooks/use-toast";
 import { useVoice } from "@/hooks/useVoice";
 import { CiqIcon, Ico, MicWave } from "@/lib/ciq-icons";
 import api from "@/services/axios";
-import { useAppSelector } from "@/store/index";
+import { type GenerationParams, setParams } from "@/store/contentSlice";
+import { useAppDispatch, useAppSelector } from "@/store/index";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -116,6 +117,11 @@ export function GlobalVoiceAssistant({ isOpen, onOpen, onClose }: GlobalVoiceAss
   const { startListening, stopListening, speak, stopSpeaking, status: voiceStatus } = useVoice();
   const { transcript } = useAppSelector((s) => s.voice);
   const user = useAppSelector((s) => s.auth.user);
+  const dispatch = useAppDispatch();
+  // Contenu actuellement dans l'éditeur (persiste entre les routes via Redux)
+  const currentContent = useAppSelector(
+    (s) => s.content.editorContent || s.content.streamedContent,
+  );
 
   // Plan check
   const canUseVoice = user?.role !== "free";
@@ -159,41 +165,72 @@ export function GlobalVoiceAssistant({ isOpen, onOpen, onClose }: GlobalVoiceAss
   const executeCommand = useCallback(
     (cmd: ParsedCommand) => {
       const { command, params } = cmd;
+      const plainContent = currentContent ? currentContent.replace(/<[^>]*>/g, "").trim() : "";
       switch (command) {
         case "navigate":
           navigate(params.to ?? "/");
-          setActionFeedback(`Navigation vers ${params.to ?? "/"}`);
+          setActionFeedback(t("voice.cmdNavigate", { to: params.to ?? "/" }));
           break;
-        case "generate":
-          navigate(
-            `/generate?subject=${encodeURIComponent(params.subject ?? "")}&type=${params.type ?? "linkedin"}&tone=${params.tone ?? "professional"}`,
+        case "generate": {
+          const subject = params.subject ?? "";
+          // Pré-remplit les paramètres dans le store puis lance la génération
+          dispatch(
+            setParams({
+              subject,
+              type: (params.type ?? "linkedin") as GenerationParams["type"],
+              tone: (params.tone ?? "professional") as GenerationParams["tone"],
+              language: (params.language ?? "fr") as GenerationParams["language"],
+            }),
           );
-          setActionFeedback("Ouverture de la génération…");
+          navigate("/generate?autostart=1");
+          setActionFeedback(
+            subject ? t("voice.cmdGenerating", { subject }) : t("voice.cmdGenerateOpen"),
+          );
+          onClose();
+          break;
+        }
+        case "read":
+          if (plainContent) {
+            setActionFeedback(null);
+            speak(plainContent, lang);
+          } else {
+            setActionFeedback(t("voice.cmdNoContent"));
+          }
+          break;
+        case "copy":
+          if (plainContent) {
+            navigator.clipboard?.writeText(plainContent).catch(() => {});
+            setActionFeedback(t("voice.cmdCopied"));
+          } else {
+            setActionFeedback(t("voice.cmdNoContent"));
+          }
           break;
         case "stop":
           stopSpeaking();
-          setActionFeedback("Lecture arrêtée.");
+          setActionFeedback(t("voice.cmdStopped"));
           break;
         case "help":
-          setActionFeedback(
-            "Commandes : naviguer, générer, lire, arrêter, copier, améliorer, exporter, traduire.",
-          );
+          setActionFeedback(t("voice.cmdScope"));
           break;
-        case "read":
-        case "copy":
         case "improve":
-        case "clear":
-        case "favorite":
-        case "export":
         case "translate":
-          setActionFeedback(t("voice.assistantContextNeeded"));
+        case "export":
+        case "favorite":
+        case "clear":
+          // Ces actions portent sur le contenu affiché dans la page de génération
+          if (plainContent) {
+            navigate("/generate");
+            setActionFeedback(t("voice.cmdOpenForEdit"));
+          } else {
+            setActionFeedback(t("voice.cmdNoContent"));
+          }
           break;
         default:
-          setActionFeedback(`Commande "${command}" non reconnue.`);
-          toast({ title: t("voice.assistantUnknown"), variant: "destructive" });
+          // Hors périmètre : rappelle poliment ce que l'assistant sait faire
+          setActionFeedback(t("voice.cmdScope"));
       }
     },
-    [navigate, stopSpeaking, t],
+    [navigate, dispatch, onClose, currentContent, speak, lang, stopSpeaking, t],
   );
 
   const handleVoiceResult = useCallback(
@@ -210,7 +247,8 @@ export function GlobalVoiceAssistant({ isOpen, onOpen, onClose }: GlobalVoiceAss
           if (cmd.command !== "none" && cmd.confidence > 0.5) {
             executeCommand(cmd);
           } else {
-            setActionFeedback(`Commande non reconnue : "${spokenText}"`);
+            // Demande hors périmètre → rappel des capacités de l'assistant
+            setActionFeedback(t("voice.cmdScope"));
           }
         }
       } catch {

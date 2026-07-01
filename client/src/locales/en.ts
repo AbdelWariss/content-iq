@@ -171,6 +171,15 @@ const en = {
     unsupportedHint:
       "Your browser doesn't support speech recognition. Try Chrome on Android or a desktop browser (Chrome / Edge). Voice input isn't available on iPhone/iPad.",
     unsupportedClose: "Close",
+    cmdNavigate: "Opening the requested page.",
+    cmdGenerating: "Starting generation on: {{subject}}.",
+    cmdGenerateOpen: "Opening content generation.",
+    cmdNoContent: "No content to work with yet. Ask me to generate one.",
+    cmdCopied: "Content copied to clipboard.",
+    cmdStopped: "Playback stopped.",
+    cmdOpenForEdit: "Opening the content to apply your change.",
+    cmdScope:
+      "I'm the CONTENT.IQ voice assistant. I can generate, read, copy, improve, translate or export content. What would you like to create?",
   },
   // History page
   history: {

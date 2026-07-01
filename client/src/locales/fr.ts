@@ -171,6 +171,15 @@ const fr = {
     unsupportedHint:
       "Votre navigateur ne prend pas en charge la reconnaissance vocale. Essayez Chrome sur Android ou un navigateur de bureau (Chrome / Edge). La saisie vocale n'est pas disponible sur iPhone/iPad.",
     unsupportedClose: "Fermer",
+    cmdNavigate: "J'ouvre la page demandée.",
+    cmdGenerating: "Je lance la génération sur : {{subject}}.",
+    cmdGenerateOpen: "J'ouvre la génération de contenu.",
+    cmdNoContent: "Aucun contenu à traiter pour l'instant. Demandez-moi d'en générer un.",
+    cmdCopied: "Contenu copié dans le presse-papiers.",
+    cmdStopped: "Lecture arrêtée.",
+    cmdOpenForEdit: "J'ouvre le contenu pour appliquer votre modification.",
+    cmdScope:
+      "Je suis l'assistant vocal de CONTENT.IQ. Je peux générer, lire, copier, améliorer, traduire ou exporter du contenu. Que souhaitez-vous créer ?",
   },
   // History page
   history: {

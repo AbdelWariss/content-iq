@@ -188,6 +188,21 @@ export default function GeneratePage() {
     [dispatch, stream, keywords, t, queryClient],
   );
 
+  // Lancement automatique déclenché par l'assistant vocal (/generate?autostart=1) :
+  // les paramètres ont été posés dans le store, on démarre la génération une fois.
+  const autoStartedRef = useRef(false);
+  useEffect(() => {
+    if (
+      searchParams.get("autostart") === "1" &&
+      !autoStartedRef.current &&
+      (currentParams.subject ?? "").trim()
+    ) {
+      autoStartedRef.current = true;
+      const id = setTimeout(() => handleSubmit(onSubmit)(), 350);
+      return () => clearTimeout(id);
+    }
+  }, [searchParams, currentParams.subject, handleSubmit, onSubmit]);
+
   const handleCopy = useCallback(async () => {
     const text = displayContent.replace(/<[^>]*>/g, "");
     await navigator.clipboard.writeText(text);

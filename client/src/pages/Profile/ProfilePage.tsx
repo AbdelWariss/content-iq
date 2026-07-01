@@ -269,6 +269,12 @@ export default function ProfilePage() {
   const [activationWord, setActivationWord] = useState(
     () => localStorage.getItem("ciq_activation") ?? "CODEXA",
   );
+  // Brouillon du mot personnalisé (non sauvegardé tant qu'on ne clique pas
+  // sur « Enregistrer » — évite de redémarrer la reconnaissance à chaque frappe).
+  const [customDraft, setCustomDraft] = useState(() => {
+    const w = localStorage.getItem("ciq_activation") ?? "CODEXA";
+    return ACTIVATION_WORDS.includes(w) ? "" : w;
+  });
 
   /* Language — source unique partagée avec le sélecteur du header (useLanguage) */
   const { lang: uiLang, changeLanguage } = useLanguage();
@@ -501,6 +507,24 @@ export default function ProfilePage() {
     if (val.length >= 2) {
       saveVoicePrefs({ activationWord: val }).catch(() => {});
     }
+  }
+
+  // Sélection d'un mot préréglé : applique et vide le brouillon custom
+  function handlePresetWord(word: string) {
+    setCustomDraft("");
+    handleActivationWordChange(word);
+    toast({ title: t("voice.wakeWordSaved", { word }) });
+  }
+
+  // Enregistrement explicite du mot personnalisé (bouton « Enregistrer »)
+  function saveCustomWord() {
+    const val = customDraft.trim().toUpperCase();
+    if (val.length < 2) {
+      toast({ title: t("voice.wakeWordTooShort"), variant: "destructive" });
+      return;
+    }
+    handleActivationWordChange(val);
+    toast({ title: t("voice.wakeWordSaved", { word: val }) });
   }
 
   if (!user) return null;
@@ -851,30 +875,45 @@ export default function ProfilePage() {
               <p style={{ fontSize: 12, color: "var(--ink-mute)", margin: "0 0 10px" }}>
                 {t("voice.wakeWordDesc")}
               </p>
-              <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+              <div className="row" style={{ gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                 {ACTIVATION_WORDS.map((w) => (
                   <button
                     key={w}
                     type="button"
                     className={`btn btn-sm${activationWord === w ? " btn-primary" : " btn-outline"}`}
-                    onClick={() => {
-                      handleActivationWordChange(w);
-                    }}
+                    onClick={() => handlePresetWord(w)}
                   >
                     {w}
                   </button>
                 ))}
                 <input
                   className="input"
-                  style={{ width: 160, fontSize: 13 }}
+                  style={{ width: 150, fontSize: 13 }}
                   placeholder={t("voice.wakeWordCustom")}
                   maxLength={20}
-                  value={ACTIVATION_WORDS.includes(activationWord) ? "" : activationWord}
-                  onChange={(e) => {
-                    if (e.target.value) handleActivationWordChange(e.target.value.toUpperCase());
+                  value={customDraft}
+                  onChange={(e) => setCustomDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      saveCustomWord();
+                    }
                   }}
                 />
+                <button
+                  type="button"
+                  className="btn btn-sm btn-primary"
+                  onClick={saveCustomWord}
+                  disabled={customDraft.trim().length < 2}
+                >
+                  {t("voice.wakeWordSave")}
+                </button>
               </div>
+              {!ACTIVATION_WORDS.includes(activationWord) && (
+                <p style={{ fontSize: 12, color: "var(--voice)", margin: "8px 0 0" }}>
+                  {t("voice.wakeWordActive", { word: activationWord })}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -1126,16 +1165,30 @@ export default function ProfilePage() {
             >
               {t("voice.wakeWordDesc")}
             </span>
-            <input
-              className="input"
-              style={{ fontSize: 13, width: "100%" }}
-              placeholder={t("voice.wakeWordCustom")}
-              maxLength={20}
-              value={ACTIVATION_WORDS.includes(activationWord) ? "" : activationWord}
-              onChange={(e) => {
-                if (e.target.value) handleActivationWordChange(e.target.value.toUpperCase());
-              }}
-            />
+            <div className="row" style={{ gap: 8 }}>
+              <input
+                className="input"
+                style={{ fontSize: 13, flex: 1 }}
+                placeholder={t("voice.wakeWordCustom")}
+                maxLength={20}
+                value={customDraft}
+                onChange={(e) => setCustomDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    saveCustomWord();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="btn btn-sm btn-primary"
+                onClick={saveCustomWord}
+                disabled={customDraft.trim().length < 2}
+              >
+                {t("voice.wakeWordSave")}
+              </button>
+            </div>
           </div>
           <div className="row between" style={{ padding: "14px 0" }}>
             <div className="col" style={{ gap: 2 }}>

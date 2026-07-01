@@ -122,8 +122,12 @@ export function useWakeWord(wakeWord: string, onDetected: () => void, enabled = 
         startedRef.current = true;
         r.start();
       } catch {
-        // Browser may reject if another recognition is running
+        // Le navigateur refuse si une autre reconnaissance tourne déjà :
+        // on réessaie plus tard au lieu de mourir en silence.
         startedRef.current = false;
+        if (enabledRef.current) {
+          restartTimerRef.current = setTimeout(start, 1200);
+        }
       }
     }
 

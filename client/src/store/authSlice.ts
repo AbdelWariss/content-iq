@@ -14,6 +14,13 @@ interface UserState {
     resetDate: string;
   };
   language: "fr" | "en";
+  voicePreferences?: {
+    ttsVoice?: string;
+    speed?: number;
+    autoTts?: boolean;
+    language?: string;
+    activationWord?: string;
+  };
 }
 
 interface AuthState {

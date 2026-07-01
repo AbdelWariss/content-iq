@@ -31,6 +31,7 @@ export interface IUser extends Document {
     speed: number;
     autoTts: boolean;
     language: string;
+    activationWord: string;
   };
   language: ContentLanguage;
   assistantMsgToday: number;
@@ -87,6 +88,7 @@ const UserSchema = new Schema<IUser>(
       speed: { type: Number, default: 1, enum: [0.75, 1, 1.25, 1.5] },
       autoTts: { type: Boolean, default: false },
       language: { type: String, default: "fr-FR" },
+      activationWord: { type: String, default: "CONTENT" },
     },
     language: { type: String, enum: ["fr", "en"], default: "fr" },
     assistantMsgToday: { type: Number, default: 0 },

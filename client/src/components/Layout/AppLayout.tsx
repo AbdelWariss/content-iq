@@ -125,6 +125,14 @@ export function AppLayout() {
       window.removeEventListener("storage", sync);
     };
   }, []);
+  // Le mot enregistré sur le compte a priorité (sync cross-appareil dès le login).
+  const accountWord = user?.voicePreferences?.activationWord;
+  useEffect(() => {
+    if (accountWord) {
+      localStorage.setItem("ciq_activation", accountWord);
+      setWakeWord(accountWord);
+    }
+  }, [accountWord]);
 
   useWakeWord(wakeWord, () => setVoiceAssistantOpen(true), !voiceAssistantOpen && canUseVoice);
 

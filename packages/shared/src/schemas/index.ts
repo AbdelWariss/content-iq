@@ -76,6 +76,7 @@ export const UpdateProfileSchema = z.object({
       speed: z.enum(["0.75", "1", "1.25", "1.5"]).optional(),
       autoTts: z.boolean().optional(),
       language: z.string().optional(),
+      activationWord: z.string().min(2).max(20).optional(),
     })
     .optional(),
 });

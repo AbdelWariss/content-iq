@@ -223,6 +223,7 @@ async function saveVoicePrefs(patch: {
   speed?: string;
   autoTts?: boolean;
   language?: string;
+  activationWord?: string;
 }) {
   await api.put("/users/me", { voicePreferences: patch });
 }
@@ -305,6 +306,7 @@ export default function ProfilePage() {
               speed?: number;
               autoTts?: boolean;
               language?: string;
+              activationWord?: string;
             };
             language?: string;
           };
@@ -315,6 +317,11 @@ export default function ProfilePage() {
         if (vp?.ttsVoice) {
           const v = VOICES.find((x) => x.voiceId === vp.ttsVoice);
           if (v) setSelectedVoice(v.name);
+        }
+        if (vp?.activationWord) {
+          setActivationWord(vp.activationWord);
+          localStorage.setItem("ciq_activation", vp.activationWord);
+          window.dispatchEvent(new Event("ciq:activation-changed"));
         }
         if (vp?.speed) {
           const s = String(vp.speed);
@@ -490,6 +497,10 @@ export default function ProfilePage() {
     localStorage.setItem("ciq_activation", val);
     // Notifie AppLayout pour appliquer le nouveau mot immédiatement (sans reload)
     window.dispatchEvent(new Event("ciq:activation-changed"));
+    // Persiste sur le compte (sync cross-appareil) — silencieux si hors ligne
+    if (val.length >= 2) {
+      saveVoicePrefs({ activationWord: val }).catch(() => {});
+    }
   }
 
   if (!user) return null;

@@ -182,6 +182,7 @@ const fr = {
     cmdCopied: "Contenu copié dans le presse-papiers.",
     cmdStopped: "Lecture arrêtée.",
     cmdOpenForEdit: "J'ouvre le contenu pour appliquer votre modification.",
+    cmdNotUnderstood: "Désolé, je n'ai pas compris. Pouvez-vous reformuler ?",
     cmdScope:
       "Je suis IQ Assistant, votre assistant vocal. Je peux générer, lire, copier, améliorer, traduire ou exporter du contenu. Que souhaitez-vous créer ?",
   },

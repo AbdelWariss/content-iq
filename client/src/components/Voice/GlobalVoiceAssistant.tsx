@@ -226,8 +226,8 @@ export function GlobalVoiceAssistant({ isOpen, onOpen, onClose }: GlobalVoiceAss
           }
           break;
         default:
-          // Hors périmètre : rappelle poliment ce que l'assistant sait faire
-          setActionFeedback(t("voice.cmdScope"));
+          // Commande non reconnue → message court (pas de rappel de cadrage en boucle)
+          setActionFeedback(t("voice.cmdNotUnderstood"));
       }
     },
     [navigate, dispatch, onClose, currentContent, speak, lang, stopSpeaking, t],
@@ -247,8 +247,8 @@ export function GlobalVoiceAssistant({ isOpen, onOpen, onClose }: GlobalVoiceAss
           if (cmd.command !== "none" && cmd.confidence > 0.5) {
             executeCommand(cmd);
           } else {
-            // Demande hors périmètre → rappel des capacités de l'assistant
-            setActionFeedback(t("voice.cmdScope"));
+            // Commande non reconnue → message court (« aide » liste les capacités)
+            setActionFeedback(t("voice.cmdNotUnderstood"));
           }
         }
       } catch {

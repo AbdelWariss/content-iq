@@ -182,6 +182,7 @@ const en = {
     cmdCopied: "Content copied to clipboard.",
     cmdStopped: "Playback stopped.",
     cmdOpenForEdit: "Opening the content to apply your change.",
+    cmdNotUnderstood: "Sorry, I didn't catch that. Could you rephrase?",
     cmdScope:
       "I'm IQ Assistant, your voice assistant. I can generate, read, copy, improve, translate or export content. What would you like to create?",
   },

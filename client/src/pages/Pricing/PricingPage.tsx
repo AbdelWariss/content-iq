@@ -171,15 +171,27 @@ export default function PricingPage() {
         </div>
       )}
 
-      <div style={{ padding: "60px 56px", maxWidth: 1280, margin: "0 auto" }}>
+      <div
+        style={{
+          padding: "clamp(32px, 6vw, 60px) clamp(16px, 5vw, 56px)",
+          maxWidth: 1280,
+          margin: "0 auto",
+        }}
+      >
         {/* Header */}
         <div style={{ textAlign: "center", maxWidth: 720, margin: "0 auto 48px" }}>
           <span className="t-eyebrow">{t("pricing.eyebrow")}</span>
-          <h1 className="t-display" style={{ fontSize: 64, margin: "10px 0 14px" }}>
+          <h1
+            className="t-display"
+            style={{ fontSize: "clamp(34px, 9vw, 64px)", margin: "10px 0 14px" }}
+          >
             {t("pricing.title")}
           </h1>
           <p style={{ fontSize: 16.5, color: "var(--ink-soft)" }}>{t("pricing.subtitle")}</p>
-          <div className="row" style={{ justifyContent: "center", marginTop: 22, gap: 12 }}>
+          <div
+            className="row"
+            style={{ justifyContent: "center", marginTop: 22, gap: 12, flexWrap: "wrap" }}
+          >
             <div className="seg">
               <button
                 type="button"
@@ -213,7 +225,7 @@ export default function PricingPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
             gap: 16,
             maxWidth: 1100,
             margin: "0 auto",

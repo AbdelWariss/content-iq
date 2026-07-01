@@ -8,6 +8,184 @@ Répertoire détaillé de toutes les tâches effectuées au cours des sessions d
 
 ---
 
+### [2026-06-30 → 07-01] — Session 22 : Correctifs UX mobile & durcissement de l'assistant vocal — COMPLÉTÉ ✅ (branche `fix/mobile-pricing-voice`, non mergé)
+- **Session :** 22
+- **Statut :** Complété — sur branche `fix/mobile-pricing-voice`, **non poussé / non mergé** (déployé plus tard sur décision utilisateur ; le merge vers `main` déclenche la prod)
+- **Commits :** `a71cca0` · `bfb8471` · `5c40a6f` · `16367e3` · `4530f0b` · `972f5e3` · `e47bd87` · `b4ac636` · `2735ab4` · `4f6c375`
+- **Tests :** 32 client / 81 serveur — verts · TypeScript 0 erreur · Biome 0/0 · build OK
+- **Contexte :** session de correctifs pilotée par retours utilisateur en conditions réelles (prod mobile iOS + dev). Point de départ : Sessions 19-21 mergées en prod (merge `94784b6`). Vérifications par captures Playwright + tests d'endpoint réels.
+
+> Fil conducteur : rendre la page tarifs vraiment responsive en mobile, puis **durcir l'assistant vocal** (réponse vocale, mot de déclenchement, interactivité contenu, qualité de voix), en restant honnête sur les **limites de plateforme** (Web Speech non fiable sur iOS, ElevenLabs plan gratuit).
+
+---
+
+#### Tâche 1 — Page tarifs responsive en mobile
+
+**Commit :** `a71cca0` — `fix(pricing): page tarifs responsive en mobile (grille auto-fit + clamp)`
+
+**Fichiers modifiés :** `client/src/pages/Pricing/PricingPage.tsx`
+
+**Problème :** En mobile (réel iOS), la page `/pricing` débordait / paraissait « zoomée » : titre surdimensionné, toggle « Chargement » coupé, badge « Le plus populaire » coupé, prix « 9.9… » coupé. Cause : `gridTemplateColumns: "repeat(3, 1fr)"` **figé à 3 colonnes même sur mobile** → cartes plus larges que l'écran. Le débordement était **masqué** par le `overflow-x: clip` global (Session 21), d'où l'illusion « pas de scroll mais zoom ».
+
+**Solution :**
+```tsx
+// AVANT : 3 colonnes fixes
+gridTemplateColumns: "repeat(3, 1fr)"
+// APRÈS : auto-fit responsive (1 colonne mobile, 3 desktop)
+gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))"
+```
++ `padding: "clamp(32px, 6vw, 60px) clamp(16px, 5vw, 56px)"`, titre `fontSize: "clamp(34px, 9vw, 64px)"`, toggle en `flexWrap: "wrap"`.
+
+**Justification :** `minmax(min(100%, 260px), 1fr)` garantit **1 colonne** sous ~520px (les cartes s'empilent) et 3 au-delà, **sans media query** (impossible en styles inline). `min(100%, 260px)` protège les très petits écrans (jamais > largeur). Validé par capture Playwright à 375px : cartes empilées, tout visible. **Leçon** : `overflow-x: clip` masque le débordement de la métrique `scrollWidth` — l'audit responsive de Session 21 avait donc un faux négatif ; la vérification visuelle reste nécessaire.
+
+---
+
+#### Tâche 2 — Réponse vocale (TTS) de l'assistant + état « non supporté »
+
+**Commit :** `bfb8471` — `fix(voice): réponse vocale TTS + mot de déclenchement réactif + état non supporté`
+
+**Fichiers modifiés :** `client/src/components/Voice/GlobalVoiceAssistant.tsx` · `client/src/components/Layout/AppLayout.tsx` · `client/src/pages/Profile/ProfilePage.tsx` · `client/src/locales/{fr,en}.ts`
+
+**Problème :** (a) L'utilisateur signalait que l'assistant **affichait** la commande au lieu de **répondre vocalement**. Cause racine : `GlobalVoiceAssistant` n'appelait **jamais `speak()`** — il ne faisait que `setActionFeedback(texte)`. (b) Sur iPhone, le bouton micro ne réagissait pas (Web Speech `webkitSpeechRecognition` absent sur WebKit) → `startListening` retournait en silence.
+
+**Solution :**
+- Effet qui lit chaque retour d'action : `useEffect(() => { if (actionFeedback) speak(actionFeedback, lang); }, [actionFeedback, speak, lang])`.
+- Amorçage de la synthèse dans le **geste utilisateur** (tap micro : `synth.resume() + getVoices() + utterance volume 0`) pour autoriser le son sur iOS.
+- Branche **« non supporté »** dans l'overlay quand `voiceStatus === "unsupported"` : message clair + bouton fermer, au lieu d'un micro silencieux.
+
+**Justification :** L'effet centralisé garantit que **tout** retour d'action est parlé sans dupliquer `speak()` à chaque `case`. L'amorçage iOS suit le même pattern que la démo (Session 20). L'état « non supporté » est une **honnêteté d'UX** : sur iPhone la reconnaissance n'existe pas, autant le dire plutôt que laisser croire à un bug.
+
+---
+
+#### Tâche 3 — Mot de déclenchement : réactif, persistant (compte), défaut « CODEXA », tolérant, avec bouton « Enregistrer »
+
+**Commits :** `5c40a6f` (persistance compte) · `4530f0b` (défaut CODEXA) · `972f5e3` (détection tolérante) · `e47bd87` (bouton Enregistrer + fiabilité)
+
+**Fichiers :** `client/src/hooks/useWakeWord.ts` · `client/src/components/Layout/AppLayout.tsx` · `client/src/pages/Profile/ProfilePage.tsx` · `packages/shared/src/schemas/index.ts` · `server/src/models/User.model.ts` · `server/src/controllers/user.controller.ts` · `client/src/store/authSlice.ts` · `client/src/hooks/useAuth.ts` · `client/src/services/auth.service.ts` · `client/src/locales/{fr,en}.ts`
+
+**Problème :** L'utilisateur a signalé plusieurs choses : le mot custom n'était mémorisé qu'en localStorage (pas cross-appareil) ; « CODEXA » n'était détecté qu'une fois sur ~10 ; **aucun bouton pour sauvegarder** le mot personnalisé.
+
+**Solution :**
+1. **Persistance compte** : ajout de `voicePreferences.activationWord` (schéma Zod partagé + modèle Mongoose défaut `"CODEXA"` + `PUT /users/me`). Mappé dans Redux via `buildUser` → appliqué dès le login (`AppLayout` : le mot du compte a priorité sur localStorage).
+2. **Réactivité** : `AppLayout` écoute `ciq:activation-changed` + `storage` → le nouveau mot s'applique **sans reload**.
+3. **Défaut `CODEXA`** partout (AppLayout, Profil, modèle), placé en tête des mots proposés.
+4. **Détection tolérante** (`useWakeWord`) : normalisation des deux côtés (minuscules, `NFD` + `\p{Diacritic}` retiré, sans espaces/ponctuation) → « codex a », « code-xa », « Codexa » correspondent tous à `codexa`. Locale complète `fr-FR`/`en-US` (meilleure reconnaissance). Réessai si `start()` échoue (micro occupé) au lieu de mourir en silence.
+5. **Bouton « Enregistrer »** : le champ custom devient un **brouillon local** (`customDraft`) ; sauvegarde uniquement au clic (ou Entrée), avec **toast** de confirmation + affichage du « mot actif ». Presets confirmés aussi par toast.
+
+**Justification :** Le point 5 corrige un **bug caché majeur** : l'ancien champ sauvegardait à **chaque frappe** → `wakeWord` changeait à chaque lettre → l'effet `useWakeWord` (deps `[enabled, wakeWord]`) **redémarrait la reconnaissance en boucle**, l'empêchant de se stabiliser (probablement LA cause du « 1 détection sur 10 »). Le brouillon découple saisie et sauvegarde. La persistance serveur suit le pattern des autres `voicePreferences`. **Honnêteté conservée** : même durci, le wake word via Web Speech reste **intrinsèquement peu fiable** (ce n'est pas un moteur de hotword natif) et **inopérant sur iOS** — documenté à l'utilisateur, le bouton micro restant le chemin fiable.
+
+---
+
+#### Tâche 4 — Prononciation de la marque « IQ » à l'anglaise
+
+**Commit :** `4530f0b` — `feat(voice): mot de déclenchement par défaut 'CODEXA' + prononciation 'IQ' à l'anglaise`
+
+**Fichiers modifiés :** `client/src/hooks/useVoice.ts` · `client/src/locales/{fr,en}.ts`
+
+**Problème :** En TTS français, « IQ Assistant » / « CONTENT.IQ » étaient prononcés à la française (« ik »), alors que la marque se dit « aï kiou » (I-Q à l'anglaise).
+
+**Solution :** `phoneticizeBrand(text, lang)` appliqué dans `speak()` : en **français uniquement**, `CONTENT.IQ` → « Content aï kiou » et `\bIQ\b` → « aï kiou ». En anglais, aucune transformation (la voix épelle déjà « I-Q »). L'assistant se présente comme « IQ Assistant ».
+
+**Justification :** Réécrire l'orthographe phonétiquement est la seule voie fiable (la Web Speech API ne supporte pas SSML `<say-as>`). Restreindre au français évite qu'une voix anglaise lise littéralement « aï kiou ».
+
+---
+
+#### Tâche 5 — L'assistant agit réellement sur le contenu + génération vocale lancée
+
+**Commits :** `16367e3` (actions contenu + cadrage) · `972f5e3` (autostart génération)
+
+**Fichiers modifiés :** `client/src/components/Voice/GlobalVoiceAssistant.tsx` · `client/src/pages/Generate/GeneratePage.tsx` · `client/src/store/contentSlice.ts` · `client/src/locales/{fr,en}.ts`
+
+**Problème :** (a) « Génère un post LinkedIn sur X » **ouvrait** la page mais **ne lançait pas** la génération (et remplissait via des params d'URL que `GeneratePage` ignorait — il lit `currentParams` Redux). (b) « Lis » / « Copie » ne faisaient rien (« contexte nécessaire »).
+
+**Solution :**
+- `generate` : `dispatch(setParams({subject,type,tone,language}))` **puis** `navigate("/generate?autostart=1")` — le store est la source de vérité, plus les params d'URL.
+- `GeneratePage` : effet autostart qui appelle **`onSubmit` directement** avec les paramètres du store (une seule fois, ref garde-fou).
+- `read` / `copy` : agissent sur `content.editorContent` (Redux, partagé entre routes) ; message clair si vide.
+- `GenerationParams` exporté depuis `contentSlice` pour typer proprement.
+
+**Justification :** **Bug critique corrigé** dans l'autostart : la 1re version appelait `handleSubmit(onSubmit)` via un `setTimeout` dans un effet dont le **cleanup annulait le timer** dès qu'une dépendance changeait (course) — et validait un formulaire non synchronisé. L'appel **direct** à `onSubmit(params)` supprime la course et la dépendance à l'état du formulaire → la génération démarre réellement. Choix produit assumé : par la voix, on génère **directement** avec le sujet + type compris + défauts sensés (pas de Q&R champ par champ — ce sera la Session 23).
+
+---
+
+#### Tâche 6 — Qualité de la voix : TTS natif moins robotique + repli ElevenLabs
+
+**Commit :** `b4ac636` — `fix(voice): TTS natif moins robotique + repli gracieux quand ElevenLabs échoue`
+
+**Fichiers modifiés :** `client/src/hooks/useVoice.ts` · `server/src/controllers/voice.controller.ts`
+
+**Problème :** L'utilisateur trouvait la voix « trop robotique ». **Vérification par test d'endpoint réel** : `/voice/synthesize` renvoyait `402 paid_plan_required` — *« Free users cannot use library voices via the API »*. Donc **les voix ElevenLabs des paramètres ne sont pas utilisables** avec la clé (plan gratuit), **et** l'assistant parlait de toute façon en **TTS natif** (jamais ElevenLabs). Pire : sur échec ElevenLabs, l'endpoint renvoyait un **502** au lieu de basculer sur le natif.
+
+**Solution :**
+- `useVoice.speak` : `pickBestVoice(lang)` choisit la **meilleure voix du navigateur** (Google / Neural / cloud) au lieu de la voix par défaut robotique ; léger `pitch = 1.05`.
+- `voice.controller` : sur échec ElevenLabs, renvoie `{ useNativeTts: true, text }` (au lieu de 502) + trace `appLog` (catégorie `system`). L'aperçu des voix bascule alors proprement sur le natif.
+
+**Justification :** Amélioration **sans coût** immédiate (voix native de meilleure qualité). Vérifié : l'endpoint renvoie désormais `{"useNativeTts":true}`. **Constat honnête livré à l'utilisateur** : de vraies voix premium non robotiques nécessitent un **plan ElevenLabs payant** (décision commerciale) — hors périmètre technique.
+
+---
+
+#### Tâche 7 — Message « je n'ai pas compris » court (retrait du cadrage répétitif)
+
+**Commit :** `4f6c375` — `fix(voice): message court 'je n'ai pas compris' hors sujet`
+
+**Fichiers modifiés :** `client/src/components/Voice/GlobalVoiceAssistant.tsx` · `client/src/locales/{fr,en}.ts`
+
+**Problème :** L'ajout du cadrage (« Je suis IQ Assistant, je peux générer, lire, copier… ») était **lu à voix haute à chaque requête hors sujet** → répétitif et lourd (crainte de boucle).
+
+**Solution :** Requête non reconnue / hors périmètre → message **court** : « Désolé, je n'ai pas compris. Pouvez-vous reformuler ? » (`voice.cmdNotUnderstood`). La liste des capacités (`cmdScope`) n'est plus dite **que** sur demande explicite d'aide (`help` : « aide », « que peux-tu faire »).
+
+**Justification :** Rétablit l'esprit du comportement d'origine (« commande non reconnue ») mais en version humaine et **parlée une seule fois**. Option « plus humaine » retenue par l'utilisateur parmi 3 propositions.
+
+---
+
+#### Tâche 8 — Plan de la Session 23 + skill de clôture reproduit dans le projet
+
+**Commit :** `2735ab4` (plan) — plus reproduction du skill `contentiq-session-close`
+
+**Fichiers :** `docs/Session-23-Assistant-Vocal-Interactif.md` (créé) · `docs/Analyse-Conformite-PRD.md` · `.claude/skills/contentiq-session-close/SKILL.md` (reproduit)
+
+**Problème :** L'auto-application vocale des modifications (améliorer/traduire/exporter un contenu **désigné**) est une fonctionnalité trop lourde pour ce lot de correctifs → chantier dédié à planifier. De plus, le skill `/contentiq-session-close` n'existait pas dans le dépôt (seulement dans `~/.claude/skills`).
+
+**Solution :** Plan détaillé **Session 23** (objectifs, périmètre, tâches T1-T6, design technique, critères d'acceptation, risques, estimation), référencé dans le backlog PRD. Skill de clôture **reproduit à l'identique** dans `.claude/skills/` du projet (versionné pour les prochaines sessions).
+
+**Justification :** Le plan cadre le futur chantier sans le démarrer prématurément. La numérotation reste cohérente : Sessions 18-22 réalisées → **Session 23** planifiée (le plan a été renuméroté 22→23 à la clôture, cette session de correctifs devenant la Session 22).
+
+---
+
+#### État final de la Session 22
+
+| Métrique | Valeur |
+|----------|--------|
+| Tests serveur | 81/81 ✓ |
+| Tests client | 32/32 ✓ |
+| TypeScript | 0 erreur ✓ |
+| Biome (lint) | 0 erreur / 0 warning ✓ |
+| Build | OK ✓ |
+| Commits | 10 sur `fix/mobile-pricing-voice` (non poussé) |
+
+**Limites de plateforme documentées (non corrigibles côté code) :**
+- Wake word « toujours à l'écoute » : Web Speech n'est pas un moteur de hotword → peu fiable, **inopérant sur iOS**. Chemin fiable = bouton micro.
+- STT (commandes vocales) : OK sur **Chrome desktop / Android**, pas sur iPhone/iPad.
+- Voix premium ElevenLabs : nécessitent un **plan payant** (clé actuelle = gratuit).
+
+**Résumé des fichiers modifiés :**
+| Fichier | Type | Changement |
+|---------|------|-----------|
+| `client/src/pages/Pricing/PricingPage.tsx` | client | Grille auto-fit + clamp (responsive mobile) |
+| `client/src/components/Voice/GlobalVoiceAssistant.tsx` | client | Réponse TTS, actions contenu, non-supporté, message court |
+| `client/src/hooks/useVoice.ts` | client | phoneticizeBrand (IQ), pickBestVoice |
+| `client/src/hooks/useWakeWord.ts` | client | Normalisation détection, locale, réessai |
+| `client/src/components/Layout/AppLayout.tsx` | client | Wake word réactif + priorité compte |
+| `client/src/pages/Profile/ProfilePage.tsx` | client | Brouillon custom + bouton Enregistrer + toast |
+| `client/src/pages/Generate/GeneratePage.tsx` | client | Autostart génération (appel direct onSubmit) |
+| `client/src/store/{contentSlice,authSlice}.ts` | client | Export GenerationParams, voicePreferences Redux |
+| `client/src/hooks/useAuth.ts` · `services/auth.service.ts` | client | Mapping voicePreferences → Redux |
+| `packages/shared/src/schemas/index.ts` | shared | `activationWord` dans voicePreferences |
+| `server/src/models/User.model.ts` · `controllers/{user,voice}.controller.ts` | serveur | activationWord persisté, repli TTS natif |
+| `docs/Session-23-Assistant-Vocal-Interactif.md` · `Analyse-Conformite-PRD.md` | docs | Plan Session 23 + backlog |
+
+---
+
 ### [2026-06-30] — Session 21 : Polish UX, responsive mobile & identité visuelle — COMPLÉTÉ ✅ (branche, non mergé)
 - **Session :** 21
 - **Statut :** Complété — sur branche `feat/reliability-hardening`, **non poussé / non mergé** (le merge vers `main` déclenche le déploiement prod, en attente de feu vert utilisateur)

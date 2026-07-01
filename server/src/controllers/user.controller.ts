@@ -34,6 +34,7 @@ export async function updateProfile(req: Request, res: Response): Promise<void> 
     if (vp.speed) updateFields["voicePreferences.speed"] = Number(vp.speed);
     if (vp.autoTts !== undefined) updateFields["voicePreferences.autoTts"] = vp.autoTts;
     if (vp.language) updateFields["voicePreferences.language"] = vp.language;
+    if (vp.activationWord) updateFields["voicePreferences.activationWord"] = vp.activationWord;
   }
 
   const user = await User.findByIdAndUpdate(userId, { $set: updateFields }, { new: true });

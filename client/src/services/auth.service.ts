@@ -25,6 +25,7 @@ export interface UserData {
     speed: number;
     autoTts: boolean;
     language: string;
+    activationWord?: string;
   };
   subscription: { status: string; currentPeriodEnd?: string };
 }

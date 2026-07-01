@@ -1,7 +1,7 @@
 import type { ContentLanguage, ContentLength, ContentTone, ContentType } from "@contentiq/shared";
 import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
 
-interface GenerationParams {
+export interface GenerationParams {
   type: ContentType;
   subject: string;
   tone: ContentTone;

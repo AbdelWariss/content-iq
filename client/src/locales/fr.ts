@@ -165,8 +165,26 @@ const fr = {
     wakeWordLabel: "Mot de déclenchement",
     wakeWordDesc: "Dites ce mot pour activer l'assistant vocal automatiquement.",
     wakeWordCustom: "Mot personnalisé…",
+    wakeWordSave: "Enregistrer",
+    wakeWordSaved: "Mot de déclenchement enregistré : {{word}}",
+    wakeWordTooShort: "Le mot doit comporter au moins 2 caractères.",
+    wakeWordActive: "Mot actif : « {{word}} »",
     transcriptionCopied: "Transcription copiée !",
     processingError: "Erreur de traitement",
+    unsupportedTitle: "Saisie vocale indisponible",
+    unsupportedHint:
+      "Votre navigateur ne prend pas en charge la reconnaissance vocale. Essayez Chrome sur Android ou un navigateur de bureau (Chrome / Edge). La saisie vocale n'est pas disponible sur iPhone/iPad.",
+    unsupportedClose: "Fermer",
+    cmdNavigate: "J'ouvre la page demandée.",
+    cmdGenerating: "Je lance la génération sur : {{subject}}.",
+    cmdGenerateOpen: "J'ouvre la génération de contenu.",
+    cmdNoContent: "Aucun contenu à traiter pour l'instant. Demandez-moi d'en générer un.",
+    cmdCopied: "Contenu copié dans le presse-papiers.",
+    cmdStopped: "Lecture arrêtée.",
+    cmdOpenForEdit: "J'ouvre le contenu pour appliquer votre modification.",
+    cmdNotUnderstood: "Désolé, je n'ai pas compris. Pouvez-vous reformuler ?",
+    cmdScope:
+      "Je suis IQ Assistant, votre assistant vocal. Je peux générer, lire, copier, améliorer, traduire ou exporter du contenu. Que souhaitez-vous créer ?",
   },
   // History page
   history: {

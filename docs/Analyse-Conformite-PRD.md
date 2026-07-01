@@ -109,6 +109,13 @@
 ### Session 21 — Polish UX PRD
 - [ ] Dark mode · mode plein écran éditeur · infinite scroll · visualiseur d'onde Canvas
 
+### Session 22 — Correctifs UX mobile & durcissement assistant vocal ✅ (réalisée)
+- [x] Page tarifs responsive · réponse vocale TTS · wake word (CODEXA, persistance, tolérance) · prononciation « IQ » · TTS natif moins robotique · assistant agit sur le contenu. Détail : `CODEXA Content.IQ/Travail Éffectué.md` (Session 22).
+
+### Session 23 — Assistant vocal interactif (chantier dédié)
+- [ ] **Auto-application vocale des modifications** : améliorer / traduire / exporter / favori / regénérer un contenu **désigné** (courant, dernier, par type) + boucle conversationnelle cadrée.
+- 📄 Plan détaillé : [`docs/Session-23-Assistant-Vocal-Interactif.md`](./Session-23-Assistant-Vocal-Interactif.md)
+
 ---
 
 ## Synthèse

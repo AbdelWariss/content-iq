@@ -71,7 +71,9 @@ export function useWakeWord(wakeWord: string, onDetected: () => void, enabled = 
 
     // Capture as a definite non-null local so inner functions can use it
     const SpeechRecognitionCtor = Ctor;
-    const lang = localStorage.getItem("ciq_lang") ?? "fr-FR";
+    // Locale complète : le moteur reconnaît mieux avec "fr-FR"/"en-US" que "fr"/"en"
+    const stored = localStorage.getItem("ciq_lang") ?? "fr";
+    const lang = stored.startsWith("en") ? "en-US" : "fr-FR";
 
     function start() {
       if (!enabledRef.current) return;
@@ -84,10 +86,18 @@ export function useWakeWord(wakeWord: string, onDetected: () => void, enabled = 
         r.onresult = (event: SpeechEvent) => {
           const transcript = Array.from({ length: event.results.length })
             .map((_, i) => event.results[i][0].transcript)
-            .join("")
-            .toLowerCase();
+            .join("");
 
-          if (transcript.includes(wakeWord.toLowerCase())) {
+          // Normalise (minuscules, sans accents, sans espaces ni ponctuation) pour
+          // tolérer les variations du moteur : "codex a", "code-xa", "Codexa", etc.
+          const normalize = (s: string) =>
+            s
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/\p{Diacritic}/gu, "")
+              .replace(/[^a-z0-9]/g, "");
+
+          if (normalize(transcript).includes(normalize(wakeWord))) {
             r.abort();
             startedRef.current = false;
             onDetectedRef.current();
@@ -112,8 +122,12 @@ export function useWakeWord(wakeWord: string, onDetected: () => void, enabled = 
         startedRef.current = true;
         r.start();
       } catch {
-        // Browser may reject if another recognition is running
+        // Le navigateur refuse si une autre reconnaissance tourne déjà :
+        // on réessaie plus tard au lieu de mourir en silence.
         startedRef.current = false;
+        if (enabledRef.current) {
+          restartTimerRef.current = setTimeout(start, 1200);
+        }
       }
     }
 

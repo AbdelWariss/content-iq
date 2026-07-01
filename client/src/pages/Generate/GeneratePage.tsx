@@ -188,6 +188,29 @@ export default function GeneratePage() {
     [dispatch, stream, keywords, t, queryClient],
   );
 
+  // Lancement automatique déclenché par l'assistant vocal (/generate?autostart=1) :
+  // les paramètres ont été posés dans le store. On lance la génération DIRECTEMENT
+  // avec ces paramètres (pas via handleSubmit, dont la validation dépend de l'état
+  // du formulaire pas encore synchronisé), et une seule fois (ref garde-fou).
+  const autoStartedRef = useRef(false);
+  useEffect(() => {
+    if (autoStartedRef.current) return;
+    if (searchParams.get("autostart") !== "1") return;
+    const subject = (currentParams.subject ?? "").trim();
+    if (!subject) return;
+    autoStartedRef.current = true;
+    onSubmit({
+      type: (currentParams.type as GenerateContentInput["type"]) ?? "linkedin",
+      subject,
+      tone: (currentParams.tone as GenerateContentInput["tone"]) ?? "professional",
+      language: (currentParams.language as GenerateContentInput["language"]) ?? userLang,
+      length: (currentParams.length as GenerateContentInput["length"]) ?? "medium",
+      keywords: [],
+      audience: currentParams.audience ?? "",
+      context: currentParams.context ?? "",
+    });
+  }, [searchParams, currentParams, onSubmit, userLang]);
+
   const handleCopy = useCallback(async () => {
     const text = displayContent.replace(/<[^>]*>/g, "");
     await navigator.clipboard.writeText(text);

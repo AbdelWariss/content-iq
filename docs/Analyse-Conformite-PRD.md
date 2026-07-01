@@ -109,6 +109,10 @@
 ### Session 21 — Polish UX PRD
 - [ ] Dark mode · mode plein écran éditeur · infinite scroll · visualiseur d'onde Canvas
 
+### Session 22 — Assistant vocal interactif (chantier dédié)
+- [ ] **Auto-application vocale des modifications** : améliorer / traduire / exporter / favori / regénérer un contenu **désigné** (courant, dernier, par type) + boucle conversationnelle cadrée.
+- 📄 Plan détaillé : [`docs/Session-22-Assistant-Vocal-Interactif.md`](./Session-22-Assistant-Vocal-Interactif.md)
+
 ---
 
 ## Synthèse

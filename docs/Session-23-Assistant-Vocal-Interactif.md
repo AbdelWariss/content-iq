@@ -1,7 +1,7 @@
-# Session 22 — Assistant vocal interactif : auto-application des modifications
+# Session 23 — Assistant vocal interactif : auto-application des modifications
 
 > **Statut :** 📋 Planifié (non démarré)
-> **Numérotation :** suit les Sessions 18 → 21 déjà réalisées (le projet numérote en « Sessions », pas en « Sprints »). Ce chantier est la **Session 22**.
+> **Numérotation :** suit les Sessions 18 → 22 déjà réalisées (le projet numérote en « Sessions », pas en « Sprints »). Ce chantier est la **Session 23**.
 > **Pré-requis :** branche de session dédiée (`feat/voice-interactive`), à ouvrir depuis `main` une fois le lot vocal courant (`fix/mobile-pricing-voice`) mergé.
 
 ---
@@ -30,7 +30,7 @@ Le travail est donc majoritairement **côté client** (câblage + résolution de
 
 ---
 
-## 2. Objectifs de la Session 22
+## 2. Objectifs de la Session 23
 
 1. **Résolution de cible** — l'assistant identifie **sur quel contenu** agir : le contenu **courant** (éditeur), le **dernier généré**, ou un contenu **désigné** (« mon post LinkedIn », « le contenu d'hier »).
 2. **Auto-application réelle** des modifications par la voix : `improve`, `translate`, `export`, `favorite`, `clear/regenerate` — exécutées via API avec **retour vocal** et mise à jour de l'éditeur.
@@ -93,7 +93,7 @@ Le travail est donc majoritairement **côté client** (câblage + résolution de
 ### T6 — Tests & docs
 - Tests client : `executeCommand` (mock API) pour chaque action + résolution de cible.
 - Test serveur : NLU renvoie `target`/`targetLang`/`format` sur cas types.
-- MAJ `Travail Éffectué.md` (Session 22) + handoff mémoire.
+- MAJ `Travail Éffectué.md` (Session 23) + handoff mémoire.
 - **Livrable :** vert (typecheck 0, lint 0), doc à jour.
 
 ---
@@ -133,7 +133,7 @@ Voix → STT (Web Speech) → /voice/intent (NLU: command + target + params)
 |--------|-----------|
 | STT indisponible (iOS) | Documenté ; parcours au **bouton micro** ; cette session ne dépend pas d'iOS. |
 | Voix TTS robotique (ElevenLabs plan gratuit) | Repli natif « meilleure voix » (déjà livré) ; voix premium = décision plan payant. |
-| Ambiguïté de cible | Limiter à `current/last/byType` en Session 22 ; recherche floue plus tard. |
+| Ambiguïté de cible | Limiter à `current/last/byType` en Session 23 ; recherche floue plus tard. |
 | Coût crédits inattendu | Annonce du coût + confirmation pour les actions facturées. |
 
 ---

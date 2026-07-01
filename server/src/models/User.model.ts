@@ -88,7 +88,7 @@ const UserSchema = new Schema<IUser>(
       speed: { type: Number, default: 1, enum: [0.75, 1, 1.25, 1.5] },
       autoTts: { type: Boolean, default: false },
       language: { type: String, default: "fr-FR" },
-      activationWord: { type: String, default: "CONTENT" },
+      activationWord: { type: String, default: "CODEXA" },
     },
     language: { type: String, enum: ["fr", "en"], default: "fr" },
     assistantMsgToday: { type: Number, default: 0 },

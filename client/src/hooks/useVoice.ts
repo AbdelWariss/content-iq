@@ -51,6 +51,13 @@ function getSpeechRecognition(): SpeechRecognitionCtor | undefined {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition;
 }
 
+// Fait prononcer la marque « IQ » à l'anglaise (« aï kiou ») par une voix
+// française. En anglais, la synthèse épelle déjà « IQ » correctement.
+function phoneticizeBrand(text: string, lang: string): string {
+  if (!lang.toLowerCase().startsWith("fr")) return text;
+  return text.replace(/CONTENT\.IQ/g, "Content aï kiou").replace(/\bIQ\b/g, "aï kiou");
+}
+
 export function useVoice() {
   const dispatch = useAppDispatch();
   const { status, isMuted } = useAppSelector((s) => s.voice);
@@ -121,7 +128,7 @@ export function useVoice() {
 
       synthRef.current.cancel();
 
-      const utterance = new SpeechSynthesisUtterance(text);
+      const utterance = new SpeechSynthesisUtterance(phoneticizeBrand(text, lang));
       utterance.lang = lang;
       utterance.rate = 1;
 

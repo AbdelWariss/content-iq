@@ -179,7 +179,7 @@ const en = {
     cmdStopped: "Playback stopped.",
     cmdOpenForEdit: "Opening the content to apply your change.",
     cmdScope:
-      "I'm the CONTENT.IQ voice assistant. I can generate, read, copy, improve, translate or export content. What would you like to create?",
+      "I'm IQ Assistant, your voice assistant. I can generate, read, copy, improve, translate or export content. What would you like to create?",
   },
   // History page
   history: {

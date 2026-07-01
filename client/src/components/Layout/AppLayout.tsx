@@ -113,11 +113,11 @@ export function AppLayout() {
   // personnalise (événement custom) ou change dans un autre onglet (storage).
   const [wakeWord, setWakeWord] = useState(() =>
     typeof localStorage !== "undefined"
-      ? (localStorage.getItem("ciq_activation") ?? "CONTENT")
-      : "CONTENT",
+      ? (localStorage.getItem("ciq_activation") ?? "CODEXA")
+      : "CODEXA",
   );
   useEffect(() => {
-    const sync = () => setWakeWord(localStorage.getItem("ciq_activation") ?? "CONTENT");
+    const sync = () => setWakeWord(localStorage.getItem("ciq_activation") ?? "CODEXA");
     window.addEventListener("ciq:activation-changed", sync);
     window.addEventListener("storage", sync);
     return () => {

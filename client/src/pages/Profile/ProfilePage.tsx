@@ -37,7 +37,7 @@ const MIC_LANGS = [
 ];
 
 const MIC_SENSITIVITIES = ["Auto", "Haute", "Normale", "Basse"];
-const ACTIVATION_WORDS = ["CONTENT", "CODEXA", "GÉNÈRE", "ASSISTANT"];
+const ACTIVATION_WORDS = ["CODEXA", "CONTENT", "GÉNÈRE", "ASSISTANT"];
 
 /* ─── Toggle component ─── */
 function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
@@ -267,7 +267,7 @@ export default function ProfilePage() {
     () => localStorage.getItem("ciq_mic_sens") ?? "Auto",
   );
   const [activationWord, setActivationWord] = useState(
-    () => localStorage.getItem("ciq_activation") ?? "CONTENT",
+    () => localStorage.getItem("ciq_activation") ?? "CODEXA",
   );
 
   /* Language — source unique partagée avec le sélecteur du header (useLanguage) */
